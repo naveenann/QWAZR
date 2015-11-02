@@ -1,0 +1,88 @@
+#!/bin/sh
+# QWAZR start
+#
+
+### BEGIN INIT INFO
+# Provides:          qwazr
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start/stop QWAZR at boot time
+# Description:       Enable service provided by QWAZR.
+### END INIT INFO
+
+CONFIGFILE=/etc/qwazr.conf
+if [ -f "$CONFIGFILE" ]; then
+    . "$CONFIGFILE"
+fi
+
+if [ -z "$PUBLIC_ADDR" ]; then
+    PUBLIC_ADDR=`hostname`
+fi
+
+JAVA_OPTS="$JAVA_OPTS -Dfile.encoding=UTF-8 -Dlog4j.configuration=file:$QWAZR_DATA/log4j.properties"
+QWAZR_JAR=/usr/share/qwazr/qwazr.jar
+QWAZR_OPTS="$JAVA_OPTS -jar $QWAZR_JAR -l $LISTEN_ADDR -a $PUBLIC_ADDR -wp $WEBAPP_PORT -sp $WEBSERVICE_PORT -d $QWAZR_DATA"
+QWAZR_LOG=/var/log/qwazr/server.out
+QWAZR_PID="/var/run/qwazr.pid"
+
+export QWAZR_MASTERS QWAZR_SERVICES QWAZR_PID_PATH QWAZR_ROOT_USER
+
+usage ()
+{
+  echo "Usage : $0 {start|stop|restart}"
+  exit
+}
+
+if [ "$#" -ne 1 ]
+then
+  usage
+fi
+
+case $1 in
+start)
+        if [ -f QWAZR_PID ]; then
+            PID=`cat $QWAZR_PID`
+            echo "QWAZR is already running $PID ..."
+        else
+            echo "Starting QWAZR ..."
+            PID=`cd $QWAZR_DATA; su -m -c "/usr/bin/java $QWAZR_OPTS" qwazr >> $QWAZR_LOG 2>&1 & echo $!`
+            if [ -z $PID ]; then
+               echo "QWAZR starting failed"
+            else
+               echo $PID > $QWAZR_PID
+               echo "QWAZR started ..."
+            fi
+        fi
+        ;;
+stop)
+        if [ -f $QWAZR_PID ]; then
+            echo "Stopping QWAZR ..."
+            PID=`cat $QWAZR_PID`
+            kill $PID
+            echo "QWAZR stopped $PID ..."
+            rm $QWAZR_PID
+        else
+            echo "QWAZR is not running ..."
+        fi
+        ;;
+status)
+        if [ -f $QWAZR_PID ]; then
+            PID=`cat $QWAZR_PID`
+            if kill -0 $PID; then
+                echo "QWAZR pid: $PID"
+            else
+                echo "PID not valid: $PID"
+                rm $QWAZR_PID
+            fi
+        else
+            echo "QWAZR is not running ..."
+        fi
+        ;;
+restart|force-reload)
+        $0 stop
+        $0 start
+        ;;
+esac
+exit 0
