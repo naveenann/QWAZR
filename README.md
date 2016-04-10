@@ -1,9 +1,9 @@
 Welcome to QWAZR
 ----------------
 
-[![Join the chat at https://gitter.im/qwazr/QWAZR](https://badges.gitter.im/qwazr/QWAZR.svg)](https://gitter.im/qwazr/QWAZR?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 [![Build Status](https://travis-ci.org/qwazr/QWAZR.svg?branch=master)](https://travis-ci.org/qwazr/QWAZR)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.qwazr/QWAZR/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.qwazr/QWAZR)
+[![Join the chat at https://gitter.im/qwazr/QWAZR](https://badges.gitter.im/qwazr/QWAZR.svg)](https://gitter.im/qwazr/QWAZR)
 
 QWAZR is a an **application server** dedicated to scalable, failover, distributed projects.
 It can be used to create a web application or a **microservice** written in Java and/or Javascript.
