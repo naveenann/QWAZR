@@ -260,6 +260,16 @@
                 <artifactId>javax.ws.rs-api</artifactId>
                 <version>2.0.1</version>
             </dependency>
+            <dependency>
+                <groupId>io.atomix.copycat</groupId>
+                <artifactId>copycat-server</artifactId>
+                <version>1.0.0-rc7</version>
+            </dependency>
+            <dependency>
+                <groupId>io.atomix.copycat</groupId>
+                <artifactId>copycat-client</artifactId>
+                <version>1.0.0-rc7</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
