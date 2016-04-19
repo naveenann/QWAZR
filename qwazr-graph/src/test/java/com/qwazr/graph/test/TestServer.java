@@ -20,15 +20,23 @@ import com.qwazr.graph.GraphServer;
 import org.junit.runner.Description;
 import org.junit.runner.notification.RunListener;
 
+import javax.servlet.ServletException;
 import java.io.File;
+import java.io.IOException;
 
-public class ExecutionListener extends RunListener {
+public class TestServer  {
 
-	@Override
-	public void testRunStarted(Description description) throws Exception {
+	public static boolean serverStarted = false;
 
+	private static final String BASE_URL = "http://localhost:9091";
+
+	public static synchronized void startServer()
+			throws ReflectiveOperationException, ServletException, IOException {
+		if (serverStarted)
+			return;
 		final File dataDir = Files.createTempDir();
-		final String[] parameters = { "-d", dataDir.getAbsolutePath() };
-		GraphServer.main(parameters);
+		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
+		GraphServer.main(new String[] {});
+		serverStarted = true;
 	}
 }
