@@ -15,6 +15,8 @@
  */
 package com.qwazr.graph.test;
 
+import com.google.common.io.Files;
+import com.qwazr.graph.GraphServer;
 import com.qwazr.graph.model.GraphDefinition;
 import com.qwazr.graph.model.GraphDefinition.PropertyTypeEnum;
 import com.qwazr.graph.model.GraphNode;
@@ -27,10 +29,12 @@ import org.apache.http.entity.ContentType;
 import org.hamcrest.core.AnyOf;
 import org.hamcrest.core.Is;
 import org.junit.Assert;
+import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
@@ -43,6 +47,11 @@ public class FullTest {
 	public static final String TEST_BASE = "graph-test";
 	public static final int PRODUCT_NUMBER = 1000;
 	public static final int VISIT_NUMBER = 1000;
+
+	@BeforeClass
+	public static void startGraphServer() throws Exception {
+		TestServer.startServer();
+	}
 
 	@Test
 	public void test000CreateDatabase() throws IOException {
