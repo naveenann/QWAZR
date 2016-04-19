@@ -16,6 +16,7 @@
 package com.qwazr.search.index;
 
 import com.qwazr.utils.server.ServerException;
+import org.apache.commons.lang3.ClassUtils;
 import org.apache.lucene.search.ScoreDoc;
 
 import java.lang.reflect.Field;
@@ -40,7 +41,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 		private final Map<String, Field> fieldMap;
 
 		Builder(final int pos, final ScoreDoc scoreDoc, final float maxScore, final Class<T> objectClass,
-				Map<String, Field> fieldMap) {
+		        Map<String, Field> fieldMap) {
 			super(pos, scoreDoc, maxScore);
 			try {
 				this.record = objectClass.newInstance();
@@ -66,7 +67,7 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 					field.set(record, fieldValue);
 				else {
 					Object value = field.get(record);
-					if (value == null) {
+					if (value == null && Collection.class.isAssignableFrom(type)) {
 						value = type.newInstance();
 						field.set(record, value);
 					}
@@ -74,11 +75,12 @@ public class ResultDocumentObject<T> extends ResultDocumentAbstract {
 						((Collection) value).add(fieldValue);
 					} else
 						throw new UnsupportedOperationException(
-								"The field " + fieldName + " does not support this type: " + type);
+								"The field " + fieldName + " does not support this type: " + fieldValue.getClass());
 				}
 			} catch (IllegalAccessException | InstantiationException e) {
 				throw new ServerException(e);
 			}
 		}
 	}
+
 }
