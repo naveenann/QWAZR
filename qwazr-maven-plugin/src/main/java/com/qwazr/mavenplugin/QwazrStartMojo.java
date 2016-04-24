@@ -69,6 +69,9 @@ public class QwazrStartMojo extends AbstractMojo {
 	@Parameter(property = "qwazr.webservice_realm")
 	private String webservice_realm;
 
+	@Parameter(property = "qwazr.etc_dir")
+	private String etc_directory;
+
 	@Parameter(property = "qwazr.etc")
 	private List<String> etc;
 
@@ -105,6 +108,7 @@ public class QwazrStartMojo extends AbstractMojo {
 
 		private Launcher() {
 			setParameter(ServerConfiguration.VariablesEnum.QWAZR_DATA, data_directory);
+			setParameter(ServerConfiguration.VariablesEnum.QWAZR_ETC_DIR, etc_directory);
 			setParameter(ServerConfiguration.VariablesEnum.LISTEN_ADDR, listen_addr);
 			setParameter(ServerConfiguration.VariablesEnum.PUBLIC_ADDR, public_addr);
 			setParameter("WEBAPP_PORT", webapp_port);
@@ -153,13 +157,11 @@ public class QwazrStartMojo extends AbstractMojo {
 			return sb.toString();
 		}
 
-		private void startAsDaemon(final Log log) throws MojoFailureException, IOException, InterruptedException,
-						DependencyResolutionRequiredException {
+		private void startAsDaemon(final Log log)
+				throws MojoFailureException, IOException, InterruptedException, DependencyResolutionRequiredException {
 
 			final File javaBinFile = new File(System.getProperty("java.home"),
-							File.separator + "bin" + File.separator + (SystemUtils.IS_OS_WINDOWS ?
-											"java.exe" :
-											"java"));
+					File.separator + "bin" + File.separator + (SystemUtils.IS_OS_WINDOWS ? "java.exe" : "java"));
 			if (!javaBinFile.exists())
 				throw new MojoFailureException("Cannot find JAVA: " + javaBinFile);
 
@@ -167,7 +169,7 @@ public class QwazrStartMojo extends AbstractMojo {
 			parameters.put("CLASSPATH", classpath);
 
 			if (etc != null && !etc.isEmpty())
-				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etc, ","));
+				parameters.put(ServerConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etc, ","));
 
 			if (groups != null && !groups.isEmpty())
 				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_GROUPS.name(), StringUtils.join(groups, ","));
@@ -177,7 +179,7 @@ public class QwazrStartMojo extends AbstractMojo {
 
 			final String className = Qwazr.class.getCanonicalName();
 			final ProcessBuilder builder = new ProcessBuilder(javaBinFile.getCanonicalPath(), "-Dfile.encoding=UTF-8",
-							className);
+					className);
 
 			builder.environment().putAll(parameters);
 			builder.inheritIO();
@@ -187,8 +189,7 @@ public class QwazrStartMojo extends AbstractMojo {
 		}
 
 		private void startEmbedded(final Log log)
-						throws ParseException, InstantiationException, IllegalAccessException, ServletException,
-						IOException {
+				throws ParseException, InstantiationException, IllegalAccessException, ServletException, IOException {
 			Qwazr.start(new QwazrConfiguration(etc, services, groups, scheduler_max_threads));
 			log.info("QWAZR started (Embedded)");
 			try {
