@@ -17,6 +17,7 @@ package com.qwazr.search.annotations;
 
 import com.qwazr.search.field.FieldDefinition;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.index.DocValuesType;
 import org.apache.lucene.index.IndexOptions;
@@ -38,6 +39,10 @@ public @interface IndexField {
 
 	String queryAnalyzer() default StringUtils.EMPTY;
 
+	Class<? extends Analyzer> analyzerClass() default Analyzer.class;
+
+	Class<? extends Analyzer> queryAnalyzerClass() default Analyzer.class;
+
 	boolean tokenized() default false;
 
 	boolean stored() default false;
@@ -52,23 +57,28 @@ public @interface IndexField {
 
 	boolean omitNorms() default false;
 
-	FieldTypeNumeric numericType() default FieldTypeNumeric.NONE;
+	@Deprecated FieldTypeNumeric numericType() default FieldTypeNumeric.NONE;
 
 	IndexOptions indexOptions() default IndexOptions.NONE;
 
 	DocValuesType docValuesType() default DocValuesType.NONE;
 
+	int dimensionCount() default 0;
+
+	int dimensionNumBytes() default 0;
+
+	@Deprecated
 	enum FieldTypeNumeric {
 
 		NONE(null),
-		INT(FieldType.NumericType.INT),
-		FLOAT(FieldType.NumericType.FLOAT),
-		DOUBLE(FieldType.NumericType.DOUBLE),
-		LONG(FieldType.NumericType.LONG);
+		INT(FieldType.LegacyNumericType.INT),
+		FLOAT(FieldType.LegacyNumericType.FLOAT),
+		DOUBLE(FieldType.LegacyNumericType.DOUBLE),
+		LONG(FieldType.LegacyNumericType.LONG);
 
-		final public FieldType.NumericType type;
+		final public FieldType.LegacyNumericType type;
 
-		FieldTypeNumeric(FieldType.NumericType type) {
+		FieldTypeNumeric(FieldType.LegacyNumericType type) {
 			this.type = type;
 		}
 	}

@@ -67,7 +67,7 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 
 		File currentDataDir = getCurrentDataDir();
 		File currentTempDir = new File(currentDataDir, "tmp");
-		File currentEtcDir = new File(currentDataDir, "etc");
+		File currentEtcDir = getCurrentEtcDir();
 		TrackedDirectory etcTracker = new TrackedDirectory(currentEtcDir, serverConfiguration.etcFileFilter);
 		if (currentEtcDir.exists()) {
 			File log4jFile = new File(currentEtcDir, "log4j.properties");
@@ -136,12 +136,12 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 		return (IdentityManager) library;
 	}
 
-	private void startAll() throws ServletException, IllegalAccessException, ParseException, IOException,
-					InstantiationException {
+	private void startAll()
+			throws ServletException, IllegalAccessException, ParseException, IOException, InstantiationException {
 		super.start(true);
 		// Register the services
-		ClusterManager.INSTANCE.registerMe(new ClusterNodeJson(ClusterManager.INSTANCE.myAddress, services,
-						serverConfiguration.groups));
+		ClusterManager.INSTANCE.registerMe(
+				new ClusterNodeJson(ClusterManager.INSTANCE.myAddress, services, serverConfiguration.groups));
 
 	}
 
@@ -157,8 +157,7 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 	 * @throws ParseException
 	 */
 	public static synchronized void start(QwazrConfiguration configuration)
-					throws IOException, InstantiationException, ServletException, IllegalAccessException,
-					ParseException {
+			throws IOException, InstantiationException, ServletException, IllegalAccessException, ParseException {
 		if (qwazr != null)
 			throw new IllegalAccessException("QWAZR is already started");
 		qwazr = new Qwazr(configuration);

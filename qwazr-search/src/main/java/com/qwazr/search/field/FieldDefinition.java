@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.search.annotations.IndexField;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.document.FieldType;
 import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.index.DocValuesType;
@@ -40,9 +41,12 @@ public class FieldDefinition {
 	public final Boolean store_termvector_positions;
 	public final Boolean store_termvector_payloads;
 	public final Boolean omit_norms;
-	public final FieldType.NumericType numeric_type;
+	@Deprecated
+	public final FieldType.LegacyNumericType numeric_type;
 	public final IndexOptions index_options;
 	public final DocValuesType docvalues_type;
+	public final Integer dimension_count;
+	public final Integer dimension_num_bytes;
 
 	public enum Template {
 		NONE,
@@ -85,6 +89,8 @@ public class FieldDefinition {
 		numeric_type = null;
 		index_options = null;
 		docvalues_type = null;
+		dimension_count = null;
+		dimension_num_bytes = null;
 		template = null;
 	}
 
@@ -101,12 +107,18 @@ public class FieldDefinition {
 		numeric_type = builder.numeric_type;
 		index_options = builder.index_options;
 		docvalues_type = builder.docvalues_type;
+		dimension_count = builder.dimension_count;
+		dimension_num_bytes = builder.dimension_num_bytes;
 		template = builder.template;
 	}
 
 	public FieldDefinition(IndexField indexField) {
-		analyzer = indexField.analyzer();
-		query_analyzer = indexField.queryAnalyzer();
+		analyzer = indexField.analyzerClass() != Analyzer.class ?
+				indexField.analyzerClass().getName() :
+				indexField.analyzer();
+		query_analyzer = indexField.queryAnalyzerClass() != Analyzer.class ?
+				indexField.queryAnalyzerClass().getName() :
+				indexField.queryAnalyzer();
 		tokenized = indexField.tokenized();
 		stored = indexField.stored();
 		store_termvectors = indexField.storeTermVectors();
@@ -117,6 +129,8 @@ public class FieldDefinition {
 		numeric_type = indexField.numericType().type;
 		index_options = indexField.indexOptions();
 		docvalues_type = indexField.docValuesType();
+		dimension_count = indexField.dimensionCount();
+		dimension_num_bytes = indexField.dimensionNumBytes();
 		template = indexField.template();
 	}
 
@@ -162,9 +176,11 @@ public class FieldDefinition {
 		private Boolean store_termvector_positions = null;
 		private Boolean store_termvector_payloads = null;
 		private Boolean omit_norms = null;
-		private FieldType.NumericType numeric_type = null;
+		private FieldType.LegacyNumericType numeric_type = null;
 		private IndexOptions index_options = null;
 		private DocValuesType docvalues_type = null;
+		private Integer dimension_count = null;
+		private Integer dimension_num_bytes = null;
 		private Template template = null;
 
 		public Builder() {
@@ -219,7 +235,7 @@ public class FieldDefinition {
 			return this;
 		}
 
-		public Builder setNumericType(FieldType.NumericType numeric_type) {
+		public Builder setNumericType(FieldType.LegacyNumericType numeric_type) {
 			this.numeric_type = numeric_type;
 			return this;
 		}
@@ -231,6 +247,16 @@ public class FieldDefinition {
 
 		public Builder setDocValuesType(DocValuesType docvalues_type) {
 			this.docvalues_type = docvalues_type;
+			return this;
+		}
+
+		public Builder setDimensionCount(Integer dimension_count) {
+			this.dimension_count = dimension_count;
+			return this;
+		}
+
+		public Builder setDimensionNumBytes(Integer dimension_num_bytes) {
+			this.dimension_num_bytes = dimension_num_bytes;
 			return this;
 		}
 
