@@ -26,11 +26,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import static com.qwazr.utils.server.ServerConfiguration.VariablesEnum.QWAZR_ETC;
+
 public class QwazrConfiguration extends ServerConfiguration {
 
 	public enum VariablesEnum {
-
-		QWAZR_ETC,
 
 		QWAZR_SERVICES,
 
@@ -80,7 +80,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 	public final Integer scheduler_max_threads;
 
 	public QwazrConfiguration(Collection<String> etcs, Collection<ServiceEnum> services, Collection<String> groups,
-					Integer schedulerMaxThreads) {
+			Integer schedulerMaxThreads) {
 		this.etcFileFilter = buildEtcFileFilter(etcs);
 		this.services = buildServices(services);
 		this.groups = buildGroups(groups);
@@ -88,26 +88,27 @@ public class QwazrConfiguration extends ServerConfiguration {
 	}
 
 	QwazrConfiguration() {
-		this.etcFileFilter = buildEtcFileFilter(getPropertyOrEnv(null, VariablesEnum.QWAZR_ETC));
+		this.etcFileFilter = buildEtcFileFilter(getPropertyOrEnv(null, QWAZR_ETC));
 		this.services = buildServices(getPropertyOrEnv(null, VariablesEnum.QWAZR_SERVICES));
 		this.groups = buildGroups(getPropertyOrEnv(null, VariablesEnum.QWAZR_GROUPS));
 		this.scheduler_max_threads = buildSchedulerMaxThreads(
-						getPropertyOrEnv(null, VariablesEnum.QWAZR_SCHEDULER_MAX_THREADS));
+				getPropertyOrEnv(null, VariablesEnum.QWAZR_SCHEDULER_MAX_THREADS));
 	}
 
-	private static FileFilter buildEtcFileFilter(String etc) {
-		if (StringUtils.isEmpty(etc))
+	private static FileFilter buildEtcFileFilter(String etcFilter) {
+		if (StringUtils.isEmpty(etcFilter))
 			return FileFileFilter.FILE;
-		String[] array = StringUtils.split(etc, ',');
+		String[] array = StringUtils.split(etcFilter, ',');
 		if (array == null || array.length == 0)
 			return FileFileFilter.FILE;
 		return new AndFileFilter(FileFileFilter.FILE, new WildcardFileFilter(array));
 	}
 
-	private static FileFilter buildEtcFileFilter(Collection<String> etcs) {
-		if (etcs == null || etcs.isEmpty())
+	private static FileFilter buildEtcFileFilter(Collection<String> etcFilters) {
+		if (etcFilters == null || etcFilters.isEmpty())
 			return FileFileFilter.FILE;
-		return new AndFileFilter(FileFileFilter.FILE, new WildcardFileFilter(etcs.toArray(new String[etcs.size()])));
+		return new AndFileFilter(FileFileFilter.FILE,
+				new WildcardFileFilter(etcFilters.toArray(new String[etcFilters.size()])));
 	}
 
 	private static Set<ServiceEnum> buildServices(Collection<ServiceEnum> serviceCollection) {
