@@ -182,10 +182,10 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 		}
 	}
 
-	public static void inject(Object object) {
+	final public static void inject(final Object object) {
 		if (object == null)
 			return;
-		AnnotationsUtils.injectRecursive(object, new QwazrInjector(object));
+		AnnotationsUtils.browseFieldsRecursive(object.getClass(), new QwazrInjector(object));
 	}
 
 }
