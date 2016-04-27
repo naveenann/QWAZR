@@ -25,13 +25,16 @@ import java.io.IOException;
 public class IndexSettingsDefinition {
 
 	final public String similarity_class;
+	final public RemoteIndex[] master;
 
 	public IndexSettingsDefinition() {
 		similarity_class = null;
+		master = null;
 	}
 
-	public IndexSettingsDefinition(String similarity_class) {
+	public IndexSettingsDefinition(final String similarity_class, final RemoteIndex... masters) {
 		this.similarity_class = similarity_class;
+		this.master = masters;
 	}
 
 	final static IndexSettingsDefinition EMPTY = new IndexSettingsDefinition();

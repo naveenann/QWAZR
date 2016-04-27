@@ -15,6 +15,7 @@
  */
 package com.qwazr.search.annotations;
 
+import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.utils.AnnotationsUtils;
@@ -30,6 +31,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
@@ -47,6 +49,8 @@ public class AnnotatedIndexService<T> {
 
 	protected final String similarityClass;
 
+	protected final RemoteIndex[] masters;
+
 	private final Map<String, IndexField> indexFieldMap;
 
 	private final Map<String, Field> fieldMap;
@@ -57,19 +61,20 @@ public class AnnotatedIndexService<T> {
 	 * @param indexService         the IndexServiceInterface to use
 	 * @param indexDefinitionClass an annotated class
 	 */
-	public AnnotatedIndexService(IndexServiceInterface indexService, Class<T> indexDefinitionClass) {
+	public AnnotatedIndexService(IndexServiceInterface indexService, Class<T> indexDefinitionClass)
+			throws URISyntaxException {
 		Objects.requireNonNull(indexService, "The indexService parameter is null");
 		Objects.requireNonNull(indexDefinitionClass, "The indexDefinition parameter is null");
 		this.indexService = indexService;
-		this.annotatedService = indexService instanceof AnnotatedServiceInterface ?
-		                        (AnnotatedServiceInterface) indexService :
-		                        null;
+		this.annotatedService =
+				indexService instanceof AnnotatedServiceInterface ? (AnnotatedServiceInterface) indexService : null;
 		this.indexDefinitionClass = indexDefinitionClass;
 		Index index = indexDefinitionClass.getAnnotation(Index.class);
 		Objects.requireNonNull(index, "This class does not declare any Index annotation: " + indexDefinitionClass);
 		schemaName = index.schema();
 		indexName = index.name();
 		similarityClass = index.similarityClass();
+		masters = RemoteIndex.build(index.replicationMaster());
 		fieldMap = new LinkedHashMap<>();
 		indexFieldMap = new LinkedHashMap<>();
 		AnnotationsUtils.browseFieldsRecursive(indexDefinitionClass, field -> {
@@ -141,11 +146,9 @@ public class AnnotatedIndexService<T> {
 	 *
 	 * @return the index status
 	 */
-	public IndexStatus createUpdateIndex() {
+	public IndexStatus createUpdateIndex() throws URISyntaxException {
 		checkParameters();
-		if (StringUtils.isEmpty(similarityClass))
-			return indexService.createUpdateIndex(schemaName, indexName);
-		IndexSettingsDefinition settings = new IndexSettingsDefinition(similarityClass);
+		IndexSettingsDefinition settings = new IndexSettingsDefinition(similarityClass, masters);
 		return indexService.createUpdateIndex(schemaName, indexName, settings);
 	}
 
@@ -245,6 +248,16 @@ public class AnnotatedIndexService<T> {
 		return indexService.getIndex(schemaName, indexName);
 	}
 
+	public LinkedHashMap<String, FieldDefinition> getFields() {
+		checkParameters();
+		return indexService.getFields(schemaName, indexName);
+	}
+
+	public LinkedHashMap<String, AnalyzerDefinition> getAnalyzers() {
+		checkParameters();
+		return indexService.getAnalyzers(schemaName, indexName);
+	}
+
 	/**
 	 * Execute a search query
 	 *
@@ -274,6 +287,13 @@ public class AnnotatedIndexService<T> {
 		return indexService.searchQuery(schemaName, indexName, query, true);
 	}
 
+	public void replicationCheck() {
+		Response response = indexService.replicationCheck(schemaName, indexName);
+		Objects.requireNonNull(response, "The response is null");
+		if (response.getStatus() != 200)
+			throw new WebApplicationException(response);
+	}
+
 	/**
 	 * Build a new Map by reading the IndexField annotations
 	 *
@@ -282,17 +302,14 @@ public class AnnotatedIndexService<T> {
 	 */
 	private Map<String, Object> newMap(final T row) {
 		final Map<String, Object> map = new HashMap<>();
-		fieldMap.forEach(new BiConsumer<String, Field>() {
-			@Override
-			public void accept(String name, Field field) {
-				try {
-					Object value = field.get(row);
-					if (value == null)
-						return;
-					map.put(name, value);
-				} catch (IllegalAccessException e) {
-					throw new RuntimeException(e);
-				}
+		fieldMap.forEach((name, field) -> {
+			try {
+				Object value = field.get(row);
+				if (value == null)
+					return;
+				map.put(name, value);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
 			}
 		});
 		return map.isEmpty() ? null : map;
@@ -316,17 +333,14 @@ public class AnnotatedIndexService<T> {
 		if (fields == null)
 			return null;
 		final T record = indexDefinitionClass.newInstance();
-		fields.forEach(new BiConsumer<String, Object>() {
-			@Override
-			public void accept(String fieldName, Object fieldValue) {
-				Field field = fieldMap.get(fieldName);
-				if (field == null)
-					return;
-				try {
-					field.set(record, fieldValue);
-				} catch (IllegalAccessException e) {
-					throw new RuntimeException(e);
-				}
+		fields.forEach((fieldName, fieldValue) -> {
+			Field field = fieldMap.get(fieldName);
+			if (field == null)
+				return;
+			try {
+				field.set(record, fieldValue);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
 			}
 		});
 		return record;

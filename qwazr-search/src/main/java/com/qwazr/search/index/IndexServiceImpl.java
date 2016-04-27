@@ -20,13 +20,18 @@ import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.TermQuery;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.replicator.SessionToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.*;
@@ -50,6 +55,9 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 
 	@Context
 	private HttpServletRequest request;
+
+	@Context
+	private HttpServletResponse response;
 
 	/**
 	 * Check the right permissions
@@ -193,9 +201,8 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			final String text, final boolean index) throws ServerException, IOException {
 		checkRight(schema_name);
 		IndexInstance indexInstance = IndexManager.INSTANCE.get(schema_name).get(index_name);
-		Analyzer analyzer = index ?
-		                    indexInstance.getIndexAnalyzer(field_name) :
-		                    indexInstance.getQueryAnalyzer(field_name);
+		Analyzer analyzer =
+				index ? indexInstance.getIndexAnalyzer(field_name) : indexInstance.getQueryAnalyzer(field_name);
 		if (analyzer == null)
 			throw new ServerException("No analyzer found for " + field_name);
 		return TermDefinition.buildTermList(analyzer, field_name, text);
@@ -270,8 +277,8 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 			final String analyzer_name) {
 		try {
 			checkRight(schema_name);
-			Map<String, AnalyzerDefinition> analyzerMap = IndexManager.INSTANCE.get(schema_name).get(index_name)
-					.getAnalyzers();
+			Map<String, AnalyzerDefinition> analyzerMap =
+					IndexManager.INSTANCE.get(schema_name).get(index_name).getAnalyzers();
 			AnalyzerDefinition analyzerDef = (analyzerMap != null) ? analyzerMap.get(analyzer_name) : null;
 			if (analyzerDef == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "Analyzer not found: " + analyzer_name);
@@ -491,6 +498,67 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 	}
 
 	@Override
+	final public InputStream replicationObtain(final String schema_name, final String index_name,
+			final String sessionID, final String source, String fileName) {
+		try {
+			checkRight(null);
+			return IndexManager.INSTANCE.get(schema_name).get(index_name).getReplicator()
+					.obtainFile(sessionID, source, fileName);
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public Response replicationRelease(final String schema_name, final String index_name,
+			final String sessionID) {
+		try {
+			checkRight(null);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).getReplicator().release(sessionID);
+			return Response.ok().build();
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public Response replicationUpdate(final String schema_name, final String index_name,
+			final String currentVersion) {
+		try {
+			checkRight(null);
+			SessionToken token = IndexManager.INSTANCE.get(schema_name).get(index_name).getReplicator()
+					.checkForUpdate(currentVersion);
+			if (token == null)
+				return Response.noContent().build();
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			DataOutputStream dataOutput = new DataOutputStream(outputStream);
+			token.serialize(dataOutput);
+			return Response.ok(outputStream.toByteArray()).build();
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
+	final public Response replicationCheck(final String schema_name, final String index_name) {
+		try {
+			checkRight(null);
+			IndexManager.INSTANCE.get(schema_name).get(index_name).replicationCheck();
+			return Response.ok().build();
+		} catch (Exception e) {
+			if (logger.isWarnEnabled())
+				logger.warn(e.getMessage(), e);
+			throw ServerException.getJsonException(e);
+		}
+	}
+
+	@Override
 	final public Response deleteAll(final String schema_name, final String index_name) {
 		try {
 			checkRight(schema_name);
@@ -518,8 +586,8 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 		try {
 			checkRight(schema_name);
 			IndexInstance index = IndexManager.INSTANCE.get(schema_name).get(index_name);
-			ResultDefinition result = index
-					.search(getDocumentQuery(index, id), ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
+			ResultDefinition result =
+					index.search(getDocumentQuery(index, id), ResultDocumentBuilder.MapBuilderFactory.INSTANCE);
 			if (result != null) {
 				List<ResultDocumentMap> docs = result.getDocuments();
 				if (docs != null && !docs.isEmpty())
@@ -580,8 +648,7 @@ class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceInterfa
 		try {
 			checkRight(schema_name);
 			final ResultDocumentBuilder.ObjectBuilderFactory documentBuilerFactory =
-					ResultDocumentBuilder.ObjectBuilderFactory
-							.createFactory(fields, indexDefinitionClass);
+					ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass);
 			if ("*".equals(index_name))
 				return (ResultDefinition.WithObject<T>) IndexManager.INSTANCE.get(schema_name)
 						.search(query, documentBuilerFactory);
