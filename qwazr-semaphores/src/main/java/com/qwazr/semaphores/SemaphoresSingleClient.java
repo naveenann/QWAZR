@@ -17,17 +17,17 @@ package com.qwazr.semaphores;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.json.client.JsonClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import org.apache.http.client.fluent.Request;
 
-import java.net.URISyntaxException;
 import java.util.Set;
 
 public class SemaphoresSingleClient extends JsonClientAbstract implements SemaphoresServiceInterface {
 
 	private final static String SCRIPT_PREFIX_SEMAPHORES = "/semaphores/";
 
-	SemaphoresSingleClient(String url, Integer msTimeOut) throws URISyntaxException {
-		super(url, msTimeOut);
+	SemaphoresSingleClient(final RemoteService remote) {
+		super(remote);
 	}
 
 	public final static TypeReference<Set<String>> SetStringTypeRef = new TypeReference<Set<String>>() {
@@ -42,8 +42,8 @@ public class SemaphoresSingleClient extends JsonClientAbstract implements Semaph
 
 	@Override
 	public Set<String> getSemaphoreOwners(String semaphore_id, Boolean local, String group, Integer msTimeout) {
-		UBuilder uriBuilder = new UBuilder(SCRIPT_PREFIX_SEMAPHORES, semaphore_id)
-				.setParameters(local, group, msTimeout);
+		UBuilder uriBuilder =
+				new UBuilder(SCRIPT_PREFIX_SEMAPHORES, semaphore_id).setParameters(local, group, msTimeout);
 		Request request = Request.Get(uriBuilder.build());
 		return commonServiceRequest(request, null, msTimeout, SetStringTypeRef, 200);
 	}

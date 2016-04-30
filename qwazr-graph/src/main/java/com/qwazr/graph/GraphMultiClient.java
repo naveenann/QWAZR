@@ -17,6 +17,7 @@ package com.qwazr.graph;
 
 import com.qwazr.graph.model.*;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
 import com.qwazr.utils.server.WebAppExceptionHolder;
 import com.qwazr.utils.threads.ThreadUtils;
@@ -32,13 +33,12 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 
-public class GraphMultiClient extends JsonMultiClientAbstract<String, GraphSingleClient>
-		implements GraphServiceInterface {
+public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient> implements GraphServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(GraphMultiClient.class);
 
-	GraphMultiClient(ExecutorService executor, String[] urls, Integer msTimeOut) throws URISyntaxException {
-		super(executor, new GraphSingleClient[urls.length], urls, msTimeOut);
+	GraphMultiClient(ExecutorService executor, RemoteService... remote) throws URISyntaxException {
+		super(executor, new GraphSingleClient[remote.length], remote);
 	}
 
 	@Override
@@ -195,8 +195,8 @@ public class GraphMultiClient extends JsonMultiClientAbstract<String, GraphSingl
 	}
 
 	@Override
-	protected GraphSingleClient newClient(String url, Integer msTimeOut) throws URISyntaxException {
-		return new GraphSingleClient(url, msTimeOut);
+	protected GraphSingleClient newClient(RemoteService remote) {
+		return new GraphSingleClient(remote);
 	}
 
 }
