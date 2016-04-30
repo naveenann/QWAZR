@@ -54,7 +54,7 @@
         <httpclient.version>4.5.2</httpclient.version>
         <httpcore.version>4.4.4</httpcore.version>
         <jersey.version>2.22.2</jersey.version>
-        <jackson.version>2.7.3</jackson.version>
+        <jackson.version>2.7.4</jackson.version>
         <surefire.version>2.19.1</surefire.version>
         <poi.version>3.14</poi.version>
         <htmlunit.version>2.21</htmlunit.version>
@@ -233,12 +233,12 @@
             <dependency>
                 <groupId>org.apache.pdfbox</groupId>
                 <artifactId>pdfbox-ant</artifactId>
-                <version>1.8.11</version>
+                <version>1.8.12</version>
             </dependency>
             <dependency>
                 <groupId>org.roaringbitmap</groupId>
                 <artifactId>RoaringBitmap</artifactId>
-                <version>0.6.14</version>
+                <version>0.6.15</version>
             </dependency>
             <dependency>
                 <groupId>net.sourceforge.htmlunit</groupId>

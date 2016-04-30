@@ -17,6 +17,7 @@ package com.qwazr.semaphores;
 
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
 import com.qwazr.utils.threads.ThreadUtils;
 import com.qwazr.utils.threads.ThreadUtils.ProcedureExceptionCatcher;
@@ -31,20 +32,20 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ExecutorService;
 
-public class SemaphoresMultiClient extends JsonMultiClientAbstract<String, SemaphoresServiceInterface>
+public class SemaphoresMultiClient extends JsonMultiClientAbstract<SemaphoresServiceInterface>
 		implements SemaphoresServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(SemaphoresMultiClient.class);
 
-	SemaphoresMultiClient(ExecutorService executor, String[] urls, Integer msTimeout) throws URISyntaxException {
-		super(executor, new SemaphoresServiceInterface[urls.length], urls, msTimeout);
+	SemaphoresMultiClient(ExecutorService executor, RemoteService... remotes) throws URISyntaxException {
+		super(executor, new SemaphoresServiceInterface[remotes.length], remotes);
 	}
 
 	@Override
-	protected SemaphoresServiceInterface newClient(String url, Integer msTimeOut) throws URISyntaxException {
-		if (ClusterManager.INSTANCE.isMe(url))
+	protected SemaphoresServiceInterface newClient(final RemoteService remote) {
+		if (ClusterManager.INSTANCE.isMe(remote.serverAddress))
 			return new SemaphoresServiceImpl();
-		return new SemaphoresSingleClient(url, msTimeOut);
+		return new SemaphoresSingleClient(remote);
 	}
 
 	@Override

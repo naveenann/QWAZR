@@ -18,10 +18,10 @@ package com.qwazr.graph;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.graph.model.*;
 import com.qwazr.utils.json.client.JsonClientAbstract;
+import com.qwazr.utils.server.RemoteService;
 import org.apache.http.client.fluent.Request;
 
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
@@ -31,8 +31,8 @@ public class GraphSingleClient extends JsonClientAbstract implements GraphServic
 
 	private final static String GRAPH_PREFIX = "/graph/";
 
-	GraphSingleClient(String url, int msTimeOut) throws URISyntaxException {
-		super(url, msTimeOut);
+	GraphSingleClient(RemoteService remote) {
+		super(remote);
 	}
 
 	public final static TypeReference<TreeSet<String>> SetStringTypeRef = new TypeReference<TreeSet<String>>() {

@@ -23,6 +23,7 @@ import com.qwazr.database.store.Tables;
 import com.qwazr.graph.model.GraphDefinition;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.json.DirectoryJsonManager;
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 
@@ -144,11 +145,11 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 		}
 	}
 
-	GraphMultiClient getMultiClient(int msTimeOut) throws URISyntaxException {
+	GraphMultiClient getMultiClient() throws URISyntaxException {
 		ClusterMultiClient clusterClient = ClusterManager.INSTANCE.getClusterClient();
 		if (clusterClient == null)
 			return null;
-		return new GraphMultiClient(executorService, clusterClient.getActiveNodesByService(SERVICE_NAME_GRAPH, null),
-				msTimeOut);
+		return new GraphMultiClient(executorService,
+				RemoteService.build(clusterClient.getActiveNodesByService(SERVICE_NAME_GRAPH, null)));
 	}
 }
