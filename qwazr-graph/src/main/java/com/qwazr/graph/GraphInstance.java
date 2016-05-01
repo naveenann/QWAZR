@@ -109,7 +109,6 @@ public class GraphInstance {
 			for (Map.Entry<String, ColumnDefinition> entry : columnDefinitions.entrySet())
 				if (!existingColumns.containsKey(entry.getKey()))
 					table.addColumn(entry.getKey(), entry.getValue());
-			table.commit();
 		} catch (Exception e) {
 			throw ServerException.getServerException(e);
 		}
@@ -179,7 +178,6 @@ public class GraphInstance {
 		}
 
 		createUpdate(table, graphDef, node_id, node);
-		table.commit();
 	}
 
 	/**
@@ -215,7 +213,6 @@ public class GraphInstance {
 
 		for (Map.Entry<String, GraphNode> entry : nodes.entrySet())
 			createUpdate(table, graphDef, entry.getKey(), entry.getValue());
-		table.commit();
 
 	}
 
@@ -367,7 +364,6 @@ public class GraphInstance {
 	void deleteNode(String node_id) throws ServerException, IOException, DatabaseException {
 		if (!table.deleteRow(node_id))
 			throw new ServerException(Status.NOT_FOUND, "Node not found: " + node_id);
-		table.commit();
 	}
 
 	/**
@@ -448,8 +444,8 @@ public class GraphInstance {
 			String field = entry.getKey();
 			Map<String, LongCounter> facets = entry.getValue();
 			Double weight = request.getEdgeWeight(field.substring(FIELD_PREFIX_EDGE.length()));
-			ScoreThread scoreThread = new ScoreThread(facets, nodeScoreMap, weight, filterBitset, boostFields,
-					result.context);
+			ScoreThread scoreThread =
+					new ScoreThread(facets, nodeScoreMap, weight, filterBitset, boostFields, result.context);
 			scoreThreads.add(scoreThread);
 		}
 		try {
