@@ -42,7 +42,7 @@ public class GraphServer extends AbstractServer<ServerConfiguration> {
 	@Override
 	public ServletApplication load(Collection<Class<? extends ServiceInterface>> services) throws IOException {
 		File dataDir = getCurrentDataDir();
-		services.add(ClusterManager.load(executorService, getWebServicePublicAddress(), null));
+		services.add(ClusterManager.load(executorService, udpServer, getWebServicePublicAddress(), null));
 		services.add(GraphManager.load(executorService, dataDir));
 		return null;
 	}
