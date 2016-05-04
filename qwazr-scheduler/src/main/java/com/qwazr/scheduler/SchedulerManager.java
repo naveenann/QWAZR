@@ -80,7 +80,7 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		mapLock = new LockUtils.ReadWriteLock();
 		schedulerMap = null;
 		schedulerFileMap = new HashMap<>();
-		schedulerStatusMap = new HashMap<String, List<ScriptRunStatus>>();
+		schedulerStatusMap = new HashMap<>();
 		DirectSchedulerFactory schedulerFactory = DirectSchedulerFactory.getInstance();
 		schedulerFactory.createVolatileScheduler(maxThreads);
 		globalScheduler = schedulerFactory.getScheduler();
@@ -180,12 +180,12 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		if (!"json".equals(extension))
 			return;
 		switch (changeReason) {
-		case UPDATED:
-			loadSchedulerConf(jsonFile);
-			break;
-		case DELETED:
-			unloadSchedulerConf(jsonFile);
-			break;
+			case UPDATED:
+				loadSchedulerConf(jsonFile);
+				break;
+			case DELETED:
+				unloadSchedulerConf(jsonFile);
+				break;
 		}
 	}
 

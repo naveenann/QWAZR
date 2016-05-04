@@ -75,7 +75,7 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 				PropertyConfigurator.configureAndWatch(log4jFile.getAbsolutePath(), 60000);
 		}
 
-		ClusterManager.load(executorService, getWebServicePublicAddress(), serverConfiguration.groups);
+		ClusterManager.load(executorService, udpServer, getWebServicePublicAddress(), serverConfiguration.groups);
 
 		ClassLoaderManager.load(currentDataDir, Thread.currentThread());
 

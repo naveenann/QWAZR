@@ -37,6 +37,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 		QWAZR_GROUPS,
 
 		QWAZR_SCHEDULER_MAX_THREADS
+
 	}
 
 	public enum ServiceEnum {
