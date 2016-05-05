@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.Executors;
@@ -55,7 +56,7 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 
 	final Collection<Class<? extends ServiceInterface>> services = new ArrayList<>();
 
-	private Qwazr(QwazrConfiguration configuration) {
+	private Qwazr(QwazrConfiguration configuration) throws UnknownHostException {
 		super(Executors.newCachedThreadPool(), configuration);
 	}
 
