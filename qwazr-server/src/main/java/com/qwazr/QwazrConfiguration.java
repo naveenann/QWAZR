@@ -92,8 +92,8 @@ public class QwazrConfiguration extends ServerConfiguration {
 		this.etcFileFilter = buildEtcFileFilter(getPropertyOrEnv(null, QWAZR_ETC));
 		this.services = buildServices(getPropertyOrEnv(null, VariablesEnum.QWAZR_SERVICES));
 		this.groups = buildGroups(getPropertyOrEnv(null, VariablesEnum.QWAZR_GROUPS));
-		this.scheduler_max_threads = buildSchedulerMaxThreads(
-				getPropertyOrEnv(null, VariablesEnum.QWAZR_SCHEDULER_MAX_THREADS));
+		this.scheduler_max_threads =
+				buildSchedulerMaxThreads(getPropertyOrEnv(null, VariablesEnum.QWAZR_SCHEDULER_MAX_THREADS));
 	}
 
 	private static FileFilter buildEtcFileFilter(String etcFilter) {

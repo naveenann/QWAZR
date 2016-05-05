@@ -25,12 +25,13 @@ import io.undertow.security.idm.IdentityManager;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.concurrent.Executors;
 
 public class GraphServer extends AbstractServer<ServerConfiguration> {
 
-	private GraphServer() {
+	private GraphServer() throws UnknownHostException {
 		super(Executors.newCachedThreadPool(), new ServerConfiguration());
 	}
 
