@@ -17,7 +17,6 @@ package com.qwazr;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.cluster.service.ClusterNodeJson;
 import com.qwazr.cluster.service.ClusterServiceImpl;
 import com.qwazr.compiler.CompilerManager;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
@@ -140,9 +139,7 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 			throws ServletException, IllegalAccessException, ParseException, IOException, InstantiationException {
 		super.start(true);
 		// Register the services
-		ClusterManager.INSTANCE.registerMe(
-				new ClusterNodeJson(ClusterManager.INSTANCE.myAddress, services, serverConfiguration.groups));
-
+		ClusterManager.INSTANCE.registerMe(services);
 	}
 
 	static Qwazr qwazr = null;

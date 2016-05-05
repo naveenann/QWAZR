@@ -15,7 +15,6 @@
  */
 package com.qwazr.graph;
 
-import com.qwazr.cluster.client.ClusterMultiClient;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.database.store.DatabaseException;
 import com.qwazr.database.store.Table;
@@ -146,10 +145,7 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 	}
 
 	GraphMultiClient getMultiClient() throws URISyntaxException {
-		ClusterMultiClient clusterClient = ClusterManager.INSTANCE.getClusterClient();
-		if (clusterClient == null)
-			return null;
 		return new GraphMultiClient(executorService,
-				RemoteService.build(clusterClient.getActiveNodesByService(SERVICE_NAME_GRAPH, null)));
+				RemoteService.build(ClusterManager.INSTANCE.getNodesByGroupByService(SERVICE_NAME_GRAPH, null)));
 	}
 }
