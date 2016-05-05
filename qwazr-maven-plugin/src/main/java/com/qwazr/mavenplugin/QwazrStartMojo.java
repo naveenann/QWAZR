@@ -57,11 +57,17 @@ public class QwazrStartMojo extends AbstractMojo {
 	@Parameter(property = "qwazr.public_addr")
 	private String public_addr;
 
+	@Parameter(property = "qwazr.udp_address")
+	private String udp_address;
+
 	@Parameter(property = "qwazr.webapp_port")
 	private Integer webapp_port;
 
 	@Parameter(property = "qwazr.webservice_port")
 	private Integer webservice_port;
+
+	@Parameter(property = "qwazr.udp_port")
+	private Integer udp_port;
 
 	@Parameter(property = "qwazr.webapp_realm")
 	private String webapp_realm;
@@ -115,6 +121,8 @@ public class QwazrStartMojo extends AbstractMojo {
 			setParameter("WEBSERVICE_PORT", webservice_port);
 			setParameter("WEBAPP_REALM", webapp_realm);
 			setParameter("WEBSERVICE_REALM", webservice_realm);
+			setParameter("UDP_ADDRESS", udp_address);
+			setParameter("UDP_PORT", udp_port);
 		}
 
 		private void setParameter(Enum<?> key, Object value) {
@@ -178,8 +186,8 @@ public class QwazrStartMojo extends AbstractMojo {
 				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_SERVICES.name(), StringUtils.join(services, ","));
 
 			final String className = Qwazr.class.getCanonicalName();
-			final ProcessBuilder builder = new ProcessBuilder(javaBinFile.getCanonicalPath(), "-Dfile.encoding=UTF-8",
-					className);
+			final ProcessBuilder builder =
+					new ProcessBuilder(javaBinFile.getCanonicalPath(), "-Dfile.encoding=UTF-8", className);
 
 			builder.environment().putAll(parameters);
 			builder.inheritIO();
