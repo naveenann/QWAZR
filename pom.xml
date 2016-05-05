@@ -58,6 +58,7 @@
         <surefire.version>2.19.1</surefire.version>
         <poi.version>3.14</poi.version>
         <htmlunit.version>2.21</htmlunit.version>
+        <lucene.version>6.0.0</lucene.version>
     </properties>
 
     <modules>
@@ -71,7 +72,6 @@
         <module>qwazr-library</module>
         <module>qwazr-maven-plugin</module>
         <module>qwazr-scripts</module>
-        <module>qwazr-semaphores</module>
         <module>qwazr-scheduler</module>
         <module>qwazr-search</module>
         <module>qwazr-utils</module>
@@ -272,6 +272,13 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+    </dependencies>
 
     <build>
         <finalName>${project.artifactId}-${project.version}</finalName>

@@ -131,8 +131,8 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 			CronScheduleBuilder cronBuilder = CronScheduleBuilder.cronSchedule(scheduler.cron);
 			if (!StringUtils.isEmpty(scheduler.time_zone))
 				cronBuilder.inTimeZone(TimeZone.getTimeZone(scheduler.time_zone));
-			TriggerBuilder<CronTrigger> triggerBuilder = TriggerBuilder.newTrigger().withIdentity(scheduler_name)
-					.withSchedule(cronBuilder).forJob(job);
+			TriggerBuilder<CronTrigger> triggerBuilder =
+					TriggerBuilder.newTrigger().withIdentity(scheduler_name).withSchedule(cronBuilder).forJob(job);
 			CronTrigger trigger = triggerBuilder.build();
 			synchronized (globalScheduler) {
 				globalScheduler.scheduleJob(job, trigger);
@@ -147,16 +147,13 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 	List<ScriptRunStatus> executeScheduler(String scheduler_name, SchedulerDefinition scheduler)
 			throws IOException, ServerException, URISyntaxException {
 		ClusterManager clusterManager = ClusterManager.INSTANCE;
-		if (clusterManager.isCluster()) {
-			if (!clusterManager.isLeader(SERVICE_NAME_SCHEDULER, null))
-				return Collections.emptyList();
-		}
+		if (!clusterManager.isLeader(SERVICE_NAME_SCHEDULER, scheduler.group))
+			return Collections.emptyList();
 		if (logger.isInfoEnabled())
 			logger.info("execute " + scheduler_name + " / " + scheduler.script_path);
 		long startTime = System.currentTimeMillis();
-		List<ScriptRunStatus> statusList = ScriptServiceInterface.getClient(false, scheduler.group, null)
-				.runScriptVariables(scheduler.script_path, false, scheduler.group, scheduler.timeout, scheduler.rule,
-						scheduler.variables);
+		List<ScriptRunStatus> statusList = ScriptServiceInterface.getClient(false, scheduler.group)
+				.runScriptVariables(scheduler.script_path, scheduler.group, scheduler.rule, scheduler.variables);
 		if (statusList != null) {
 			statusList = ScriptRunStatus.cloneSchedulerResultList(statusList, startTime);
 			statusMapLock.w.lock();
@@ -180,19 +177,19 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		if (!"json".equals(extension))
 			return;
 		switch (changeReason) {
-			case UPDATED:
-				loadSchedulerConf(jsonFile);
-				break;
-			case DELETED:
-				unloadSchedulerConf(jsonFile);
-				break;
+		case UPDATED:
+			loadSchedulerConf(jsonFile);
+			break;
+		case DELETED:
+			unloadSchedulerConf(jsonFile);
+			break;
 		}
 	}
 
 	private void loadSchedulerConf(File jsonFile) {
 		try {
-			final SchedulerConfiguration schedulerConfiguration = JsonMapper.MAPPER
-					.readValue(jsonFile, SchedulerConfiguration.class);
+			final SchedulerConfiguration schedulerConfiguration =
+					JsonMapper.MAPPER.readValue(jsonFile, SchedulerConfiguration.class);
 
 			if (schedulerConfiguration == null || schedulerConfiguration.schedulers == null) {
 				unloadSchedulerConf(jsonFile);
