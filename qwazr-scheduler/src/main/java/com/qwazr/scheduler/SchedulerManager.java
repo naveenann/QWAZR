@@ -103,7 +103,8 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		final Map<String, SchedulerDefinition> scMap = schedulerMap;
 		if (scMap == null)
 			return map;
-		scMap.forEach((name, schedulerDef) -> map.put(name, ClusterManager.INSTANCE.myAddress + "/schedulers/" + name));
+		scMap.forEach((name, schedulerDef) -> map
+				.put(name, ClusterManager.INSTANCE.me.httpAddressKey + "/schedulers/" + name));
 		return map;
 	}
 
@@ -177,12 +178,12 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		if (!"json".equals(extension))
 			return;
 		switch (changeReason) {
-		case UPDATED:
-			loadSchedulerConf(jsonFile);
-			break;
-		case DELETED:
-			unloadSchedulerConf(jsonFile);
-			break;
+			case UPDATED:
+				loadSchedulerConf(jsonFile);
+				break;
+			case DELETED:
+				unloadSchedulerConf(jsonFile);
+				break;
 		}
 	}
 
