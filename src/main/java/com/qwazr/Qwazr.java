@@ -29,7 +29,6 @@ import com.qwazr.library.LibraryServiceImpl;
 import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.search.index.IndexManager;
-import com.qwazr.semaphores.SemaphoresManager;
 import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.file.TrackedDirectory;
 import com.qwazr.utils.server.AbstractServer;
@@ -93,9 +92,6 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 			servletApplication = WebappManager.getInstance().getServletApplication();
 		} else
 			servletApplication = null;
-
-		if (QwazrConfiguration.ServiceEnum.semaphores.isActive(serverConfiguration))
-			services.add(SemaphoresManager.load(executorService));
 
 		if (QwazrConfiguration.ServiceEnum.scripts.isActive(serverConfiguration))
 			services.add(ScriptManager.load(executorService, currentDataDir));
