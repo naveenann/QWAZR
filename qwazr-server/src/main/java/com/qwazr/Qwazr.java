@@ -74,15 +74,15 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 				PropertyConfigurator.configureAndWatch(log4jFile.getAbsolutePath(), 60000);
 		}
 
-		ClusterManager.load(executorService, udpServer, getWebServicePublicAddress(), serverConfiguration.groups);
-
 		ClassLoaderManager.load(currentDataDir, Thread.currentThread());
+
+		services.add(WelcomeServiceImpl.class);
+
+		services.add(ClusterManager
+				.load(executorService, udpServer, getWebServicePublicAddress(), serverConfiguration.groups));
 
 		if (QwazrConfiguration.ServiceEnum.compiler.isActive(serverConfiguration))
 			services.add(CompilerManager.load(executorService, currentDataDir));
-
-		services.add(WelcomeServiceImpl.class);
-		services.add(ClusterServiceImpl.class);
 
 		if (QwazrConfiguration.ServiceEnum.extractor.isActive(serverConfiguration))
 			services.add(ExtractorManager.load());
@@ -136,7 +136,7 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 			throws ServletException, IllegalAccessException, ParseException, IOException, InstantiationException {
 		super.start(true);
 		// Register the services
-		ClusterManager.INSTANCE.registerMe(services);
+		ClusterManager.INSTANCE.joinCluster(services, null);
 	}
 
 	static Qwazr qwazr = null;
