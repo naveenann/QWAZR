@@ -16,6 +16,7 @@
 package com.qwazr.compiler;
 
 import com.qwazr.classloader.ClassLoaderManager;
+import com.qwazr.utils.server.ServerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,13 +33,13 @@ public class CompilerManager {
 
 	private final static Logger logger = LoggerFactory.getLogger(CompilerManager.class);
 
-	public static Class<? extends CompilerServiceInterface> load(ExecutorService executor, File dataDirectory)
-			throws IOException {
+	public static void load(final ServerBuilder serverBuilder) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
-			INSTANCE = new CompilerManager(executor, dataDirectory);
-			return CompilerServiceImpl.class;
+			INSTANCE = new CompilerManager(serverBuilder.getExecutorService(),
+					serverBuilder.getServerConfiguration().dataDirectory);
+			serverBuilder.registerWebService(CompilerServiceImpl.class);
 		} catch (URISyntaxException e) {
 			throw new IOException(e);
 		}

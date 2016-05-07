@@ -22,6 +22,7 @@ import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.file.TrackedDirectory;
 import com.qwazr.utils.file.TrackedInterface;
 import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -45,14 +46,15 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 
 	static SchedulerManager INSTANCE = null;
 
-	public static synchronized Class<? extends SchedulerServiceInterface> load(TrackedDirectory etcTracker,
-			int maxThreads) throws IOException {
+	public static synchronized void load(final ServerBuilder serverBuilder, TrackedDirectory etcTracker, int maxThreads)
+			throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		try {
 			INSTANCE = new SchedulerManager(etcTracker, maxThreads);
 			etcTracker.register(INSTANCE);
-			return SchedulerServiceImpl.class;
+			if (serverBuilder != null)
+				serverBuilder.registerWebService(SchedulerServiceImpl.class);
 		} catch (ServerException | SchedulerException e) {
 			throw new RuntimeException(e);
 		}
@@ -178,12 +180,12 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		if (!"json".equals(extension))
 			return;
 		switch (changeReason) {
-			case UPDATED:
-				loadSchedulerConf(jsonFile);
-				break;
-			case DELETED:
-				unloadSchedulerConf(jsonFile);
-				break;
+		case UPDATED:
+			loadSchedulerConf(jsonFile);
+			break;
+		case DELETED:
+			unloadSchedulerConf(jsonFile);
+			break;
 		}
 	}
 

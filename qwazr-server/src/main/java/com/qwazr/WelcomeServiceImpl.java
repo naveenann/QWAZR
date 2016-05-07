@@ -17,7 +17,7 @@ public class WelcomeServiceImpl implements ServiceInterface {
 	@GET
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	public WelcomeStatus welcome() {
-		return new WelcomeStatus(Qwazr.qwazr.services);
+		return new WelcomeStatus();
 	}
 
 	@DELETE

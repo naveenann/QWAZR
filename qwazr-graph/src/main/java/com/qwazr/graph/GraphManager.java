@@ -23,6 +23,7 @@ import com.qwazr.graph.model.GraphDefinition;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.json.DirectoryJsonManager;
 import com.qwazr.utils.server.RemoteService;
+import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
 
@@ -49,18 +50,17 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 
 	private final Map<String, GraphInstance> graphMap;
 
-	public synchronized static Class<? extends GraphServiceInterface> load(ExecutorService executorService,
-			File dataDirectory) throws IOException {
+	public synchronized static void load(final ServerBuilder serverBuilder) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
-		File graphDirectory = new File(dataDirectory, SERVICE_NAME_GRAPH);
+		File graphDirectory = new File(serverBuilder.getServerConfiguration().dataDirectory, SERVICE_NAME_GRAPH);
 		if (!graphDirectory.exists())
 			graphDirectory.mkdir();
 		try {
-			INSTANCE = new GraphManager(executorService, graphDirectory);
+			INSTANCE = new GraphManager(serverBuilder.getExecutorService(), graphDirectory);
 			for (String name : INSTANCE.nameSet())
 				INSTANCE.addNewInstance(name, INSTANCE.get(name));
-			return GraphServiceImpl.class;
+			serverBuilder.registerWebService(GraphServiceImpl.class);
 		} catch (ServerException | DatabaseException e) {
 			throw new RuntimeException(e);
 		}

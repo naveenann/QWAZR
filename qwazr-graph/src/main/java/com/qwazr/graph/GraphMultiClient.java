@@ -37,8 +37,11 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 
 	private static final Logger logger = LoggerFactory.getLogger(GraphMultiClient.class);
 
-	GraphMultiClient(ExecutorService executor, RemoteService... remote) throws URISyntaxException {
-		super(executor, new GraphSingleClient[remote.length], remote);
+	private final ExecutorService executorService;
+
+	GraphMultiClient(ExecutorService executorService, RemoteService... remote) throws URISyntaxException {
+		super(new GraphSingleClient[remote.length], remote);
+		this.executorService = executorService;
 	}
 
 	@Override
@@ -64,7 +67,7 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 				});
 			}
 
-			ThreadUtils.invokeAndJoin(executor, threads);
+			ThreadUtils.invokeAndJoin(executorService, threads);
 			return globalSet;
 
 		} catch (Exception e) {
@@ -87,7 +90,7 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 				});
 			}
 
-			ThreadUtils.invokeAndJoin(executor, threads);
+			ThreadUtils.invokeAndJoin(executorService, threads);
 			return ThreadUtils.getFirstResult(threads);
 
 		} catch (Exception e) {
@@ -135,7 +138,7 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 					}
 				});
 			}
-			ThreadUtils.invokeAndJoin(executor, threads);
+			ThreadUtils.invokeAndJoin(executorService, threads);
 			GraphDefinition graphDef = ThreadUtils.getFirstResult(threads);
 			if (graphDef == null)
 				throw new ServerException(Status.NOT_FOUND, "Graph not found: " + graphName);
