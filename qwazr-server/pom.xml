@@ -94,10 +94,6 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpcore</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.atomix.copycat</groupId>
-            <artifactId>copycat-server</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
