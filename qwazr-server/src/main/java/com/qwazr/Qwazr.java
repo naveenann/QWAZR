@@ -97,7 +97,7 @@ public class Qwazr {
 
 		etcTracker.check();
 
-		return new GenericServer(builder);
+		return builder.build();
 	}
 
 	static GenericServer qwazr = null;
