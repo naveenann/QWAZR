@@ -36,7 +36,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.function.BiConsumer;
 
 public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 
@@ -101,7 +100,7 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 
 	TreeMap<String, String> getSchedulers() {
 		etcTracker.check();
-		final TreeMap<String, String> map = new TreeMap<String, String>();
+		final TreeMap<String, String> map = new TreeMap<>();
 		final Map<String, SchedulerDefinition> scMap = schedulerMap;
 		if (scMap == null)
 			return map;
@@ -150,7 +149,7 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 	List<ScriptRunStatus> executeScheduler(String scheduler_name, SchedulerDefinition scheduler)
 			throws IOException, ServerException, URISyntaxException {
 		ClusterManager clusterManager = ClusterManager.INSTANCE;
-		if (!clusterManager.isLeader(SERVICE_NAME_SCHEDULER, scheduler.group))
+		if (!clusterManager.isLeader(scheduler.group, SERVICE_NAME_SCHEDULER))
 			return Collections.emptyList();
 		if (logger.isInfoEnabled())
 			logger.info("execute " + scheduler_name + " / " + scheduler.script_path);
@@ -244,12 +243,9 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		// Remove the no more existing jobs status
 		statusMapLock.r.lock();
 		try {
-			schedulerStatusMap.forEach(new BiConsumer<String, List<ScriptRunStatus>>() {
-				@Override
-				public void accept(String name, List<ScriptRunStatus> scriptRunStatuses) {
-					if (!map.containsKey(name))
-						removeKeys.add(name);
-				}
+			schedulerStatusMap.forEach((name, scriptRunStatuses) -> {
+				if (!map.containsKey(name))
+					removeKeys.add(name);
 			});
 			removeKeys.forEach((name) -> schedulerStatusMap.remove(name));
 		} finally {
@@ -260,15 +256,12 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		schedulerMap = map;
 
 		// Reschedule the jobs
-		schedulerMap.forEach(new BiConsumer<String, SchedulerDefinition>() {
-			@Override
-			public void accept(String name, SchedulerDefinition schedulerDefinition) {
-				try {
-					checkSchedulerCron(name, schedulerDefinition);
-				} catch (SchedulerException e) {
-					if (logger.isErrorEnabled())
-						logger.error("Error on scheduler " + name + ": " + e.getMessage(), e);
-				}
+		schedulerMap.forEach((name, schedulerDefinition) -> {
+			try {
+				checkSchedulerCron(name, schedulerDefinition);
+			} catch (SchedulerException e) {
+				if (logger.isErrorEnabled())
+					logger.error("Error on scheduler " + name + ": " + e.getMessage(), e);
 			}
 		});
 	}
