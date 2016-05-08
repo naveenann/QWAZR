@@ -16,6 +16,7 @@
 package com.qwazr.extractor;
 
 import com.qwazr.extractor.parser.*;
+import com.qwazr.utils.server.ServerBuilder;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import java.io.IOException;
@@ -40,11 +41,12 @@ public class ExtractorManager {
 
 	static ExtractorManager INSTANCE = null;
 
-	public synchronized static Class<? extends ExtractorServiceImpl> load() throws IOException {
+	public synchronized static void load(final ServerBuilder builder) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
 		INSTANCE = new ExtractorManager();
-		return ExtractorServiceImpl.class;
+		if (builder != null)
+			builder.registerWebService(ExtractorServiceImpl.class);
 	}
 
 	public static ExtractorManager getInstance() {
@@ -54,9 +56,9 @@ public class ExtractorManager {
 	}
 
 	private ExtractorManager() {
-		namesMap = new LinkedHashMap<String, Class<? extends ParserAbstract>>();
-		mimeTypesMap = new MultivaluedHashMap<String, Class<? extends ParserAbstract>>();
-		extensionsMap = new MultivaluedHashMap<String, Class<? extends ParserAbstract>>();
+		namesMap = new LinkedHashMap<>();
+		mimeTypesMap = new MultivaluedHashMap<>();
+		extensionsMap = new MultivaluedHashMap<>();
 
 		register(Audio.class);
 		register(Doc.class);

@@ -18,10 +18,7 @@ package com.qwazr;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.utils.AnnotationsUtils;
-import com.qwazr.utils.server.ServiceInterface;
 
-import javax.ws.rs.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -32,20 +29,12 @@ public class WelcomeStatus {
 	public final ImplementationStatus implementation;
 	public final List<String> endpoints;
 
-	WelcomeStatus(Collection<Class<? extends ServiceInterface>> classes) {
+	WelcomeStatus() {
 		this.implementation = new ImplementationStatus();
 		endpoints = new ArrayList<>();
-		classes.forEach(aClass -> addService(endpoints, aClass));
-	}
-
-	private void addService(List<String> endpoints, Class<?> clazz) {
-		final Path path = AnnotationsUtils.getFirstAnnotation(clazz, Path.class);
-		if (path == null) {
-			if (Qwazr.logger.isWarnEnabled())
-				Qwazr.logger.warn("No PATH annotation for " + clazz.getName());
-			return;
-		}
-		endpoints.add(ClusterManager.INSTANCE.me.address + path.value());
+		Collection<String> servicePaths = Qwazr.qwazr.getServicePaths();
+		if (servicePaths != null)
+			servicePaths.forEach(path -> endpoints.add(ClusterManager.INSTANCE.me.address + path));
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)

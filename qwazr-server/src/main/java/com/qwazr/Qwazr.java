@@ -17,13 +17,11 @@ package com.qwazr;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.cluster.service.ClusterServiceImpl;
 import com.qwazr.compiler.CompilerManager;
 import com.qwazr.crawler.web.manager.WebCrawlerManager;
 import com.qwazr.database.TableManager;
 import com.qwazr.extractor.ExtractorManager;
 import com.qwazr.graph.GraphManager;
-import com.qwazr.library.AbstractLibrary;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.library.LibraryServiceImpl;
 import com.qwazr.scheduler.SchedulerManager;
@@ -31,11 +29,9 @@ import com.qwazr.scripts.ScriptManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.file.TrackedDirectory;
-import com.qwazr.utils.server.AbstractServer;
-import com.qwazr.utils.server.ServiceInterface;
-import com.qwazr.utils.server.ServletApplication;
+import com.qwazr.utils.server.GenericServer;
+import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.webapps.transaction.WebappManager;
-import io.undertow.security.idm.IdentityManager;
 import org.apache.commons.cli.ParseException;
 import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
@@ -44,102 +40,67 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.concurrent.Executors;
 
-public class Qwazr extends AbstractServer<QwazrConfiguration> {
+public class Qwazr {
 
 	static final Logger logger = LoggerFactory.getLogger(Qwazr.class);
 
-	final Collection<Class<? extends ServiceInterface>> services = new ArrayList<>();
+	private final static synchronized GenericServer newServer(final QwazrConfiguration config) throws IOException {
 
-	private Qwazr(QwazrConfiguration configuration) throws UnknownHostException {
-		super(Executors.newCachedThreadPool(), configuration);
-	}
+		final ServerBuilder builder = new ServerBuilder(config);
 
-	@Override
-	public ServletApplication load(Collection<Class<? extends ServiceInterface>> classes) throws IOException {
-
-		final ServletApplication servletApplication;
-
-		File currentDataDir = getCurrentDataDir();
-		File currentTempDir = new File(currentDataDir, "tmp");
-		File currentEtcDir = getCurrentEtcDir();
-		TrackedDirectory etcTracker = new TrackedDirectory(currentEtcDir, serverConfiguration.etcFileFilter);
-		if (currentEtcDir.exists()) {
-			File log4jFile = new File(currentEtcDir, "log4j.properties");
+		File currentTempDir = new File(config.dataDirectory, "tmp");
+		TrackedDirectory etcTracker = new TrackedDirectory(config.etcDirectory, config.etcFileFilter);
+		if (config.etcDirectory.exists()) {
+			File log4jFile = new File(config.etcDirectory, "log4j.properties");
 			if (log4jFile.exists() && log4jFile.isFile())
 				PropertyConfigurator.configureAndWatch(log4jFile.getAbsolutePath(), 60000);
 		}
 
-		ClassLoaderManager.load(currentDataDir, Thread.currentThread());
+		ClassLoaderManager.load(config.dataDirectory, Thread.currentThread());
 
-		services.add(WelcomeServiceImpl.class);
+		builder.registerWebService(WelcomeServiceImpl.class);
 
-		services.add(ClusterManager
-				.load(executorService, udpServer, getWebServicePublicAddress(), serverConfiguration.groups));
+		ClusterManager.load(builder, config.groups);
 
-		if (QwazrConfiguration.ServiceEnum.compiler.isActive(serverConfiguration))
-			services.add(CompilerManager.load(executorService, currentDataDir));
+		if (QwazrConfiguration.ServiceEnum.compiler.isActive(config))
+			CompilerManager.load(builder);
 
-		if (QwazrConfiguration.ServiceEnum.extractor.isActive(serverConfiguration))
-			services.add(ExtractorManager.load());
+		if (QwazrConfiguration.ServiceEnum.extractor.isActive(config))
+			ExtractorManager.load(builder);
 
-		if (QwazrConfiguration.ServiceEnum.webapps.isActive(serverConfiguration)) {
-			services.add(WebappManager.load(currentDataDir, etcTracker, currentTempDir));
-			servletApplication = WebappManager.getInstance().getServletApplication();
-		} else
-			servletApplication = null;
+		if (QwazrConfiguration.ServiceEnum.webapps.isActive(config))
+			WebappManager.load(builder, etcTracker, currentTempDir);
 
-		if (QwazrConfiguration.ServiceEnum.scripts.isActive(serverConfiguration))
-			services.add(ScriptManager.load(executorService, currentDataDir));
+		if (QwazrConfiguration.ServiceEnum.scripts.isActive(config))
+			ScriptManager.load(builder);
 
-		if (QwazrConfiguration.ServiceEnum.webcrawler.isActive(serverConfiguration))
-			services.add(WebCrawlerManager.load(executorService));
+		if (QwazrConfiguration.ServiceEnum.webcrawler.isActive(config))
+			WebCrawlerManager.load(builder);
 
-		if (QwazrConfiguration.ServiceEnum.search.isActive(serverConfiguration))
-			services.add(IndexManager.load(executorService, currentDataDir));
+		if (QwazrConfiguration.ServiceEnum.search.isActive(config))
+			IndexManager.load(builder);
 
-		if (QwazrConfiguration.ServiceEnum.graph.isActive(serverConfiguration))
-			services.add(GraphManager.load(executorService, currentDataDir));
+		if (QwazrConfiguration.ServiceEnum.graph.isActive(config))
+			GraphManager.load(builder);
 
-		if (QwazrConfiguration.ServiceEnum.table.isActive(serverConfiguration))
-			services.add(TableManager.load(executorService, currentDataDir));
+		if (QwazrConfiguration.ServiceEnum.table.isActive(config))
+			TableManager.load(builder);
 
-		LibraryManager.load(currentDataDir, etcTracker);
-		services.add(LibraryServiceImpl.class);
+		LibraryManager.load(config.dataDirectory, etcTracker);
+		builder.registerWebService(LibraryServiceImpl.class);
+		builder.setIdentityManagerProvider(LibraryManager.getInstance());
 
 		// Scheduler is last, because it may immediatly execute a scripts
-		if (QwazrConfiguration.ServiceEnum.schedulers.isActive(serverConfiguration))
-			services.add(SchedulerManager.load(etcTracker, serverConfiguration.scheduler_max_threads));
+		if (QwazrConfiguration.ServiceEnum.schedulers.isActive(config))
+			SchedulerManager.load(builder, etcTracker, config.scheduler_max_threads);
 
 		etcTracker.check();
 
-		classes.addAll(services);
-
-		return servletApplication;
+		return builder.build();
 	}
 
-	@Override
-	protected IdentityManager getIdentityManager(String realm) throws IOException {
-		AbstractLibrary library = LibraryManager.getInstance().get(realm);
-		if (library == null)
-			throw new IOException("No realm connector with this name: " + realm);
-		if (!(library instanceof IdentityManager))
-			throw new IOException("This is a not a realm connector: " + realm);
-		return (IdentityManager) library;
-	}
-
-	private void startAll()
-			throws ServletException, IllegalAccessException, ParseException, IOException, InstantiationException {
-		super.start(true);
-		// Register the services
-		ClusterManager.INSTANCE.joinCluster(services, null);
-	}
-
-	static Qwazr qwazr = null;
+	static GenericServer qwazr = null;
 
 	/**
 	 * Start the server
@@ -154,8 +115,8 @@ public class Qwazr extends AbstractServer<QwazrConfiguration> {
 			throws IOException, InstantiationException, ServletException, IllegalAccessException, ParseException {
 		if (qwazr != null)
 			throw new IllegalAccessException("QWAZR is already started");
-		qwazr = new Qwazr(configuration);
-		qwazr.startAll();
+		qwazr = newServer(configuration);
+		qwazr.start(true);
 	}
 
 	/**

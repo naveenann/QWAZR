@@ -20,9 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.*;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.function.Consumer;
 
 /**
@@ -34,62 +32,51 @@ public class UdpServerThread extends Thread {
 
 	public final static int DEFAULT_BUFFER_SIZE = 65536;
 	public final static String DEFAULT_MULTICAST = "239.255.90.91";
-	private final static int DEFAULT_PORT = 9091;
 
-	private final int port;
 	private final int dataBufferSize;
-	private final Collection<Consumer<DatagramPacket>> datagramConsumers;
+	private final PacketListener[] packetListeners;
 
 	private volatile Collection<Consumer<DatagramPacket>> datagramConsumersCache;
-	private final InetAddress address;
+	private final InetSocketAddress socketAddress;
+	private final InetAddress multicastAddress;
 
-	public UdpServerThread(Integer port, String socketAddress, Integer dataBufferSize) throws UnknownHostException {
+	public UdpServerThread(final InetSocketAddress socketAddress, final InetAddress multicastAddress,
+			Integer dataBufferSize, Collection<PacketListener> packetListeners) {
 		super();
 		setName("UDP Server");
 		setDaemon(true);
-		this.datagramConsumers = new HashSet<>();
 		this.dataBufferSize = dataBufferSize == null ? DEFAULT_BUFFER_SIZE : dataBufferSize;
-		this.port = port == null ? DEFAULT_PORT : port;
-		final String datagramAddress = socketAddress == null ? DEFAULT_MULTICAST : socketAddress;
-		this.address = InetAddress.getByName(datagramAddress);
-		register(null); // To create an initial empty array
-	}
-
-	public void register(Consumer<DatagramPacket> datagramConsumer) {
-		synchronized (datagramConsumers) {
-			if (datagramConsumer != null)
-				datagramConsumers.add(datagramConsumer);
-			datagramConsumersCache = new ArrayList<>(datagramConsumers);
-		}
+		this.socketAddress = socketAddress;
+		this.multicastAddress = multicastAddress;
+		this.packetListeners = packetListeners.toArray(new PacketListener[packetListeners.size()]);
 	}
 
 	@Override
 	public void run() {
-		try (final DatagramSocket socket = address.isMulticastAddress() ?
-				new MulticastSocket(port) :
-				new DatagramSocket(port, address)) {
-			socket.setReuseAddress(true);
+		try (final DatagramSocket socket = multicastAddress != null ?
+				new MulticastSocket(socketAddress) :
+				new DatagramSocket(socketAddress)) {
 			if (socket instanceof MulticastSocket)
-				((MulticastSocket) socket).joinGroup(address);
+				((MulticastSocket) socket).joinGroup(multicastAddress);
 			if (logger.isInfoEnabled())
-				logger.info("UDP Server started: " + address + ":" + port);
+				logger.info("UDP Server started: " + socketAddress);
 			for (; ; ) {
 				final byte[] dataBuffer = new byte[dataBufferSize];
 				final DatagramPacket datagramPacket = new DatagramPacket(dataBuffer, dataBuffer.length);
 				socket.receive(datagramPacket);
-				datagramConsumersCache.forEach(datagramConsumer -> {
+				for (PacketListener packetListener : packetListeners) {
 					try {
-						datagramConsumer.accept(datagramPacket);
+						packetListener.acceptPacket(datagramPacket);
 					} catch (Exception e) {
 						logger.warn(e.getMessage(), e);
 					}
-				});
+				}
 			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		} finally {
 			if (logger.isInfoEnabled())
-				logger.info("UDP Server exit: " + address + ":" + port);
+				logger.info("UDP Server exit: " + socketAddress);
 		}
 	}
 
@@ -106,5 +93,10 @@ public class UdpServerThread extends Thread {
 		if (isInterrupted())
 			return;
 		this.interrupt();
+	}
+
+	public interface PacketListener {
+
+		void acceptPacket(final DatagramPacket packet) throws Exception;
 	}
 }
