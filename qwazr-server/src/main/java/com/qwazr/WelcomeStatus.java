@@ -34,7 +34,7 @@ public class WelcomeStatus {
 		endpoints = new ArrayList<>();
 		Collection<String> servicePaths = Qwazr.qwazr.getServicePaths();
 		if (servicePaths != null)
-			servicePaths.forEach(path -> endpoints.add(ClusterManager.INSTANCE.me.address + path));
+			servicePaths.forEach(path -> endpoints.add(ClusterManager.INSTANCE.me.httpAddressKey + path));
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
