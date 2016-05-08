@@ -146,6 +146,6 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 
 	GraphMultiClient getMultiClient() throws URISyntaxException {
 		return new GraphMultiClient(executorService,
-				RemoteService.build(ClusterManager.INSTANCE.getNodesByGroupByService(SERVICE_NAME_GRAPH, null)));
+				RemoteService.build(ClusterManager.INSTANCE.getNodesByGroupByService(null, SERVICE_NAME_GRAPH)));
 	}
 }
