@@ -45,7 +45,8 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 
 	static SchedulerManager INSTANCE = null;
 
-	public static synchronized void load(final ServerBuilder serverBuilder, TrackedDirectory etcTracker, int maxThreads)
+	public static synchronized void load(final ServerBuilder serverBuilder, final TrackedInterface etcTracker,
+			final int maxThreads)
 			throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
@@ -68,13 +69,13 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 	private final Scheduler globalScheduler;
 	private final Map<String, List<ScriptRunStatus>> schedulerStatusMap;
 	private final LockUtils.ReadWriteLock statusMapLock;
-	private final TrackedDirectory etcTracker;
+	private final TrackedInterface etcTracker;
 
 	private final LockUtils.ReadWriteLock mapLock;
 	private final Map<File, Map<String, SchedulerDefinition>> schedulerFileMap;
 	private volatile Map<String, SchedulerDefinition> schedulerMap;
 
-	private SchedulerManager(TrackedDirectory etcTracker, int maxThreads)
+	private SchedulerManager(final TrackedInterface etcTracker, final int maxThreads)
 			throws IOException, SchedulerException, ServerException {
 		this.etcTracker = etcTracker;
 		statusMapLock = new LockUtils.ReadWriteLock();
@@ -179,12 +180,12 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		if (!"json".equals(extension))
 			return;
 		switch (changeReason) {
-		case UPDATED:
-			loadSchedulerConf(jsonFile);
-			break;
-		case DELETED:
-			unloadSchedulerConf(jsonFile);
-			break;
+			case UPDATED:
+				loadSchedulerConf(jsonFile);
+				break;
+			case DELETED:
+				unloadSchedulerConf(jsonFile);
+				break;
 		}
 	}
 
