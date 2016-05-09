@@ -16,6 +16,8 @@
 package com.qwazr.database.store;
 
 import com.qwazr.utils.LockUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,49 +28,48 @@ public class Tables {
 
 	private final static LockUtils.ReadWriteLock rwlTables = new LockUtils.ReadWriteLock();
 
-	private final static Map<File, Table> tables = new HashMap<File, Table>();
+	private static final Logger logger = LoggerFactory.getLogger(Table.class);
 
-	public static Table getInstance(File directory, boolean createIfNotExist) throws IOException, DatabaseException {
-		rwlTables.r.lock();
-		try {
-			Table table = tables.get(directory);
-			if (table != null)
-				return table;
-		} finally {
-			rwlTables.r.unlock();
-		}
+	private final static Map<File, Table> tables = new HashMap<>();
+
+	public static Table getInstance(final File directory, final boolean createIfNotExist) throws IOException {
+		final Table t = rwlTables.readEx(() -> tables.get(directory));
+		if (t != null)
+			return t;
 		if (!createIfNotExist)
 			return null;
-		rwlTables.w.lock();
-		try {
+		return rwlTables.writeEx(() -> {
 			Table table = tables.get(directory);
 			if (table != null)
 				return table;
 			table = new Table(directory);
 			tables.put(directory, table);
 			return table;
-		} finally {
-			rwlTables.w.unlock();
-		}
+		});
 	}
 
-	static void close(File directory) throws IOException {
-		rwlTables.r.lock();
-		try {
-			Table table = tables.get(directory);
-			if (table == null)
-				return;
-		} finally {
-			rwlTables.r.unlock();
-		}
-		rwlTables.w.lock();
-		try {
+	static void close(final File directory) throws IOException {
+		Table t = rwlTables.readEx(() -> tables.get(directory));
+		if (t == null)
+			return;
+		rwlTables.writeEx(() -> {
 			Table table = tables.get(directory);
 			if (table == null)
 				return;
 			tables.remove(directory);
-		} finally {
-			rwlTables.w.unlock();
-		}
+		});
+	}
+
+	public static void closeAll() {
+		rwlTables.writeEx(() -> {
+			tables.forEach((file, table) -> {
+				try {
+					table.closeNoLock();
+				} catch (IOException e) {
+					logger.warn("Cannot clause the table: " + table, e);
+				}
+			});
+			tables.clear();
+		});
 	}
 }

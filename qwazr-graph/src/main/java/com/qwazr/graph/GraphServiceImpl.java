@@ -45,17 +45,17 @@ public class GraphServiceImpl implements GraphServiceInterface {
 	}
 
 	@Override
-	public GraphDefinition createUpdateGraph(String graphName, GraphDefinition graphDef) {
+	public GraphDefinition createUpdateGraph(final String graphName, final GraphDefinition graphDef) {
 		try {
 			GraphManager.INSTANCE.createUpdateGraph(graphName, graphDef);
 			return graphDef;
-		} catch (IOException | ServerException | DatabaseException e) {
+		} catch (IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
 
-	private GraphDefinition getGraphOrNotFound(String graphName) throws ServerException, IOException {
+	private GraphDefinition getGraphOrNotFound(final String graphName) throws ServerException, IOException {
 		GraphDefinition graphDef = GraphManager.INSTANCE.get(graphName);
 		if (graphDef == null)
 			throw new ServerException(Status.NOT_FOUND, "Graph not found: " + graphName);
@@ -95,7 +95,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			GraphManager.INSTANCE.getGraphInstance(graphName).createUpdateNode(node_id, node, upsert);
 			return node;
-		} catch (IOException | ServerException | DatabaseException e) {
+		} catch (IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -106,14 +106,15 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			GraphManager.INSTANCE.getGraphInstance(graphName).createUpdateNodes(nodes, upsert);
 			return nodes.keySet();
-		} catch (URISyntaxException | IOException | ServerException | DatabaseException e) {
+		} catch (URISyntaxException | IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
 	}
 
-	public final static TypeReference<Map<String, GraphNode>> MapStringGraphNodeTypeRef = new TypeReference<Map<String, GraphNode>>() {
-	};
+	public final static TypeReference<Map<String, GraphNode>> MapStringGraphNodeTypeRef =
+			new TypeReference<Map<String, GraphNode>>() {
+			};
 
 	@Override
 	public Long createUpdateNodes(String graphName, Boolean upsert, InputStream inputStream) {
@@ -141,7 +142,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 				if (irs != null)
 					IOUtils.closeQuietly(irs);
 			}
-		} catch (URISyntaxException | IOException | ServerException | DatabaseException e) {
+		} catch (URISyntaxException | IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -160,7 +161,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			GraphInstance graphInstance = GraphManager.INSTANCE.getGraphInstance(graphName);
 			return getNodeOrNotFound(graphInstance, node_id);
-		} catch (URISyntaxException | IOException | ServerException | DatabaseException e) {
+		} catch (URISyntaxException | IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -173,7 +174,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 			GraphNode node = getNodeOrNotFound(graphInstance, node_id);
 			graphInstance.deleteNode(node_id);
 			return node;
-		} catch (URISyntaxException | IOException | ServerException | DatabaseException e) {
+		} catch (URISyntaxException | IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -184,7 +185,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			GraphInstance graphInstance = GraphManager.INSTANCE.getGraphInstance(graphName);
 			return graphInstance.createEdge(node_id, edge_type, to_node_id);
-		} catch (IOException | ServerException | DatabaseException e) {
+		} catch (IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -195,7 +196,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			GraphInstance graphInstance = GraphManager.INSTANCE.getGraphInstance(graphName);
 			return graphInstance.deleteEdge(node_id, edge_type, to_node_id);
-		} catch (URISyntaxException | IOException | ServerException | DatabaseException e) {
+		} catch (URISyntaxException | IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}
@@ -206,7 +207,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			GraphInstance graphInstance = GraphManager.INSTANCE.getGraphInstance(graphName);
 			return graphInstance.request(request);
-		} catch (URISyntaxException | IOException | ServerException | DatabaseException e) {
+		} catch (URISyntaxException | IOException | ServerException e) {
 			logger.warn(e.getMessage(), e);
 			throw ServerException.getJsonException(e);
 		}

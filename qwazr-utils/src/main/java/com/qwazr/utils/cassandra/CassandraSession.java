@@ -68,48 +68,41 @@ public class CassandraSession implements Closeable {
 
 	@Override
 	public void close() {
-		rwl.w.lock();
-		try {
-			closeNoLock();
-		} finally {
-			rwl.w.unlock();
-		}
+		rwl.write(this::closeNoLock);
 	}
 
 	public boolean isClosed() {
-		rwl.r.lock();
-		try {
-			return session == null || session.isClosed();
-		} finally {
-			rwl.r.unlock();
-		}
+		return rwl.read(() -> session == null || session.isClosed());
 	}
 
 	private Session checkSession() {
-		rwl.r.lock();
-		try {
+
+		Session s = rwl.read(() -> {
 			lastUse = System.currentTimeMillis();
-			if (session != null && !session.isClosed())
-				return session;
-		} finally {
-			rwl.r.unlock();
-		}
-		rwl.w.lock();
+			return session != null && !session.isClosed() ? session : null;
+		});
+		if (s != null)
+			return s;
+
 		try {
-			if (session != null && !session.isClosed())
+			return rwl.writeEx(() -> {
+				if (session != null && !session.isClosed())
+					return session;
+				if (cluster == null || cluster.isClosed())
+					throw new DriverException("The cluster is closed");
+				if (logger.isDebugEnabled())
+					logger.debug("Create session " + keySpace == null ? StringUtils.EMPTY : keySpace);
+				session = keySpace == null ? cluster.connect() : cluster.connect(keySpace);
 				return session;
-			if (cluster == null || cluster.isClosed())
-				throw new DriverException("The cluster is closed");
-			if (logger.isDebugEnabled())
-				logger.debug("Create session " + keySpace == null ? StringUtils.EMPTY : keySpace);
-			session = keySpace == null ? cluster.connect() : cluster.connect(keySpace);
-			return session;
-		} finally {
-			rwl.w.unlock();
+			});
+		} catch (LockUtils.InsideLockException e) {
+			if (e.exception instanceof RuntimeException)
+				throw (RuntimeException) e.exception;
+			throw e;
 		}
 	}
 
-	private SimpleStatement getStatement(Session session, String cql, Integer fetchSize, Object... values) {
+	private SimpleStatement getStatement(final String cql, final Integer fetchSize, final Object... values) {
 		SimpleStatement statement =
 				values != null && values.length > 0 ? new SimpleStatement(cql, values) : new SimpleStatement(cql);
 		if (fetchSize != null)
@@ -137,7 +130,7 @@ public class CassandraSession implements Closeable {
 		if (logger.isDebugEnabled())
 			logger.debug("Execute " + cql);
 		Session session = checkSession();
-		SimpleStatement statement = getStatement(session, cql, fetchSize, values);
+		SimpleStatement statement = getStatement(cql, fetchSize, values);
 		return executeStatement(session, statement);
 	}
 
@@ -145,7 +138,7 @@ public class CassandraSession implements Closeable {
 		if (logger.isDebugEnabled())
 			logger.debug("Execute " + cql);
 		Session session = checkSession();
-		SimpleStatement statement = getStatement(session, cql, null, values);
+		SimpleStatement statement = getStatement(cql, null, values);
 		return executeStatement(session, statement);
 	}
 

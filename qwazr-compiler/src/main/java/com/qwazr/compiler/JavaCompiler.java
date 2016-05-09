@@ -55,13 +55,13 @@ public class JavaCompiler implements Closeable {
 	private final DirectoryWatcher directorWatcher;
 
 	private JavaCompiler(ExecutorService executorService, File javaSourceDirectory, File javaClassesDirectory,
-					String classPath, Collection<URL> urlList) throws IOException {
+			String classPath, Collection<URL> urlList) throws IOException {
 		this.classPath = classPath;
 		this.javaSourceDirectory = javaSourceDirectory;
 		String javaSourcePrefix = javaSourceDirectory.getAbsolutePath();
 		javaSourcePrefixSize = javaSourcePrefix.endsWith("/") ?
-						javaSourcePrefix.length() :
-						javaSourcePrefix.length() + 1;
+				javaSourcePrefix.length() :
+				javaSourcePrefix.length() + 1;
 		this.javaClassesDirectory = javaClassesDirectory;
 		if (this.javaClassesDirectory != null && !this.javaClassesDirectory.exists())
 			this.javaClassesDirectory.mkdir();
@@ -86,7 +86,7 @@ public class JavaCompiler implements Closeable {
 	}
 
 	static JavaCompiler newInstance(ExecutorService executorService, File javaSourceDirectory,
-					File javaClassesDirectory, File... classPathDirectories) throws IOException, URISyntaxException {
+			File javaClassesDirectory, File... classPathDirectories) throws IOException, URISyntaxException {
 		Objects.requireNonNull(javaSourceDirectory, "No source directory given (null)");
 		Objects.requireNonNull(javaClassesDirectory, "No class directory given (null)");
 		final FileSystem fs = FileSystems.getDefault();
@@ -97,7 +97,7 @@ public class JavaCompiler implements Closeable {
 	}
 
 	private final static String buildClassPath(File[] classPathArray, Collection<URL> urlCollection)
-					throws MalformedURLException, URISyntaxException {
+			throws MalformedURLException, URISyntaxException {
 		final List<String> classPathes = new ArrayList<>();
 
 		URLClassLoader classLoader = (URLClassLoader) URLClassLoader.getSystemClassLoader();
@@ -144,11 +144,11 @@ public class JavaCompiler implements Closeable {
 			options.add("-sourcepath");
 			options.add(javaSourceDirectory.getAbsolutePath());
 			javax.tools.JavaCompiler.CompilationTask task = compiler
-							.getTask(pw, fileManager, diagnostics, options, null, sourceFileObjects);
+					.getTask(pw, fileManager, diagnostics, options, null, sourceFileObjects);
 			if (!task.call()) {
 				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
 					pw.format("Error on line %d in %s%n%s%n", diagnostic.getLineNumber(),
-									diagnostic.getSource().toUri(), diagnostic.getMessage(null));
+							diagnostic.getSource().toUri(), diagnostic.getMessage(null));
 				pw.flush();
 				pw.close();
 				sw.close();
@@ -166,10 +166,10 @@ public class JavaCompiler implements Closeable {
 		if (javaSourceFiles.length == 0)
 			return finalJavaFiles;
 		final File parentClassDir = new File(javaClassesDirectory,
-						parentDir.getAbsolutePath().substring(javaSourcePrefixSize));
+				parentDir.getAbsolutePath().substring(javaSourcePrefixSize));
 		for (File javaSourceFile : javaSourceFiles) {
 			final File classFile = new File(parentClassDir,
-							FilenameUtils.removeExtension(javaSourceFile.getName()) + ".class");
+					FilenameUtils.removeExtension(javaSourceFile.getName()) + ".class");
 			if (classFile.exists() && classFile.lastModified() > javaSourceFile.lastModified())
 				continue;
 			finalJavaFiles.add(javaSourceFile);
@@ -193,14 +193,11 @@ public class JavaCompiler implements Closeable {
 			return;
 		if (!sourceDirectory.isDirectory())
 			return;
-		compilerLock.w.lock();
-		try {
+		compilerLock.writeEx(() -> {
 			javax.tools.JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
 			Objects.requireNonNull(compiler, "No compiler is available. This feature requires a JDK (not a JRE).");
 			compileDirectory(compiler, sourceDirectory);
-		} finally {
-			compilerLock.w.unlock();
-		}
+		});
 	}
 
 	private final JavaFileFilter javaFileFilter = new JavaFileFilter();
