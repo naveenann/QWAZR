@@ -28,7 +28,9 @@ import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.utils.AnnotationsUtils;
+import com.qwazr.utils.file.TrackedDirectories;
 import com.qwazr.utils.file.TrackedDirectory;
+import com.qwazr.utils.file.TrackedInterface;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.webapps.transaction.WebappManager;
@@ -50,11 +52,19 @@ public class Qwazr {
 		final ServerBuilder builder = new ServerBuilder(config);
 
 		File currentTempDir = new File(config.dataDirectory, "tmp");
-		TrackedDirectory etcTracker = new TrackedDirectory(config.etcDirectory, config.etcFileFilter);
-		if (config.etcDirectory.exists()) {
-			File log4jFile = new File(config.etcDirectory, "log4j.properties");
-			if (log4jFile.exists() && log4jFile.isFile())
-				PropertyConfigurator.configureAndWatch(log4jFile.getAbsolutePath(), 60000);
+
+		// Load the configuration
+		TrackedInterface etcTracker = TrackedInterface.build(config.etcDirectories, config.etcFileFilter);
+		if (config.etcDirectories != null) {
+			for (File etcDirectory : config.etcDirectories) {
+				if (etcDirectory.exists()) {
+					File log4jFile = new File(etcDirectory, "log4j.properties");
+					if (log4jFile.exists() && log4jFile.isFile()) {
+						PropertyConfigurator.configureAndWatch(log4jFile.getAbsolutePath(), 60000);
+						break;
+					}
+				}
+			}
 		}
 
 		ClassLoaderManager.load(config.dataDirectory, Thread.currentThread());
