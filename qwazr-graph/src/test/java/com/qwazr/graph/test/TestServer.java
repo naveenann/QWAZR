@@ -24,7 +24,7 @@ import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 
-public class TestServer  {
+public class TestServer {
 
 	public static boolean serverStarted = false;
 
@@ -36,7 +36,9 @@ public class TestServer  {
 			return;
 		final File dataDir = Files.createTempDir();
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
-		GraphServer.main(new String[] {});
+		System.setProperty("LISTEN_ADDR", "localhost");
+		System.setProperty("PUBLIC_ADDR", "localhost");
+		GraphServer.main(new String[]{});
 		serverStarted = true;
 	}
 }
