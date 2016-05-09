@@ -46,8 +46,6 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 
 	public File directory;
 
-	final ExecutorService executorService;
-
 	private final Map<String, GraphInstance> graphMap;
 
 	public synchronized static void load(final ServerBuilder serverBuilder) throws IOException {
@@ -74,13 +72,12 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 
 	private GraphManager(ExecutorService executorService, File directory) throws ServerException, IOException {
 		super(directory, GraphDefinition.class);
-		this.executorService = executorService;
 		this.directory = directory;
-		graphMap = new HashMap<String, GraphInstance>();
+		graphMap = new HashMap<>();
 	}
 
 	private GraphInstance addNewInstance(String graphName, GraphDefinition graphDef)
-			throws IOException, ServerException, DatabaseException {
+			throws IOException, ServerException {
 		File dbDirectory = new File(directory, graphName);
 		if (!dbDirectory.exists())
 			dbDirectory.mkdir();
@@ -91,16 +88,13 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 		return graphInstance;
 	}
 
-	public GraphInstance getGraphInstance(String graphName) throws ServerException {
-		rwl.r.lock();
-		try {
+	public GraphInstance getGraphInstance(final String graphName) throws ServerException {
+		return rwl.readEx(() -> {
 			GraphInstance graphInstance = graphMap.get(graphName);
 			if (graphInstance == null)
 				throw new ServerException(Status.NOT_FOUND, "Graph instance not found");
 			return graphInstance;
-		} finally {
-			rwl.r.unlock();
-		}
+		});
 	}
 
 	@Override
@@ -109,26 +103,22 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 	}
 
 	@Override
-	public GraphDefinition get(String name) throws IOException {
+	public GraphDefinition get(final String name) throws IOException {
 		return super.get(name);
 	}
 
-	public void createUpdateGraph(String graphName, GraphDefinition graphDef)
-			throws IOException, ServerException, DatabaseException {
-		rwl.w.lock();
-		try {
+	public void createUpdateGraph(final String graphName, final GraphDefinition graphDef)
+			throws IOException, ServerException {
+		rwl.writeEx(() -> {
 			super.set(graphName, graphDef);
 			graphMap.remove(graphName);
 			addNewInstance(graphName, graphDef);
-		} finally {
-			rwl.w.unlock();
-		}
+		});
 	}
 
 	@Override
 	public GraphDefinition delete(String graphName) throws ServerException, IOException {
-		rwl.w.lock();
-		try {
+		return rwl.writeEx(() -> {
 			GraphDefinition graphDef = super.delete(graphName);
 			File dbDirectory = new File(directory, graphName);
 			Table table = Tables.getInstance(dbDirectory, false);
@@ -139,15 +129,11 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 			FileUtils.deleteDirectory(dbDirectory);
 			graphMap.remove(graphName);
 			return graphDef;
-		} catch (DatabaseException e) {
-			throw new ServerException(e);
-		} finally {
-			rwl.w.unlock();
-		}
+		});
 	}
 
 	GraphMultiClient getMultiClient() throws URISyntaxException {
-		return new GraphMultiClient(executorService,
+		return new GraphMultiClient(
 				RemoteService.build(ClusterManager.INSTANCE.getNodesByGroupByService(null, SERVICE_NAME_GRAPH)));
 	}
 }

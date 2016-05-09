@@ -27,9 +27,8 @@ import com.qwazr.graph.model.GraphNode;
 import com.qwazr.graph.model.GraphNodeResult;
 import com.qwazr.graph.model.GraphRequest;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.concurrent.ThreadUtils;
 import com.qwazr.utils.server.ServerException;
-import com.qwazr.utils.threads.ThreadUtils;
-import com.qwazr.utils.threads.ThreadUtils.ProcedureExceptionCatcher;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.roaringbitmap.RoaringBitmap;
 import org.slf4j.Logger;
@@ -438,8 +437,8 @@ public class GraphInstance {
 		}
 
 		// Compute the score using facets (multithreaded)
-		Map<String, NodeScore> nodeScoreMap = new PatriciaTrie<NodeScore>();
-		List<ScoreThread> scoreThreads = new ArrayList<ScoreThread>(facetFields.size());
+		Map<String, NodeScore> nodeScoreMap = new PatriciaTrie<>();
+		List<ScoreThread> scoreThreads = new ArrayList<>(facetFields.size());
 		for (Map.Entry<String, Map<String, LongCounter>> entry : facetFields.entrySet()) {
 			String field = entry.getKey();
 			Map<String, LongCounter> facets = entry.getValue();
@@ -449,7 +448,7 @@ public class GraphInstance {
 			scoreThreads.add(scoreThread);
 		}
 		try {
-			ThreadUtils.invokeAndJoin(GraphManager.INSTANCE.executorService, scoreThreads);
+			ThreadUtils.parallel(scoreThreads);
 		} catch (Exception e) {
 			throw ServerException.getServerException(e);
 		}
@@ -483,7 +482,7 @@ public class GraphInstance {
 		return resultList;
 	}
 
-	public class ScoreThread extends ProcedureExceptionCatcher {
+	public class ScoreThread implements ThreadUtils.ParallelRunnable {
 
 		private final Map<String, LongCounter> facets;
 		private final Map<String, NodeScore> nodeScoreMap;
@@ -534,7 +533,7 @@ public class GraphInstance {
 		}
 
 		@Override
-		public void execute() throws IOException, DatabaseException {
+		public void run() throws IOException {
 			for (Map.Entry<String, LongCounter> facet : facets.entrySet()) {
 				NodeScore nodeScore;
 				Integer docId = null;

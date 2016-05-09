@@ -16,13 +16,11 @@
 package com.qwazr.graph;
 
 import com.qwazr.graph.model.*;
+import com.qwazr.utils.concurrent.ThreadUtils;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
 import com.qwazr.utils.server.WebAppExceptionHolder;
-import com.qwazr.utils.threads.ThreadUtils;
-import com.qwazr.utils.threads.ThreadUtils.FunctionExceptionCatcher;
-import com.qwazr.utils.threads.ThreadUtils.ProcedureExceptionCatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,17 +29,14 @@ import javax.ws.rs.core.Response.Status;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient> implements GraphServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(GraphMultiClient.class);
 
-	private final ExecutorService executorService;
-
-	GraphMultiClient(ExecutorService executorService, RemoteService... remote) throws URISyntaxException {
+	GraphMultiClient(final RemoteService... remote) throws URISyntaxException {
 		super(new GraphSingleClient[remote.length], remote);
-		this.executorService = executorService;
 	}
 
 	@Override
@@ -50,24 +45,20 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 		try {
 
 			// We merge the result of all the nodes
-			TreeSet<String> globalSet = new TreeSet<String>();
+			final TreeSet<String> globalSet = new TreeSet<>();
 
-			List<ProcedureExceptionCatcher> threads = new ArrayList<>(size());
-			for (GraphSingleClient client : this) {
-				threads.add(new ProcedureExceptionCatcher() {
-
-					@Override
-					public void execute() throws Exception {
-						Set<String> set = client.list();
-						synchronized (globalSet) {
-							if (set != null)
-								globalSet.addAll(set);
-						}
+			final List<ThreadUtils.ParallelRunnable> threads = new ArrayList<>(size());
+			this.forEach(client -> {
+				threads.add(() -> {
+					Set<String> set = client.list();
+					synchronized (globalSet) {
+						if (set != null)
+							globalSet.addAll(set);
 					}
 				});
-			}
+			});
 
-			ThreadUtils.invokeAndJoin(executorService, threads);
+			ThreadUtils.parallel(threads);
 			return globalSet;
 
 		} catch (Exception e) {
@@ -76,22 +67,19 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 	}
 
 	@Override
-	public GraphDefinition createUpdateGraph(String graphName, GraphDefinition graphDef) {
+	public GraphDefinition createUpdateGraph(final String graphName, final GraphDefinition graphDef) {
 
 		try {
-
-			List<FunctionExceptionCatcher<GraphDefinition>> threads = new ArrayList<>(size());
-			for (GraphSingleClient client : this) {
-				threads.add(new FunctionExceptionCatcher<GraphDefinition>() {
-					@Override
-					public GraphResult execute() throws Exception {
-						return client.createUpdateGraph(graphName, graphDef);
-					}
+			final AtomicReference<GraphDefinition> resultRef = new AtomicReference<>();
+			final List<ThreadUtils.ParallelRunnable> threads = new ArrayList<>(size());
+			this.forEach(client -> {
+				threads.add(() -> {
+					resultRef.compareAndSet(null, client.createUpdateGraph(graphName, graphDef));
 				});
-			}
+			});
 
-			ThreadUtils.invokeAndJoin(executorService, threads);
-			return ThreadUtils.getFirstResult(threads);
+			ThreadUtils.parallel(threads);
+			return resultRef.get();
 
 		} catch (Exception e) {
 			throw ServerException.getJsonException(e);
@@ -122,28 +110,26 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 
 		try {
 
-			List<FunctionExceptionCatcher<GraphDefinition>> threads = new ArrayList<>(size());
-			for (GraphSingleClient client : this) {
-				threads.add(new FunctionExceptionCatcher<GraphDefinition>() {
-					@Override
-					public GraphDefinition execute() throws Exception {
-						try {
-							return client.deleteGraph(graphName);
-						} catch (WebApplicationException e) {
-							if (e.getResponse().getStatus() == 404)
-								return null;
+			final AtomicReference<GraphDefinition> resultRef = new AtomicReference<>();
+			final List<ThreadUtils.ParallelRunnable> threads = new ArrayList<>(size());
+			this.forEach(client -> {
+				threads.add(() -> {
+					try {
+						resultRef.compareAndSet(null, client.deleteGraph(graphName));
+					} catch (WebApplicationException e) {
+						if (e.getResponse().getStatus() != 404) {
 							logger.warn(e.getMessage(), e);
 							throw e;
 						}
 					}
 				});
-			}
-			ThreadUtils.invokeAndJoin(executorService, threads);
-			GraphDefinition graphDef = ThreadUtils.getFirstResult(threads);
+			});
+
+			ThreadUtils.parallel(threads);
+			GraphDefinition graphDef = resultRef.get();
 			if (graphDef == null)
 				throw new ServerException(Status.NOT_FOUND, "Graph not found: " + graphName);
 			return graphDef;
-
 		} catch (Exception e) {
 			throw ServerException.getJsonException(e);
 		}
