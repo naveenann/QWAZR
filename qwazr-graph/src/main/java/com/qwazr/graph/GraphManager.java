@@ -132,8 +132,10 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 			GraphDefinition graphDef = super.delete(graphName);
 			File dbDirectory = new File(directory, graphName);
 			Table table = Tables.getInstance(dbDirectory, false);
-			if (table != null)
+			if (table != null) {
 				table.close();
+				table.delete();
+			}
 			FileUtils.deleteDirectory(dbDirectory);
 			graphMap.remove(graphName);
 			return graphDef;
