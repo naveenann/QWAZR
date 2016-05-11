@@ -34,18 +34,33 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
+/**
+ * Stops a QWAZR application
+ */
 @Mojo(name = "stop")
 public class QwazrStopMojo extends AbstractMojo {
 
+	/**
+	 * The public address of the QWAZR application. Default value: localhost.
+	 */
 	@Parameter(defaultValue = "${qwazr.publicAddr}")
 	private String publicAddr;
 
+	/**
+	 * The port of the REST Web service. Default value: 9091.
+	 */
 	@Parameter(defaultValue = "${qwazr.webservicePort}")
 	private Integer webservicePort;
 
+	/**
+	 * The time out in milliseconds. Default value: 5000ms.
+	 */
 	@Parameter(defaultValue = "${qwazr.waitMs}")
 	private Integer waitMs;
 
+	/**
+	 * Be fault tolerant, or generate an error if some wrong happens. Default value: true.
+	 */
 	@Parameter(defaultValue = "${qwazr.faultTolerant}")
 	private Boolean faultTolerant;
 
@@ -69,7 +84,7 @@ public class QwazrStopMojo extends AbstractMojo {
 
 		publicAddr = getProperty(publicAddr, "PUBLIC_ADDR", "localhost");
 		webservicePort = getProperty(webservicePort, "WEBSERVICE_PORT", 9091);
-		waitMs = getProperty(webservicePort, null, 5000);
+		waitMs = getProperty(waitMs, null, 5000);
 
 		CloseableHttpResponse response = null;
 		CloseableHttpClient httpClient = null;

@@ -42,54 +42,103 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+/**
+ * Starts a QWAZR application
+ */
 @Mojo(name = "start", requiresDependencyResolution = ResolutionScope.RUNTIME)
 public class QwazrStartMojo extends AbstractMojo {
 
 	@Parameter(defaultValue = "${project}", readonly = true)
 	private MavenProject project;
 
+	/**
+	 * The location of the directory which contains the application. The current directory by default.
+	 */
 	@Parameter(property = "qwazrData")
 	private String dataDirectory;
 
+	/**
+	 * The local address the server will bind to for TCP connections (HTTP and WebService).
+	 */
 	@Parameter(property = "qwazr.listenAddr")
 	private String listenAddr;
 
+	/**
+	 * The public address the server can be reach with.
+	 */
 	@Parameter(property = "qwazr.publicAddr")
 	private String publicAddr;
 
+
+	/**
+	 * The local address the server will bind to for UDP connections.
+	 */
 	@Parameter(property = "qwazr.udpAddress")
 	private String udpAddress;
 
+	/**
+	 * The port the server will bind to for HTTP connections. Default is 9090.
+	 */
 	@Parameter(property = "qwazr.webappPort")
 	private Integer webappPort;
 
+	/**
+	 * The port the server will bind to for REST web service connections. Default is 9091.
+	 */
 	@Parameter(property = "qwazr.webservicePort")
 	private Integer webservicePort;
 
+	/**
+	 * The port the server will bind to for UDP connections. Default is 9091.
+	 */
 	@Parameter(property = "qwazr.udpPort")
 	private Integer udpPort;
 
+	/**
+	 * The library item which will handle the Basic authentication for the HTTP connections.
+	 */
 	@Parameter(property = "qwazr.webappRealm")
 	private String webappRealm;
 
+	/**
+	 * The library item which will handle the Basic authentication for the REST web service connections.
+	 */
 	@Parameter(property = "qwazr.webserviceRealm")
 	private String webserviceRealm;
 
+	/**
+	 * A list of directories which contains the configuration files.
+	 */
 	@Parameter(property = "qwazr.etcDirs")
 	private List<String> etcDirectories;
 
+	/**
+	 * A list of wildcard filters applied to the configuration files.
+	 */
 	@Parameter(property = "qwazr.etcFilters")
 	private List<String> etcFilters;
 
+	/**
+	 * A list of services to activate.
+	 */
 	@Parameter(property = "qwazr.services")
 	private List<QwazrConfiguration.ServiceEnum> services;
 
+	/**
+	 * The size of the thread pool used by the scheduler.
+	 */
 	@Parameter(property = "qwazr.schedulerMaxThreads")
 	private Integer schedulerMaxThreads;
 
+	/**
+	 * The groups the application will be registered in.
+	 */
 	@Parameter(property = "qwazr.groups")
 	private List<String> groups;
 
+	/**
+	 * Pass true to start the QWAZR application as a daemon.
+	 */
 	@Parameter(property = "qwazr.daemon")
 	private Boolean daemon;
 
@@ -145,14 +194,14 @@ public class QwazrStartMojo extends AbstractMojo {
 			final StringBuilder sb = new StringBuilder();
 
 			// Build the runtime classpath
-			List<String> classPathList = project.getRuntimeClasspathElements();
+			final List<String> classPathList = project.getRuntimeClasspathElements();
 			classPathList.forEach(path -> {
 				sb.append(path);
 				sb.append(File.pathSeparatorChar);
 			});
 
 			// Build the artifacts classpath
-			Set<Artifact> artifacts = project.getArtifacts();
+			final Set<Artifact> artifacts = project.getArtifacts();
 			if (artifacts != null)
 				artifacts.forEach(artifact -> {
 					sb.append(artifact.getFile().getPath());
