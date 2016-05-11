@@ -48,49 +48,49 @@ Goals
 Parameters
 ----------
 
-* dataDirectory:
+**dataDirectory**:
 The location of the directory which contains the application.
 Default value: the current directory.
 
-* listenAddr:
+**listenAddr**:
 The local address the server will bind to for TCP connections (HTTP and WebService).
 
-* publicAddr:
+**publicAddr**:
 The public address the server can be reach with.
 
-* udpAddress:
+**udpAddress**:
 The local address the server will bind to for UDP connections.
 
-* webappPort:
+**webappPort**:
  The port the server will bind to for HTTP connections. Default is 9090.
 
-* webservicePort:
+**webservicePort**:
 The port the server will bind to for REST web service connections. Default is 9091.
 
-* udpPort:
+**udpPort**:
 The port the server will bind to for UDP connections. Default is 9091.
 
-* webappRealm:
+**webappRealm**:
 The name of the library item which will handle the Basic authentication for the HTTP connections.
 
-* webserviceRealm:
+**webserviceRealm**:
 The name of the library item which will handle the Basic authentication for the REST web service connections.
 
-* etcDirectories:
+**etcDirectories**:
 A list of directories which contains the configuration files.
 
-* etcFilters:
+**etcFilters**:
 A list of wildcard filters applied to the configuration files.
 
-* services:
+**services**:
 A list of services to activate.
 
-* schedulerMaxThreads:
+**schedulerMaxThreads**:
 The size of the thread pool used by the scheduler.
 
-* groups:
+**groups**:
 The groups the application will be registered in.
 
-* daemon:
+**daemon**:
 Pass true to start the QWAZR application as a daemon.
 Default value: false.
