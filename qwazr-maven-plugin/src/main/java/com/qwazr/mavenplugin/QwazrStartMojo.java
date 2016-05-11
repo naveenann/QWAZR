@@ -48,44 +48,44 @@ public class QwazrStartMojo extends AbstractMojo {
 	@Parameter(defaultValue = "${project}", readonly = true)
 	private MavenProject project;
 
-	@Parameter(property = "qwazr_data")
-	private String data_directory;
+	@Parameter(property = "qwazrData")
+	private String dataDirectory;
 
-	@Parameter(property = "qwazr.listen_addr")
-	private String listen_addr;
+	@Parameter(property = "qwazr.listenAddr")
+	private String listenAddr;
 
-	@Parameter(property = "qwazr.public_addr")
-	private String public_addr;
+	@Parameter(property = "qwazr.publicAddr")
+	private String publicAddr;
 
-	@Parameter(property = "qwazr.udp_address")
-	private String udp_address;
+	@Parameter(property = "qwazr.udpAddress")
+	private String udpAddress;
 
-	@Parameter(property = "qwazr.webapp_port")
-	private Integer webapp_port;
+	@Parameter(property = "qwazr.webappPort")
+	private Integer webappPort;
 
-	@Parameter(property = "qwazr.webservice_port")
-	private Integer webservice_port;
+	@Parameter(property = "qwazr.webservicePort")
+	private Integer webservicePort;
 
-	@Parameter(property = "qwazr.udp_port")
-	private Integer udp_port;
+	@Parameter(property = "qwazr.udpPort")
+	private Integer udpPort;
 
-	@Parameter(property = "qwazr.webapp_realm")
-	private String webapp_realm;
+	@Parameter(property = "qwazr.webappRealm")
+	private String webappRealm;
 
-	@Parameter(property = "qwazr.webservice_realm")
-	private String webservice_realm;
+	@Parameter(property = "qwazr.webserviceRealm")
+	private String webserviceRealm;
 
-	@Parameter(property = "qwazr.etc_dir")
-	private List<String> etc_directories;
+	@Parameter(property = "qwazr.etcDirs")
+	private List<String> etcDirectories;
 
-	@Parameter(property = "qwazr.etc")
-	private List<String> etc;
+	@Parameter(property = "qwazr.etcFilters")
+	private List<String> etcFilters;
 
 	@Parameter(property = "qwazr.services")
 	private List<QwazrConfiguration.ServiceEnum> services;
 
-	@Parameter(property = "qwazr.scheduler_max_threads")
-	private Integer scheduler_max_threads;
+	@Parameter(property = "qwazr.schedulerMaxThreads")
+	private Integer schedulerMaxThreads;
 
 	@Parameter(property = "qwazr.groups")
 	private List<String> groups;
@@ -113,18 +113,18 @@ public class QwazrStartMojo extends AbstractMojo {
 		private final Map<String, String> parameters = new HashMap<>();
 
 		private Launcher() {
-			setParameter(ServerConfiguration.VariablesEnum.QWAZR_DATA, data_directory);
-			setParameter(ServerConfiguration.VariablesEnum.LISTEN_ADDR, listen_addr);
-			setParameter(ServerConfiguration.VariablesEnum.PUBLIC_ADDR, public_addr);
-			if (etc_directories != null && !etc_directories.isEmpty())
+			setParameter(ServerConfiguration.VariablesEnum.QWAZR_DATA, dataDirectory);
+			setParameter(ServerConfiguration.VariablesEnum.LISTEN_ADDR, listenAddr);
+			setParameter(ServerConfiguration.VariablesEnum.PUBLIC_ADDR, publicAddr);
+			if (etcDirectories != null && !etcDirectories.isEmpty())
 				setParameter(ServerConfiguration.VariablesEnum.QWAZR_ETC_DIR,
-						StringUtils.join(etc_directories, File.pathSeparatorChar));
-			setParameter("WEBAPP_PORT", webapp_port);
-			setParameter("WEBSERVICE_PORT", webservice_port);
-			setParameter("WEBAPP_REALM", webapp_realm);
-			setParameter("WEBSERVICE_REALM", webservice_realm);
-			setParameter("UDP_ADDRESS", udp_address);
-			setParameter("UDP_PORT", udp_port);
+						StringUtils.join(etcDirectories, File.pathSeparatorChar));
+			setParameter("WEBAPP_PORT", webappPort);
+			setParameter("WEBSERVICE_PORT", webservicePort);
+			setParameter("WEBAPP_REALM", webappRealm);
+			setParameter("WEBSERVICE_REALM", webserviceRealm);
+			setParameter("UDP_ADDRESS", udpAddress);
+			setParameter("UDP_PORT", udpPort);
 		}
 
 		private void setParameter(Enum<?> key, Object value) {
@@ -172,8 +172,9 @@ public class QwazrStartMojo extends AbstractMojo {
 			final String classpath = buildClassPass();
 			parameters.put("CLASSPATH", classpath);
 
-			if (etc != null && !etc.isEmpty())
-				parameters.put(ServerConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etc, ","));
+			if (etcDirectories != null && !etcDirectories.isEmpty())
+				parameters
+						.put(ServerConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etcDirectories, ","));
 
 			if (groups != null && !groups.isEmpty())
 				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_GROUPS.name(), StringUtils.join(groups, ","));
@@ -194,7 +195,7 @@ public class QwazrStartMojo extends AbstractMojo {
 
 		private void startEmbedded(final Log log)
 				throws ParseException, InstantiationException, IllegalAccessException, ServletException, IOException {
-			Qwazr.start(new QwazrConfiguration(etc, services, groups, scheduler_max_threads));
+			Qwazr.start(new QwazrConfiguration(etcFilters, services, groups, schedulerMaxThreads));
 			log.info("QWAZR started (Embedded)");
 			try {
 				for (; ; )

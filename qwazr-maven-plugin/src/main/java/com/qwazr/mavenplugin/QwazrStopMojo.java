@@ -37,17 +37,17 @@ import java.security.NoSuchAlgorithmException;
 @Mojo(name = "stop")
 public class QwazrStopMojo extends AbstractMojo {
 
-	@Parameter(defaultValue = "${qwazr.public_addr}")
-	private String public_addr;
+	@Parameter(defaultValue = "${qwazr.publicAddr}")
+	private String publicAddr;
 
-	@Parameter(defaultValue = "${qwazr.webservice_port}")
-	private Integer webservice_port;
+	@Parameter(defaultValue = "${qwazr.webservicePort}")
+	private Integer webservicePort;
 
-	@Parameter(defaultValue = "${qwazr.wait_ms}")
-	private Integer wait_ms;
+	@Parameter(defaultValue = "${qwazr.waitMs}")
+	private Integer waitMs;
 
-	@Parameter(defaultValue = "${qwazr.fault_tolerant}")
-	private Boolean fault_tolerant;
+	@Parameter(defaultValue = "${qwazr.faultTolerant}")
+	private Boolean faultTolerant;
 
 	static String getProperty(String currentValue, String env, String defaultValue) {
 		if (currentValue != null)
@@ -67,20 +67,20 @@ public class QwazrStopMojo extends AbstractMojo {
 		final Log log = getLog();
 		log.info("Stopping QWAZR");
 
-		public_addr = getProperty(public_addr, "PUBLIC_ADDR", "localhost");
-		webservice_port = getProperty(webservice_port, "WEBSERVICE_PORT", 9091);
-		wait_ms = getProperty(webservice_port, null, 5000);
+		publicAddr = getProperty(publicAddr, "PUBLIC_ADDR", "localhost");
+		webservicePort = getProperty(webservicePort, "WEBSERVICE_PORT", 9091);
+		waitMs = getProperty(webservicePort, null, 5000);
 
 		CloseableHttpResponse response = null;
 		CloseableHttpClient httpClient = null;
 		try {
 			httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
-			URI uri = new URI("http", null, public_addr, webservice_port, "/shutdown", null, null);
+			URI uri = new URI("http", null, publicAddr, webservicePort, "/shutdown", null, null);
 			log.info("Post HTTP Delete on: " + uri);
 			response = httpClient.execute(new HttpDelete(uri));
 			log.info("HTTP Status Code: " + response.getStatusLine().getStatusCode());
 		} catch (IOException | URISyntaxException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
-			if (fault_tolerant == null || fault_tolerant)
+			if (faultTolerant == null || faultTolerant)
 				log.warn(e);
 			else
 				throw new MojoExecutionException(e.getMessage(), e);
@@ -88,7 +88,7 @@ public class QwazrStopMojo extends AbstractMojo {
 			IOUtils.close(httpClient, response);
 		}
 		try {
-			Thread.sleep(wait_ms);
+			Thread.sleep(waitMs);
 		} catch (InterruptedException e) {
 			log.warn(e);
 		}
