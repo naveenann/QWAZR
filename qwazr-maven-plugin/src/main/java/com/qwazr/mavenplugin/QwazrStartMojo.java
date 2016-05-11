@@ -76,7 +76,7 @@ public class QwazrStartMojo extends AbstractMojo {
 	private String webservice_realm;
 
 	@Parameter(property = "qwazr.etc_dir")
-	private String etc_directory;
+	private List<String> etc_directories;
 
 	@Parameter(property = "qwazr.etc")
 	private List<String> etc;
@@ -114,9 +114,11 @@ public class QwazrStartMojo extends AbstractMojo {
 
 		private Launcher() {
 			setParameter(ServerConfiguration.VariablesEnum.QWAZR_DATA, data_directory);
-			setParameter(ServerConfiguration.VariablesEnum.QWAZR_ETC_DIR, etc_directory);
 			setParameter(ServerConfiguration.VariablesEnum.LISTEN_ADDR, listen_addr);
 			setParameter(ServerConfiguration.VariablesEnum.PUBLIC_ADDR, public_addr);
+			if (etc_directories != null && !etc_directories.isEmpty())
+				setParameter(ServerConfiguration.VariablesEnum.QWAZR_ETC_DIR,
+						StringUtils.join(etc_directories, File.pathSeparatorChar));
 			setParameter("WEBAPP_PORT", webapp_port);
 			setParameter("WEBSERVICE_PORT", webservice_port);
 			setParameter("WEBAPP_REALM", webapp_realm);
@@ -144,23 +146,17 @@ public class QwazrStartMojo extends AbstractMojo {
 
 			// Build the runtime classpath
 			List<String> classPathList = project.getRuntimeClasspathElements();
-			classPathList.forEach(new Consumer<String>() {
-				@Override
-				public void accept(String path) {
-					sb.append(path);
-					sb.append(File.pathSeparatorChar);
-				}
+			classPathList.forEach(path -> {
+				sb.append(path);
+				sb.append(File.pathSeparatorChar);
 			});
 
 			// Build the artifacts classpath
 			Set<Artifact> artifacts = project.getArtifacts();
 			if (artifacts != null)
-				artifacts.forEach(new Consumer<Artifact>() {
-					@Override
-					public void accept(Artifact artifact) {
-						sb.append(artifact.getFile().getPath());
-						sb.append(File.pathSeparatorChar);
-					}
+				artifacts.forEach(artifact -> {
+					sb.append(artifact.getFile().getPath());
+					sb.append(File.pathSeparatorChar);
 				});
 			return sb.toString();
 		}
