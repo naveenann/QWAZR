@@ -80,9 +80,10 @@ public class QwazrConfiguration extends ServerConfiguration {
 	public final FileFilter etcFileFilter;
 	public final Integer scheduler_max_threads;
 
-	public QwazrConfiguration(Collection<String> etcs, Collection<ServiceEnum> services, Collection<String> groups,
+	public QwazrConfiguration(Collection<String> etcFilters,
+			Collection<ServiceEnum> services, Collection<String> groups,
 			Integer schedulerMaxThreads) {
-		this.etcFileFilter = buildEtcFileFilter(etcs);
+		this.etcFileFilter = buildEtcFileFilter(etcFilters);
 		this.services = buildServices(services);
 		this.groups = buildGroups(groups);
 		this.scheduler_max_threads = buildSchedulerMaxThreads(schedulerMaxThreads);
