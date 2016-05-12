@@ -221,9 +221,9 @@ public class QwazrStartMojo extends AbstractMojo {
 			final String classpath = buildClassPass();
 			parameters.put("CLASSPATH", classpath);
 
-			if (etcDirectories != null && !etcDirectories.isEmpty())
+			if (etcFilters != null && !etcFilters.isEmpty())
 				parameters
-						.put(ServerConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etcDirectories, ","));
+						.put(ServerConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etcFilters, ","));
 
 			if (groups != null && !groups.isEmpty())
 				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_GROUPS.name(), StringUtils.join(groups, ","));

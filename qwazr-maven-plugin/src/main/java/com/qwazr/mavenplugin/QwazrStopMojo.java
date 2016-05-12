@@ -43,48 +43,58 @@ public class QwazrStopMojo extends AbstractMojo {
 	/**
 	 * The public address of the QWAZR application. Default value: localhost.
 	 */
-	@Parameter(defaultValue = "${qwazr.publicAddr}")
+	@Parameter(property = "qwazr.publicAddr")
 	private String publicAddr;
 
 	/**
 	 * The port of the REST Web service. Default value: 9091.
 	 */
-	@Parameter(defaultValue = "${qwazr.webservicePort}")
+	@Parameter(property = "qwazr.webservicePort")
 	private Integer webservicePort;
 
 	/**
 	 * The time out in milliseconds. Default value: 5000ms.
 	 */
-	@Parameter(defaultValue = "${qwazr.waitMs}")
+	@Parameter(property = "qwazr.waitMs")
 	private Integer waitMs;
 
 	/**
 	 * Be fault tolerant, or generate an error if some wrong happens. Default value: true.
 	 */
-	@Parameter(defaultValue = "${qwazr.faultTolerant}")
+	@Parameter(property = "qwazr.faultTolerant")
 	private Boolean faultTolerant;
 
-	static String getProperty(String currentValue, String env, String defaultValue) {
+	static String getPropertyOrEnv(String currentValue, String env, String defaultValue) {
 		if (currentValue != null)
 			return currentValue;
-		String value = env == null ? null : System.getenv(env);
-		return value != null ? null : defaultValue;
+		if (env == null)
+			return defaultValue;
+		currentValue = System.getProperty(env);
+		if (currentValue != null)
+			return currentValue;
+		currentValue = System.getenv().get(env);
+		return currentValue == null ? defaultValue : currentValue;
 	}
 
-	static Integer getProperty(Integer currentValue, String env, Integer defaultValue) {
+	static Integer getPropertyOrEnv(Integer currentValue, String env, Integer defaultValue) {
 		if (currentValue != null)
 			return currentValue;
-		String value = env == null ? null : System.getenv(env);
-		return value != null ? Integer.parseInt(value) : defaultValue;
+		if (env == null)
+			return defaultValue;
+		String value = System.getProperty(env);
+		if (value != null)
+			return Integer.parseInt(value);
+		value = System.getenv().get(env);
+		return value == null ? defaultValue : Integer.parseInt(value);
 	}
 
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		final Log log = getLog();
 		log.info("Stopping QWAZR");
 
-		publicAddr = getProperty(publicAddr, "PUBLIC_ADDR", "localhost");
-		webservicePort = getProperty(webservicePort, "WEBSERVICE_PORT", 9091);
-		waitMs = getProperty(waitMs, null, 5000);
+		publicAddr = getPropertyOrEnv(publicAddr, "PUBLIC_ADDR", "localhost");
+		webservicePort = getPropertyOrEnv(webservicePort, "WEBSERVICE_PORT", 9091);
+		waitMs = getPropertyOrEnv(waitMs, null, 5000);
 
 		CloseableHttpResponse response = null;
 		CloseableHttpClient httpClient = null;
