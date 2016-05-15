@@ -17,8 +17,6 @@ package com.qwazr.compiler;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.utils.server.ServerBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,8 +28,6 @@ public class CompilerManager {
 	public final static String SERVICE_NAME_COMPILER = "compiler";
 
 	private static volatile CompilerManager INSTANCE = null;
-
-	private final static Logger logger = LoggerFactory.getLogger(CompilerManager.class);
 
 	public static void load(final ServerBuilder serverBuilder) throws IOException {
 		if (INSTANCE != null)
