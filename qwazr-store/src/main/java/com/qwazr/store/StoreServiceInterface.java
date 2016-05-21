@@ -28,7 +28,7 @@ import java.util.Set;
 @RolesAllowed(StoreServiceInterface.SERVICE_NAME)
 @ServiceName(StoreServiceInterface.SERVICE_NAME)
 @Path("/" + StoreServiceInterface.SERVICE_NAME)
-interface StoreServiceInterface extends ServiceInterface {
+public interface StoreServiceInterface extends ServiceInterface {
 
 	String SERVICE_NAME = "store";
 
