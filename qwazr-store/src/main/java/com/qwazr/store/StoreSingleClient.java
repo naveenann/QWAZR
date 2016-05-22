@@ -110,7 +110,7 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 		try {
 			UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName, "/", path);
 			uBuilder.setParameterObject("last_modified", lastModified);
-			Request request = Request.Post(uBuilder.build());
+			Request request = Request.Put(uBuilder.build());
 			HttpResponse response = execute(request, inputStream, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			ResponseBuilder builder = Response.ok("File created: " + path, MediaType.TEXT_PLAIN);
