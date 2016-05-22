@@ -27,9 +27,8 @@ import com.qwazr.library.LibraryServiceImpl;
 import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.search.index.IndexManager;
+import com.qwazr.store.StoreManager;
 import com.qwazr.utils.AnnotationsUtils;
-import com.qwazr.utils.file.TrackedDirectories;
-import com.qwazr.utils.file.TrackedDirectory;
 import com.qwazr.utils.file.TrackedInterface;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
@@ -96,6 +95,9 @@ public class Qwazr {
 
 		if (QwazrConfiguration.ServiceEnum.table.isActive(config))
 			TableManager.load(builder);
+
+		if (QwazrConfiguration.ServiceEnum.store.isActive(config))
+			StoreManager.load(builder);
 
 		LibraryManager.load(config.dataDirectory, etcTracker);
 		builder.registerWebService(LibraryServiceImpl.class);

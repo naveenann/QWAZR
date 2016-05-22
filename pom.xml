@@ -74,6 +74,7 @@
         <module>qwazr-scripts</module>
         <module>qwazr-scheduler</module>
         <module>qwazr-search</module>
+        <module>qwazr-store</module>
         <module>qwazr-utils</module>
         <module>qwazr-webapps</module>
     </modules>
@@ -193,6 +194,11 @@
             <dependency>
                 <groupId>com.qwazr</groupId>
                 <artifactId>qwazr-webapps</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.qwazr</groupId>
+                <artifactId>qwazr-store</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

@@ -49,9 +49,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 		scripts,
 
 		schedulers,
-
-		semaphores,
-
+		
 		webapps,
 
 		search,
@@ -59,6 +57,8 @@ public class QwazrConfiguration extends ServerConfiguration {
 		graph,
 
 		table,
+
+		store,
 
 		compiler;
 
@@ -80,9 +80,8 @@ public class QwazrConfiguration extends ServerConfiguration {
 	public final FileFilter etcFileFilter;
 	public final Integer scheduler_max_threads;
 
-	public QwazrConfiguration(Collection<String> etcFilters,
-			Collection<ServiceEnum> services, Collection<String> groups,
-			Integer schedulerMaxThreads) {
+	public QwazrConfiguration(Collection<String> etcFilters, Collection<ServiceEnum> services,
+			Collection<String> groups, Integer schedulerMaxThreads) {
 		this.etcFileFilter = buildEtcFileFilter(etcFilters);
 		this.services = buildServices(services);
 		this.groups = buildGroups(groups);
