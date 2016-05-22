@@ -15,10 +15,8 @@
  */
 package com.qwazr.store;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServiceInterface;
 import org.apache.commons.io.IOUtils;
@@ -28,14 +26,12 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.utils.DateUtils;
 
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.Map;
 import java.util.TreeMap;
@@ -51,7 +47,7 @@ public class StoreFileResult {
 	public final Long size;
 
 	public final Map<String, StoreFileResult> directories;
-	public final Map<String, Map<String, StoreFileResult>> files;
+	public final Map<String, StoreFileResult> files;
 
 	public StoreFileResult() {
 		this((Type) null, false);
@@ -64,8 +60,8 @@ public class StoreFileResult {
 		last_modified = null;
 		size = null;
 		if (instanceMaps) {
-			directories = new TreeMap<String, StoreFileResult>();
-			files = new TreeMap<String, Map<String, StoreFileResult>>();
+			directories = new TreeMap<>();
+			files = new TreeMap<>();
 		} else {
 			directories = null;
 			files = null;
@@ -79,18 +75,15 @@ public class StoreFileResult {
 			type = Type.DIRECTORY;
 			if (retrieveChilds) {
 				// We need at least an empty structure for the merging process
-				directories = new TreeMap<String, StoreFileResult>();
-				files = new TreeMap<String, Map<String, StoreFileResult>>();
+				directories = new TreeMap<>();
+				files = new TreeMap<>();
 				File[] fileList = file.listFiles((FileFilter) HiddenFileFilter.VISIBLE);
 				if (fileList != null) {
 					for (File f : fileList) {
 						if (f.isDirectory())
 							directories.put(f.getName(), new StoreFileResult(f, false));
-						else if (f.isFile()) {
-							Map<String, StoreFileResult> nodeMap = new TreeMap<String, StoreFileResult>();
-							nodeMap.put(ClusterManager.INSTANCE.me.httpAddressKey, new StoreFileResult(f, false));
-							files.put(f.getName(), nodeMap);
-						}
+						else if (f.isFile())
+							files.put(f.getName(), new StoreFileResult(f, false));
 					}
 				}
 			} else {
@@ -156,61 +149,4 @@ public class StoreFileResult {
 			builder.header(QWAZR_ADDR, uri.toASCIIString());
 	}
 
-	final static Type getType(Response response) {
-		String h = response.getHeaderString(QWAZR_TYPE);
-		if (h == null)
-			return Type.UNKNOWN;
-		try {
-			return Type.valueOf(h);
-		} catch (IllegalArgumentException e) {
-			return Type.UNKNOWN;
-		}
-	}
-
-	final static URI getAddr(Response response) throws URISyntaxException {
-		String u = response.getHeaderString(QWAZR_ADDR);
-		if (u == null)
-			throw new NullPointerException("No address");
-		return new URI(u);
-	}
-
-	@JsonIgnore
-	final void merge(StoreFileResult dirResult) {
-		if (dirResult == null)
-			return;
-		if (dirResult.directories != null)
-			directories.putAll(dirResult.directories);
-		if (dirResult.files != null) {
-			for (Map.Entry<String, Map<String, StoreFileResult>> entry : dirResult.files.entrySet()) {
-				String name = entry.getKey();
-				Map<String, StoreFileResult> nodeMap = entry.getValue();
-				Map<String, StoreFileResult> mergeNodeMap = files.get(name);
-				if (mergeNodeMap == null)
-					files.put(name, nodeMap);
-				else
-					mergeNodeMap.putAll(nodeMap);
-			}
-		}
-	}
-
-	/**
-	 * Check if the file are identical. Same type, same last_modified date, and
-	 * same size.
-	 *
-	 * @param o the object to compare
-	 * @return true if the file are the same
-	 */
-	public final boolean repairCheckFileEquals(StoreFileResult o) {
-		if (o.type == null || type == null)
-			throw new IllegalArgumentException("The type is node defined");
-		if (o.type != type)
-			return false;
-		if (size == null || o.size == null)
-			throw new IllegalArgumentException("The size is node defined");
-		if (!size.equals(o.size))
-			return false;
-		if (last_modified == null || o.last_modified == null)
-			throw new IllegalArgumentException("The last modified date is node defined");
-		return last_modified.equals(o.last_modified);
-	}
 }
