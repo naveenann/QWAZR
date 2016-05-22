@@ -17,19 +17,22 @@ package com.qwazr.store.test;
 
 import com.qwazr.store.StoreFileResult;
 import com.qwazr.store.StoreServiceInterface;
+import com.qwazr.utils.inputstream.CounterInputStream;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class StoreTest {
@@ -74,10 +77,18 @@ public class StoreTest {
 		return result;
 	}
 
-	private StoreFileResult checkFile(StoreFileResult result, String file) {
-		Assert.assertNotNull(result.files);
-		Assert.assertTrue(result.files.containsKey(file));
-		return result;
+	private void checkFile(StoreFileResult dirResult, String file) {
+		Assert.assertNotNull(dirResult.files);
+		final StoreFileResult fileResult = dirResult.files.get(file);
+		Assert.assertNotNull(fileResult);
+		Assert.assertNotNull(fileResult.size);
+		Assert.assertEquals(FILE_SIZES.get(file), fileResult.size);
+	}
+
+	private void checkNoFile(StoreFileResult dirResult, String file) {
+		if (dirResult.files == null)
+			return;
+		Assert.assertFalse(dirResult.files.containsKey(file));
 	}
 
 	@Test
@@ -116,6 +127,7 @@ public class StoreTest {
 	private final static String QWAZR_PDF = "Qwazr_BAT.pdf";
 
 	private final static List<String> FILES = Arrays.asList(QWAZR_JPG, QWAZR_PDF);
+	private final static Map<String, Long> FILE_SIZES = new ConcurrentHashMap<>();
 
 	private final static String DIRECTORY = "testdir";
 
@@ -123,8 +135,9 @@ public class StoreTest {
 	public void test300putFile() throws URISyntaxException {
 		final StoreServiceInterface client = TestServer.getClient();
 		FILES.parallelStream().forEach(file -> {
-			try (final InputStream is = getClass().getResourceAsStream(file)) {
+			try (final CounterInputStream is = new CounterInputStream(getClass().getResourceAsStream(file))) {
 				checkResponse(client.putFile(SCHEMA, DIRECTORY + "/" + file, is, null), 200);
+				FILE_SIZES.put(file, is.getCount());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
@@ -134,19 +147,30 @@ public class StoreTest {
 	@Test
 	public void test400getDirectory() throws URISyntaxException {
 		final StoreServiceInterface client = TestServer.getClient();
-		StoreFileResult result = checkFileResult(client.getDirectory(SCHEMA), StoreFileResult.Type.DIRECTORY);
+		final StoreFileResult result = checkFileResult(client.getDirectory(SCHEMA), StoreFileResult.Type.DIRECTORY);
 		checkDirectory(result, DIRECTORY);
 	}
 
 	@Test
 	public void test410getFiles() throws URISyntaxException {
 		final StoreServiceInterface client = TestServer.getClient();
-		StoreFileResult result =
+		final StoreFileResult result =
 				checkFileResult(client.getDirectory(SCHEMA, DIRECTORY), StoreFileResult.Type.DIRECTORY);
 		FILES.parallelStream().forEach(file -> checkFile(result, file));
 	}
 
-	//TODO Delete files and prune directory
+	@Test
+	public void test500deleteFilesCheckPrune() throws URISyntaxException {
+		final StoreServiceInterface client = TestServer.getClient();
+		checkFileResult(client.getDirectory(SCHEMA, DIRECTORY), StoreFileResult.Type.DIRECTORY);
+		FILES.parallelStream().forEach(file -> checkResponse(client.deleteFile(SCHEMA, DIRECTORY + "/" + file), 200));
+		try {
+			client.getDirectory(SCHEMA, DIRECTORY);
+			Assert.fail("Directory not pruned");
+		} catch (WebApplicationException e) {
+			Assert.assertEquals(404, e.getResponse().getStatus());
+		}
+	}
 
 	@Test
 	public void test900deleteSchema() throws URISyntaxException {
