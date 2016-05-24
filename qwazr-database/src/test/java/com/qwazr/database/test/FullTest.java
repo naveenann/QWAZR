@@ -21,10 +21,7 @@ import com.qwazr.database.TableBuilder;
 import com.qwazr.database.TableServer;
 import com.qwazr.database.TableServiceInterface;
 import com.qwazr.database.TableSingleClient;
-import com.qwazr.database.model.ColumnDefinition;
-import com.qwazr.database.model.TableDefinition;
-import com.qwazr.database.model.TableRequest;
-import com.qwazr.database.model.TableRequestResult;
+import com.qwazr.database.model.*;
 import com.qwazr.database.store.Table;
 import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.IOUtils;
@@ -52,6 +49,9 @@ public class FullTest {
 	public static final String BASE_URL = "http://localhost:9091";
 	public static final ColumnDefinition COLUMN_DEF_PASSWORD = getColumnDefinition("column_def_password.json");
 	public static final ColumnDefinition COLUMN_DEF_ROLES = getColumnDefinition("column_def_roles.json");
+	public static final ColumnDefinition COLUMN_DEF_DPT_ID =
+			new ColumnDefinition(ColumnDefinition.Type.INTEGER, ColumnDefinition.Mode.INDEXED);
+
 	public static final Map<String, Object> UPSERT_ROW1 =
 			getTypeDef("upsert_row1.json", TableSingleClient.MapStringObjectTypeRef);
 	public static final Map<String, Object> UPSERT_ROW2 =
@@ -62,6 +62,7 @@ public class FullTest {
 	public static final String COLUMN_NAME_PASSWORD = "password";
 	public static final String COLUMN_NAME_ROLES = "roles";
 	public static final String COLUMN_NAME_ROLES2 = "roles2";
+	public static final String COLUMN_NAME_DPT_ID = "dptId";
 	public static final String ID1 = "one";
 	public static final String ID2 = "two";
 	public static final String ID3 = "three";
@@ -116,6 +117,9 @@ public class FullTest {
 		columnDefinition = client.addColumn(TABLE_NAME, COLUMN_NAME_ROLES2, COLUMN_DEF_ROLES);
 		Assert.assertNotNull(columnDefinition);
 		checkColumnDefinitions(columnDefinition, COLUMN_DEF_ROLES);
+		columnDefinition = client.addColumn(TABLE_NAME, COLUMN_NAME_DPT_ID, COLUMN_DEF_DPT_ID);
+		Assert.assertNotNull(columnDefinition);
+		checkColumnDefinitions(columnDefinition, COLUMN_DEF_DPT_ID);
 	}
 
 	private void checkColumn(TableServiceInterface client, String columnName, ColumnDefinition columnDefinition) {
@@ -131,6 +135,7 @@ public class FullTest {
 		checkColumn(client, COLUMN_NAME_PASSWORD, COLUMN_DEF_PASSWORD);
 		checkColumn(client, COLUMN_NAME_ROLES, COLUMN_DEF_ROLES);
 		checkColumn(client, COLUMN_NAME_ROLES2, COLUMN_DEF_ROLES);
+		checkColumn(client, COLUMN_NAME_DPT_ID, COLUMN_DEF_DPT_ID);
 	}
 
 	// TODO Not Yet implemented
@@ -161,7 +166,7 @@ public class FullTest {
 
 	@Test
 	public void test300upsertRow() throws URISyntaxException {
-		TableServiceInterface client = getClient();
+		final TableServiceInterface client = getClient();
 		Assert.assertNotNull(client.upsertRow(TABLE_NAME, ID1, UPSERT_ROW1));
 		Assert.assertNotNull(client.upsertRow(TABLE_NAME, ID2, UPSERT_ROW2));
 		checkGetRow("password", PASS1, client.getRow(TABLE_NAME, ID1, COLUMNS));
@@ -170,7 +175,7 @@ public class FullTest {
 
 	@Test
 	public void test350upsertRows() throws URISyntaxException {
-		TableServiceInterface client = getClient();
+		final TableServiceInterface client = getClient();
 		Long result = client.upsertRows(TABLE_NAME, UPSERT_ROWS);
 		Assert.assertNotNull(result);
 		Assert.assertEquals((long) result, UPSERT_ROWS.size());
@@ -178,7 +183,7 @@ public class FullTest {
 
 	@Test
 	public void test355MatchAllQuery() throws URISyntaxException {
-		TableServiceInterface client = getClient();
+		final TableServiceInterface client = getClient();
 		TableRequest request = new TableRequest(0, 1000, COLUMNS_WITHID, null, null);
 		TableRequestResult result = client.queryRows(TABLE_NAME, request);
 		Assert.assertNotNull(result);
@@ -188,7 +193,7 @@ public class FullTest {
 	}
 
 	private void deleteAndCheck(String id) throws URISyntaxException {
-		TableServiceInterface client = getClient();
+		final TableServiceInterface client = getClient();
 		Assert.assertTrue(client.deleteRow(TABLE_NAME, id));
 		try {
 			client.getRow(TABLE_NAME, id, COLUMNS);
@@ -200,7 +205,7 @@ public class FullTest {
 
 	@Test
 	public void test360DeleteAndUpsertRow() throws URISyntaxException {
-		TableServiceInterface client = getClient();
+		final TableServiceInterface client = getClient();
 		deleteAndCheck(ID1);
 		deleteAndCheck(ID2);
 		Assert.assertNotNull(client.upsertRow(TABLE_NAME, ID2, UPSERT_ROW2));
@@ -212,7 +217,7 @@ public class FullTest {
 
 	private Map<String, Object> checkGetRow(String column, String value, Map<String, Object> row) {
 		Assert.assertNotNull(row);
-		List<String> values = (List<String>) row.get(column);
+		final List<String> values = (List<String>) row.get(column);
 		Assert.assertNotNull(values);
 		Assert.assertFalse(values.isEmpty());
 		Assert.assertEquals(values.get(0), value);
@@ -220,12 +225,23 @@ public class FullTest {
 	}
 
 	@Test
-	public void test400getRow() throws URISyntaxException {
-		TableServiceInterface client = getClient();
+	public void test400FilterQuery() throws URISyntaxException {
+		final TableServiceInterface client = getClient();
+		final TableQuery.Group query = new TableQuery.And().add(COLUMN_NAME_DPT_ID, 1);
+		final TableRequest request = new TableRequest(0, 0, COLUMNS_WITHID, null, query.build());
+		final TableRequestResult result = client.queryRows(TABLE_NAME, request);
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.count);
+		Assert.assertEquals(new Long(3), result.count);
+	}
+
+	@Test
+	public void test410GetRow() throws URISyntaxException {
+		final TableServiceInterface client = getClient();
 		checkGetRow("password", PASS3, client.getRow(TABLE_NAME, ID3, COLUMNS));
 		checkGetRow("password", PASS4, client.getRow(TABLE_NAME, ID4, COLUMNS));
-		Map<String, Object> row = checkGetRow("password", PASS1, client.getRow(TABLE_NAME, ID1, COLUMNS));
-		List<String> roles = (List<String>) row.get("roles");
+		final Map<String, Object> row = checkGetRow("password", PASS1, client.getRow(TABLE_NAME, ID1, COLUMNS));
+		final List<String> roles = (List<String>) row.get("roles");
 		Assert.assertNotNull(roles);
 		Assert.assertEquals(2, roles.size());
 	}
