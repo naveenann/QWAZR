@@ -107,12 +107,12 @@ class StoreSchemaInstance implements Closeable {
 			Path tmpPath = null;
 			try {
 				tmpPath = tempDirectory.resolve(UUIDs.timeBased().toString());
-				if (lastModified != null)
-					Files.setLastModifiedTime(tmpPath, FileTime.fromMillis(lastModified));
 				Path parent = path.getParent();
 				if (parent == null || !Files.exists(parent))
 					Files.createDirectories(parent);
 				IOUtils.copy(inputStream, tmpPath.toFile());
+				if (lastModified != null)
+					Files.setLastModifiedTime(tmpPath, FileTime.fromMillis(lastModified));
 				Files.move(tmpPath, path);
 				tmpPath = null;
 				return path;
