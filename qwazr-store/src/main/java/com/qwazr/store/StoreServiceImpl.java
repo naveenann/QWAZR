@@ -25,25 +25,27 @@ import javax.ws.rs.core.Response.Status;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.TreeSet;
 
 class StoreServiceImpl implements StoreServiceInterface {
 
-	private File getExistingFile(String schemaName, String path) throws ServerException {
-		File file = StoreManager.INSTANCE.get(schemaName).getFile(path);
-		if (!file.exists())
-			throw new ServerException(Status.NOT_FOUND, "Error. file not found: " + path);
-		return file;
+	private Path getExistingPath(String schemaName, String path) throws IOException {
+		final Path filePath = StoreManager.INSTANCE.get(schemaName).getPath(path);
+		if (!Files.exists(filePath))
+			throw new ServerException(Status.NOT_FOUND, "Error. path not found: " + path);
+		return filePath;
 	}
 
 	@Override
 	public Response getFile(String schemaName, String path) {
 		StoreFileResult storeFile = null;
 		try {
-			File file = getExistingFile(schemaName, path);
+			final File file = getExistingPath(schemaName, path).toFile();
 			storeFile = new StoreFileResult(file, file.isDirectory());
-			ResponseBuilder builder = Response.ok();
+			final ResponseBuilder builder = Response.ok();
 			storeFile.buildHeader(builder);
 			storeFile.buildEntity(builder);
 			return builder.build();
@@ -57,9 +59,9 @@ class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public StoreFileResult getDirectory(String schemaName, String path) {
 		try {
-			File file = getExistingFile(schemaName, path);
+			final File file = getExistingPath(schemaName, path).toFile();
 			return new StoreFileResult(file, file.isDirectory());
-		} catch (ServerException e) {
+		} catch (ServerException | IOException e) {
 			throw ServerException.getJsonException(e);
 		}
 	}
@@ -72,12 +74,12 @@ class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public Response headFile(String schemaName, String path) {
 		try {
-			File file = getExistingFile(schemaName, path);
-			StoreFileResult storeFile = new StoreFileResult(file, false);
-			ResponseBuilder builder = Response.ok();
+			final File file = getExistingPath(schemaName, path).toFile();
+			final StoreFileResult storeFile = new StoreFileResult(file, false);
+			final ResponseBuilder builder = Response.ok();
 			storeFile.buildHeader(builder);
 			return builder.build();
-		} catch (ServerException e) {
+		} catch (ServerException | IOException e) {
 			return ServerException.getTextException(e).getResponse();
 		}
 	}
@@ -85,9 +87,9 @@ class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public Response putFile(String schemaName, String path, InputStream inputStream, Long lastModified) {
 		try {
-			File file = StoreManager.INSTANCE.get(schemaName).putFile(path, inputStream, lastModified);
-			StoreFileResult storeFile = new StoreFileResult(file, false);
-			ResponseBuilder builder = Response.ok("File created: " + path, MediaType.TEXT_PLAIN);
+			final File file = StoreManager.INSTANCE.get(schemaName).putPath(path, inputStream, lastModified).toFile();
+			final StoreFileResult storeFile = new StoreFileResult(file, false);
+			final ResponseBuilder builder = Response.ok("File created: " + path, MediaType.TEXT_PLAIN);
 			storeFile.buildHeader(builder);
 			return builder.build();
 		} catch (ServerException | IOException e) {
@@ -98,9 +100,9 @@ class StoreServiceImpl implements StoreServiceInterface {
 	@Override
 	public Response deleteFile(String schemaName, String path) {
 		try {
-			StoreManager.INSTANCE.get(schemaName).deleteFile(path);
+			StoreManager.INSTANCE.get(schemaName).deletePath(path);
 			return Response.ok("File deleted: " + path, MediaType.TEXT_PLAIN).build();
-		} catch (ServerException e) {
+		} catch (ServerException | IOException e) {
 			throw ServerException.getTextException(e);
 		}
 	}

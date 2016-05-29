@@ -68,9 +68,9 @@ public class StoreFileResult {
 		}
 	}
 
-	StoreFileResult(File file, boolean retrieveChilds) {
-		inputStream = null;
+	StoreFileResult(final File file, boolean retrieveChilds) {
 		this.file = file;
+		inputStream = null;
 		if (file.isDirectory()) {
 			type = Type.DIRECTORY;
 			if (retrieveChilds) {
