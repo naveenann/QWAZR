@@ -18,16 +18,13 @@ package com.qwazr.store;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response.Status;
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -47,24 +44,23 @@ public class StoreManager {
 
 	private final ConcurrentHashMap<String, StoreSchemaInstance> schemaMap;
 
-	private final File storeDirectory;
+	private final Path storeDirectory;
 
 	private StoreManager(final ServerBuilder builder) throws IOException {
-		storeDirectory = new File(builder.getServerConfiguration().dataDirectory, STORE_DIRECTORY);
-		FileUtils.forceMkdir(storeDirectory);
+		storeDirectory = builder.getServerConfiguration().dataDirectory.toPath().resolve(STORE_DIRECTORY);
+		if (!Files.exists(storeDirectory))
+			Files.createDirectory(storeDirectory);
 		builder.registerWebService(StoreServiceImpl.class);
 		builder.registerShutdownListener(server -> shutdown());
 		schemaMap = new ConcurrentHashMap<>();
-		File[] directories = storeDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
-		if (directories == null)
-			return;
-		for (File schemaDirectory : directories) {
+		storeDirectory.forEach(path -> {
 			try {
-				schemaMap.put(schemaDirectory.getName(), new StoreSchemaInstance(schemaDirectory));
+				if (Files.isDirectory(path))
+					schemaMap.put(path.toFile().getName(), new StoreSchemaInstance(path));
 			} catch (ServerException | IOException e) {
 				logger.error(e.getMessage(), e);
 			}
-		}
+		});
 	}
 
 	private void shutdown() {
@@ -77,7 +73,7 @@ public class StoreManager {
 		synchronized (schemaMap) {
 			StoreSchemaInstance schemaInstance = schemaMap.get(schemaName);
 			if (schemaInstance == null) {
-				schemaInstance = new StoreSchemaInstance(new File(storeDirectory, schemaName));
+				schemaInstance = new StoreSchemaInstance(storeDirectory.resolve(schemaName));
 				schemaMap.put(schemaName, schemaInstance);
 			}
 		}
@@ -100,26 +96,6 @@ public class StoreManager {
 
 	Set<String> nameSet() {
 		return schemaMap.keySet();
-	}
-
-	/**
-	 * Get a File with a path including the schema name
-	 *
-	 * @param schemaAndPath a full path schema_name/path
-	 * @return a file instance
-	 * @throws ServerException if the schema does not exists, or if there is a permission
-	 *                         issue
-	 */
-	final File getFile(final String schemaAndPath) throws ServerException {
-		final int idx = schemaAndPath.indexOf('/');
-		switch (idx) {
-		case -1:
-			return get(schemaAndPath).getFile(StringUtils.EMPTY);
-		case 0:
-			return get(schemaAndPath.substring(1)).getFile(StringUtils.EMPTY);
-		default:
-			return get(schemaAndPath.substring(0, idx)).getFile(schemaAndPath.substring(idx));
-		}
 	}
 
 }

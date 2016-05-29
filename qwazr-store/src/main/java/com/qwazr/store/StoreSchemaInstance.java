@@ -24,9 +24,11 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.ws.rs.core.Response;
 import java.io.Closeable;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 
 class StoreSchemaInstance implements Closeable {
 
@@ -35,35 +37,33 @@ class StoreSchemaInstance implements Closeable {
 	final static String DATA_DIRECTORY = "data";
 	final static String TEMP_DIRECTORY = "tmp";
 
-	private final File schemaDirectory;
-	private final File dataDirectory;
-	private final File tempDirectory;
+	private final Path schemaDirectory;
+	private final Path dataDirectory;
+	private final Path tempDirectory;
 
-	StoreSchemaInstance(final File schemaDirectory) throws IOException {
+	StoreSchemaInstance(final Path schemaDirectory) throws IOException {
 		this.schemaDirectory = schemaDirectory;
-		dataDirectory = new File(schemaDirectory, DATA_DIRECTORY);
-		FileUtils.forceMkdir(dataDirectory);
-		tempDirectory = new File(schemaDirectory, TEMP_DIRECTORY);
-		FileUtils.forceMkdir(tempDirectory);
+		dataDirectory = schemaDirectory.resolve(DATA_DIRECTORY);
+		Files.createDirectories(dataDirectory);
+		tempDirectory = schemaDirectory.resolve(TEMP_DIRECTORY);
+		Files.createDirectories(tempDirectory);
 	}
 
 	@Override
 	final public void close() throws IOException {
 		rwl.readEx(() -> {
-			FileUtils.cleanDirectory(tempDirectory);
+			FileUtils.cleanDirectory(tempDirectory.toFile());
 		});
 	}
 
 	final void delete() throws IOException {
 		rwl.writeEx(() -> {
-			if (!schemaDirectory.exists())
-				return;
-			FileUtils.deleteQuietly(schemaDirectory);
+			FileUtils.deleteDirectory(schemaDirectory.toFile());
 		});
 	}
 
 	/**
-	 * Get a File with a path relative to the schema directory. This method also
+	 * Get a Path given a path relative to the schema directory. This method also
 	 * checks that the resolved path is a child of the schema directory
 	 *
 	 * @param relativePath a relative path
@@ -71,23 +71,24 @@ class StoreSchemaInstance implements Closeable {
 	 * @throws ServerException if the schema does not exists, or if there is a permission
 	 *                         issue
 	 */
-	final File getFile(final String relativePath) throws ServerException {
+	final Path getPath(final String relativePath) throws IOException {
 		return rwl.readEx(() -> {
 			if (StringUtils.isEmpty(relativePath) || relativePath.equals("/"))
 				return dataDirectory;
-			final File finalFile = new File(dataDirectory, relativePath);
-			File file = finalFile;
-			while (file != null) {
-				if (file.equals(dataDirectory))
-					return finalFile;
-				file = file.getParentFile();
+
+			final Path finalPath = dataDirectory.resolve(relativePath);
+			Path path = finalPath;
+			while (path != null) {
+				if (Files.exists(path) && Files.isSameFile(path, dataDirectory))
+					return finalPath;
+				path = path.getParent();
 			}
 			throw new ServerException(Response.Status.FORBIDDEN, "Permission denied.");
 		});
 	}
 
 	/**
-	 * Upload a file to a patch relative to the schema directory.
+	 * Upload a file to a path relative to the schema directory.
 	 *
 	 * @param relativePath
 	 * @param inputStream
@@ -96,28 +97,28 @@ class StoreSchemaInstance implements Closeable {
 	 * @throws ServerException
 	 * @throws IOException
 	 */
-	final File putFile(final String relativePath, final InputStream inputStream, final Long lastModified)
+	final Path putPath(final String relativePath, final InputStream inputStream, final Long lastModified)
 			throws ServerException, IOException {
 		return rwl.readEx(() -> {
-			final File file = getFile(relativePath);
-			if (file.exists() && file.isDirectory())
+			final Path path = getPath(relativePath);
+			if (Files.exists(path) && Files.isDirectory(path))
 				throw new ServerException(Response.Status.CONFLICT,
 						"Error. A directory already exists: " + relativePath);
-			File tmpFile = null;
+			Path tmpPath = null;
 			try {
-				tmpFile = new File(tempDirectory, UUIDs.timeBased().toString());
+				tmpPath = tempDirectory.resolve(UUIDs.timeBased().toString());
 				if (lastModified != null)
-					tmpFile.setLastModified(lastModified);
-				File parent = file.getParentFile();
-				if (!parent.exists())
-					parent.mkdir();
-				IOUtils.copy(inputStream, tmpFile);
-				tmpFile.renameTo(file);
-				tmpFile = null;
-				return file;
+					Files.setLastModifiedTime(tmpPath, FileTime.fromMillis(lastModified));
+				Path parent = path.getParent();
+				if (parent == null || !Files.exists(parent))
+					Files.createDirectories(parent);
+				IOUtils.copy(inputStream, tmpPath.toFile());
+				Files.move(tmpPath, path);
+				tmpPath = null;
+				return path;
 			} finally {
-				if (tmpFile != null)
-					tmpFile.delete();
+				if (tmpPath != null)
+					Files.deleteIfExists(tmpPath);
 			}
 		});
 	}
@@ -130,26 +131,27 @@ class StoreSchemaInstance implements Closeable {
 	 * @throws ServerException is thrown is the file does not exists or if deleting the file
 	 *                         was not possible
 	 */
-	final File deleteFile(final String relativePath) throws ServerException {
+	final Path deletePath(final String relativePath) throws ServerException, IOException {
 		return rwl.readEx(() -> {
-			final File file = getFile(relativePath);
-			if (!file.exists())
+			final Path path = getPath(relativePath);
+			if (!Files.exists(path))
 				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + relativePath);
-			if (file.isDirectory()) {
-				String[] files = file.list();
+			if (Files.isDirectory(path)) {
+				String[] files = path.toFile().list();
 				if (files != null && files.length > 0)
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE, "The directory is not empty");
 			}
-			file.delete();
-			if (file.exists())
+			Files.deleteIfExists(path);
+			if (Files.exists(path))
 				throw new ServerException(Response.Status.INTERNAL_SERVER_ERROR,
 						"Unable to delete the file: " + relativePath);
-			final File parent = file.getParentFile();
-			if (parent.equals(dataDirectory))
-				return file;
-			if (parent.list().length == 0)
-				parent.delete();
-			return file;
+			final Path parent = path.getParent();
+			if (Files.isSameFile(parent, dataDirectory))
+				return path;
+			final String[] parentFiles = parent.toFile().list();
+			if (parentFiles == null || parentFiles.length == 0)
+				Files.deleteIfExists(parent);
+			return path;
 		});
 	}
 
