@@ -38,12 +38,13 @@ public class WebappHttpServlet extends HttpServlet {
 	private void handle(HttpServletRequest request, HttpServletResponse response, boolean body) {
 		WebappTransaction transaction = null;
 		try {
+			final long time = System.currentTimeMillis();
 			HttpBodyInterface bodyEntity = null;
 			if (body)
 				bodyEntity = HttpBodyInterface.newEntity(request);
 			transaction = new WebappTransaction(request, response, bodyEntity);
 			transaction.execute();
-			logger.info(request.getRequestURI() + "\t" + response.getStatus());
+			new WebappLogger(request, response, System.currentTimeMillis() - time);
 		} catch (Exception e) {
 			AbstractWebappException.newInstance(e).sendQuietly(response);
 			logger.error(request.getRequestURI() + "\t" + response.getStatus(), e);

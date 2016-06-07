@@ -26,6 +26,16 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <version>2.6</version>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet</artifactId>
             <version>${jersey.version}</version>
@@ -249,7 +259,7 @@
                                     </mapper>
                                 </data>
                                 <data>
-                                    <src>${basedir}/src/pkgs/linux/log4j.properties</src>
+                                    <src>${basedir}/src/main/java/resources/log4j2.xml</src>
                                     <type>file</type>
                                     <conffile>true</conffile>
                                     <mapper>
@@ -314,7 +324,7 @@
                             <configuration>noreplace</configuration>
                             <sources>
                                 <source>
-                                    <location>src/pkgs/linux/log4j.properties</location>
+                                    <location>src/main/java/resources/log4j2.xml</location>
                                 </source>
                             </sources>
                         </mapping>
