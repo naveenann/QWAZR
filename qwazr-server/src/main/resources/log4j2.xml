@@ -20,7 +20,12 @@
         <RollingFile name="AccessFile" fileName="${env:QWAZR_LOGS:-logs}/access.${hostName}.log"
                      filePattern="${env:QWAZR_LOGS:-logs}/access.${hostName}.log.%d{yyyy-MM-dd}.gz">
             <PatternLayout>
-                <Pattern>%m%n</Pattern>
+                <Header>
+                    #Fields:\tdate\ttime\tc-ip\ts-ip\tcs-method\tcs-uri-stem\tcs-uri-query\tsc-status\tcs(Referer)\tcs(User-Agent)\tcs(bytes)\tsc(bytes)\ttime-taken\tcs(host)%n
+                </Header>
+                <Pattern>
+                    %X{date}\t%X{time}\t%X{c-ip}\t%X{s-ip}\t%X{cs-method}\t%X{cs-uri-stem}\t%X{cs-uri-query}\t%X{sc-status}\t%X{cs-referer}\t%X{cs-user-agent}\t%X{cs-bytes}\t%X{sc-bytes}\t%X{time-taken}\t%X{cs-host}%n
+                </Pattern>
             </PatternLayout>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
@@ -29,6 +34,22 @@
         </RollingFile>
 
     </Appenders>
+
+    <Loggers>
+        <Root level="error">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="ServerFile"/>
+        </Root>
+
+        <Logger name="EventLogger" level="INFO" additivity="false">
+            <AppenderRef ref="AccessFile"/>
+        </Logger>
+
+        <Logger name="com.gargoylesoftware.htmlunit" level="OFF"/>
+        <Logger name="com.qwazr" level="WARN"/>
+        <Logger name="com.qwazr.cluster" level="INFO"/>
+
+    </Loggers>
 
     <Loggers>
         <Root level="error">
