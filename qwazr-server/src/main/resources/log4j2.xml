@@ -6,8 +6,8 @@
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
 
-        <RollingFile name="ServerFile" fileName="$${env:QWAZR_LOGS}/server.${hostName}.log"
-                     filePattern="${env:QWAZR_LOGS}/server.${hostName}.log.%d{yyyy-MM-dd}.gz">
+        <RollingFile name="ServerFile" fileName="${env:QWAZR_LOGS:-logs}/server.${hostName}.log"
+                     filePattern="${env:QWAZR_LOGS:-logs}/server.${hostName}.log.%d{yyyy-MM-dd}.gz">
             <PatternLayout>
                 <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
             </PatternLayout>
@@ -17,15 +17,13 @@
             <DefaultRolloverStrategy max="31"/>
         </RollingFile>
 
-        <RollingFile name="AccessFile" fileName="$${env:QWAZR_LOGS}/access.${hostName}.log"
-                     filePattern="${env:QWAZR_LOGS}/access.${hostName}.log.%d{yyyy-MM-dd}.gz">
+        <RollingFile name="AccessFile" fileName="${env:QWAZR_LOGS:-logs}/access.${hostName}.log"
+                     filePattern="${env:QWAZR_LOGS:-logs}/access.${hostName}.log.%d{yyyy-MM-dd}.gz">
             <PatternLayout>
                 <header>
                     #Fields:\tdate\ttime\tc-ip\ts-ip\tcs-method\tcs-uri-stem\tcs-uri-query\tsc-status\tcs(Referer)\tcs(User-Agent)\tcs(bytes)\tsc(bytes)\ttime-taken\tcs(host)%n
                 </header>
-                <Pattern>
-                    ${sd:date}\t${sd:time}\t${sd:cIp}\t${sIp}\t${sd:csMethod}\t${sd:csUriStem}\t${sd:csUriQuery}\t${sd:scStatus}\t${sd:csReferer}\t${sd:csUserAgent}\t${sd:csBytes}\t${sd:scBytes}\t${sd:timeTaken}\t${sd:csHost}%n
-                </Pattern>
+                <Pattern>%m%n</Pattern>
             </PatternLayout>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
@@ -41,7 +39,7 @@
             <AppenderRef ref="ServerFile"/>
         </Root>
 
-        <Logger name="EventLogger" level="INFO" additivity="false">
+        <Logger name="com.qwazr.webapp.accessLogger" level="INFO" additivity="false">
             <AppenderRef ref="AccessFile"/>
         </Logger>
 
