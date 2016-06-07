@@ -60,6 +60,8 @@ public class Qwazr {
 
 		ClusterManager.load(builder, config.groups);
 
+		LibraryManager.load(config.dataDirectory, etcTracker);
+
 		if (QwazrConfiguration.ServiceEnum.compiler.isActive(config))
 			CompilerManager.load(builder);
 
@@ -87,7 +89,6 @@ public class Qwazr {
 		if (QwazrConfiguration.ServiceEnum.store.isActive(config))
 			StoreManager.load(builder);
 
-		LibraryManager.load(config.dataDirectory, etcTracker);
 		builder.registerWebService(LibraryServiceImpl.class);
 		builder.setIdentityManagerProvider(LibraryManager.getInstance());
 
