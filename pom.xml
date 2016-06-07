@@ -259,7 +259,7 @@
                                     </mapper>
                                 </data>
                                 <data>
-                                    <src>${basedir}/src/main/java/resources/log4j2.xml</src>
+                                    <src>${basedir}/src/main/resources/log4j2.xml</src>
                                     <type>file</type>
                                     <conffile>true</conffile>
                                     <mapper>
@@ -324,7 +324,7 @@
                             <configuration>noreplace</configuration>
                             <sources>
                                 <source>
-                                    <location>src/main/java/resources/log4j2.xml</location>
+                                    <location>src/java/resources/log4j2.xml</location>
                                 </source>
                             </sources>
                         </mapping>
