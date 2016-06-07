@@ -41,7 +41,7 @@
             <AppenderRef ref="ServerFile"/>
         </Root>
 
-        <Logger name="EventLogger" level="INFO">
+        <Logger name="EventLogger" level="INFO" additivity="false">
             <AppenderRef ref="AccessFile"/>
         </Logger>
 
