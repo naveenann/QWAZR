@@ -34,7 +34,6 @@ import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.webapps.transaction.WebappManager;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.PropertyConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,17 +53,6 @@ public class Qwazr {
 
 		// Load the configuration
 		TrackedInterface etcTracker = TrackedInterface.build(config.etcDirectories, config.etcFileFilter);
-		if (config.etcDirectories != null) {
-			for (File etcDirectory : config.etcDirectories) {
-				if (etcDirectory.exists()) {
-					File log4jFile = new File(etcDirectory, "log4j.properties");
-					if (log4jFile.exists() && log4jFile.isFile()) {
-						PropertyConfigurator.configureAndWatch(log4jFile.getAbsolutePath(), 60000);
-						break;
-					}
-				}
-			}
-		}
 
 		ClassLoaderManager.load(config.dataDirectory, Thread.currentThread());
 
