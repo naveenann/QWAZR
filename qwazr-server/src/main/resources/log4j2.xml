@@ -6,8 +6,8 @@
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
 
-        <RollingFile name="ServerFile" fileName="/var/log/qwazr/server.${hostName}.log"
-                     filePattern="/var/log/qwazr/server.${hostName}.log.%d{yyyy-MM-dd}.gz">
+        <RollingFile name="ServerFile" fileName="$${env:QWAZR_LOGS}server.${hostName}.log"
+                     filePattern="${env:QWAZR_LOGS}server.${hostName}.log.%d{yyyy-MM-dd}.gz">
             <PatternLayout>
                 <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
             </PatternLayout>
@@ -17,8 +17,8 @@
             <DefaultRolloverStrategy max="31"/>
         </RollingFile>
 
-        <RollingFile name="AccessFile" fileName="/var/log/qwazr/access.${hostName}.log"
-                     filePattern="/var/log/qwazr/server.${hostName}.log.%d{yyyy-MM-dd}.gz">
+        <RollingFile name="AccessFile" fileName="$${env:QWAZR_LOGS}access.${hostName}.log"
+                     filePattern="${env:QWAZR_LOGS}server.${hostName}.log.%d{yyyy-MM-dd}.gz">
             <PatternLayout>
                 <header>
                     #Fields:\tdate\ttime\tc-ip\ts-ip\tcs-method\tcs-uri-stem\tcs-uri-query\tsc-status\tcs(Referer)\tcs(User-Agent)\tcs(bytes)\tsc(bytes)\ttime-taken\tcs(host)%n
