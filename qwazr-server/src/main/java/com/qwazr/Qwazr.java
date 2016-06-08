@@ -117,7 +117,7 @@ public class Qwazr {
 	 * @throws IllegalAccessException
 	 * @throws ParseException
 	 */
-	public static synchronized void start(QwazrConfiguration configuration)
+	public static synchronized void startWithConf(QwazrConfiguration configuration)
 			throws IOException, InstantiationException, ServletException, IllegalAccessException, ParseException {
 		if (qwazr != null)
 			throw new IllegalAccessException("QWAZR is already started");
@@ -126,21 +126,49 @@ public class Qwazr {
 	}
 
 	/**
-	 * Stop the server
+	 * Start the server. The prototype is based on Procrun specs
+	 *
+	 * @param args For procrun compatbility, currently ignored
 	 */
-	public static synchronized void stop() {
-		if (qwazr == null)
-			return;
-		qwazr.stopAll();
-	}
-
-	public static void main(String[] args) {
+	public static synchronized void start(String[] args) {
 		try {
-			start(new QwazrConfiguration());
+			startWithConf(new QwazrConfiguration());
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			System.exit(1);
 		}
+	}
+
+	/**
+	 * Stop the server. The prototype is based on Procrun specs.
+	 *
+	 * @param args For procrun compatbility, currently ignored
+	 */
+	public static synchronized void stop(String[] args) {
+		if (qwazr == null) {
+			System.exit(0);
+			return;
+		}
+		qwazr.stopAll();
+	}
+
+	/**
+	 * Main with Procun compatibility
+	 *
+	 * @param args One argument: "start" or "stop"
+	 */
+	public static void main(String[] args) {
+		if (args != null && args.length > 0) {
+			switch (args[0]) {
+				case "start":
+					start(args);
+					return;
+				case "stop":
+					stop(args);
+					return;
+			}
+		}
+		start(args);
 	}
 
 	final public static void inject(final Object object) {
