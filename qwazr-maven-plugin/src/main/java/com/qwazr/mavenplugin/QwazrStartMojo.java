@@ -244,7 +244,7 @@ public class QwazrStartMojo extends AbstractMojo {
 
 		private void startEmbedded(final Log log)
 				throws ParseException, InstantiationException, IllegalAccessException, ServletException, IOException {
-			Qwazr.start(new QwazrConfiguration(etcFilters, services, groups, schedulerMaxThreads));
+			Qwazr.startWithConf(new QwazrConfiguration(etcFilters, services, groups, schedulerMaxThreads));
 			log.info("QWAZR started (Embedded)");
 			try {
 				for (; ; )
@@ -253,7 +253,7 @@ public class QwazrStartMojo extends AbstractMojo {
 				log.info("QWAZR interrupted");
 			}
 			log.info("Stopping QWAZR");
-			Qwazr.stop();
+			Qwazr.stop(null);
 		}
 	}
 }
