@@ -1,32 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="WARN">
 
+    <Properties>
+
+        <!-- The logs location is defined by the QWAZR_LOGS environment variable -->
+        <Property name="LogPath">${env:QWAZR_LOGS:-logs}/</Property>
+
+        <!-- The default error pattern -->
+        <Property name="ErrorPattern">%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+
+        <!-- The header of the Access logs -->
+        <Property name="W3CHeader">
+            #Fields:\tdate\ttime\tc-ip\ts-ip\tcs-method\tcs-uri-stem\tcs-uri-query\tsc-status\tcs(Referer)\tcs(User-Agent)\tcs(bytes)\tsc(bytes)\ttime-taken\tcs(host)%n
+        </Property>
+
+        <!-- The content of the Axcess logs -->
+        <Property name="W3CLogs">
+            %X{date}\t%X{time}\t%X{c-ip}\t%X{s-ip}\t%X{cs-method}\t%X{cs-uri-stem}\t%X{cs-uri-query}\t%X{sc-status}\t%X{cs-referer}\t%X{cs-user-agent}\t%X{cs-bytes}\t%X{sc-bytes}\t%X{time-taken}\t%X{cs-host}%n
+        </Property>
+
+    </Properties>
+
     <Appenders>
+
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+            <PatternLayout pattern="${ErrorPattern}"/>
         </Console>
 
-        <RollingFile name="ServerFile" fileName="${env:QWAZR_LOGS:-logs}/server.${hostName}.log"
-                     filePattern="${env:QWAZR_LOGS:-logs}/server.${hostName}.log.%d{yyyy-MM-dd}.gz">
-            <PatternLayout>
-                <Pattern>%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Pattern>
-            </PatternLayout>
+        <RollingFile name="ErrorFile" fileName="${LogPath}/error.${hostName}.log"
+                     filePattern="${LogPath}/error.${hostName}.log.%d{yyyy-MM-dd}.gz">
+            <!-- We only want ERROR, FATAL and WARNING levels -->
+            <!-- <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="NEUTRAL"/> -->
+            <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout pattern="${ErrorPattern}"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
             <DefaultRolloverStrategy max="31"/>
         </RollingFile>
 
-        <RollingFile name="AccessFile" fileName="${env:QWAZR_LOGS:-logs}/access.${hostName}.log"
-                     filePattern="${env:QWAZR_LOGS:-logs}/access.${hostName}.log.%d{yyyy-MM-dd}.gz">
-            <PatternLayout>
-                <Header>
-                    #Fields:\tdate\ttime\tc-ip\ts-ip\tcs-method\tcs-uri-stem\tcs-uri-query\tsc-status\tcs(Referer)\tcs(User-Agent)\tcs(bytes)\tsc(bytes)\ttime-taken\tcs(host)%n
-                </Header>
-                <Pattern>
-                    %X{date}\t%X{time}\t%X{c-ip}\t%X{s-ip}\t%X{cs-method}\t%X{cs-uri-stem}\t%X{cs-uri-query}\t%X{sc-status}\t%X{cs-referer}\t%X{cs-user-agent}\t%X{cs-bytes}\t%X{sc-bytes}\t%X{time-taken}\t%X{cs-host}%n
-                </Pattern>
-            </PatternLayout>
+        <RollingFile name="AccessServletFile" fileName="${LogPath}/access.servlet.${hostName}.log"
+                     filePattern="${LogPath}/access.servlet.${hostName}.log.%d{yyyy-MM-dd}.gz">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout header="${W3CHeader}" pattern="${W3CLogs}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+            <DefaultRolloverStrategy max="31"/>
+        </RollingFile>
+
+        <RollingFile name="AccessRestFile" fileName="${LogPath}/access.rest.${hostName}.log"
+                     filePattern="${LogPath}/access.rest.${hostName}.log.%d{yyyy-MM-dd}.gz">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            <PatternLayout header="${W3CHeader}" pattern="${W3CLogs}"/>
             <Policies>
                 <TimeBasedTriggeringPolicy/>
             </Policies>
@@ -36,32 +62,25 @@
     </Appenders>
 
     <Loggers>
-        <Root level="error">
+
+        <Root level="WARN">
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="ServerFile"/>
+            <AppenderRef ref="ErrorFile"/>
         </Root>
 
-        <Logger name="EventLogger" level="INFO" additivity="false">
-            <AppenderRef ref="AccessFile"/>
+        <!-- The Access logs for the Webapps -->
+        <Logger name="com.qwazr.webapps.accessLogger" level="INFO" additivity="false">
+            <AppenderRef ref="AccessServletFile"/>
+        </Logger>
+
+        <!-- Access logs for the REST APIs -->
+        <Logger name="com.qwazr.rest.accessLogger" level="INFO" additivity="false">
+            <AppenderRef ref="AccessRestFile"/>
         </Logger>
 
         <Logger name="com.gargoylesoftware.htmlunit" level="OFF"/>
-        <Logger name="com.qwazr" level="WARN"/>
-        <Logger name="com.qwazr.cluster" level="INFO"/>
 
-    </Loggers>
-
-    <Loggers>
-        <Root level="error">
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="ServerFile"/>
-        </Root>
-
-        <Logger name="com.qwazr.webapp.accessLogger" level="INFO" additivity="false">
-            <AppenderRef ref="AccessFile"/>
-        </Logger>
-
-        <Logger name="com.gargoylesoftware.htmlunit" level="OFF"/>
+        <!-- Default logs level -->
         <Logger name="com.qwazr" level="WARN"/>
         <Logger name="com.qwazr.cluster" level="INFO"/>
 

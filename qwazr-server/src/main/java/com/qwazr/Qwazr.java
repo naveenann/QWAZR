@@ -45,9 +45,14 @@ public class Qwazr {
 
 	static final Logger logger = LoggerFactory.getLogger(Qwazr.class);
 
+	private static final String ACCESS_LOG_LOGGER_NAME = "com.qwazr.rest.accessLogger";
+	private static final Logger accessRestLogger = LoggerFactory.getLogger(ACCESS_LOG_LOGGER_NAME);
+
 	private final static synchronized GenericServer newServer(final QwazrConfiguration config) throws IOException {
 
 		final ServerBuilder builder = new ServerBuilder(config);
+
+		builder.setRestAccessLogger(accessRestLogger);
 
 		File currentTempDir = new File(config.dataDirectory, "tmp");
 
