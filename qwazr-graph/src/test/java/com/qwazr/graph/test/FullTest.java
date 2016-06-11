@@ -28,7 +28,6 @@ import org.apache.http.entity.ContentType;
 import org.hamcrest.core.AnyOf;
 import org.hamcrest.core.Is;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -46,13 +45,14 @@ public class FullTest {
 	public static final int PRODUCT_NUMBER = 1000;
 	public static final int VISIT_NUMBER = 1000;
 
-	@BeforeClass
-	public static void startGraphServer() throws Exception {
+	@Test
+	public void test000startGraphServer() throws Exception {
 		TestServer.startServer();
+		Assert.assertTrue(TestServer.serverStarted);
 	}
 
 	@Test
-	public void test000CreateDatabase() throws IOException {
+	public void test050CreateDatabase() throws IOException {
 
 		HashMap<String, PropertyTypeEnum> node_properties = new HashMap<String, PropertyTypeEnum>();
 		node_properties.put("type", PropertyTypeEnum.indexed);
@@ -74,7 +74,7 @@ public class FullTest {
 	public void test100PutProductNodes() throws IOException {
 		for (int i = 0; i < PRODUCT_NUMBER; i++) {
 			GraphNode node = new GraphNode();
-			node.properties = new HashMap<String, Object>();
+			node.properties = new HashMap<>();
 			node.properties.put("type", "product");
 			node.properties.put("name", "product" + i);
 			HttpResponse response = Request.Post(BASE_URL + '/' + TEST_BASE + "/node/p" + i)
