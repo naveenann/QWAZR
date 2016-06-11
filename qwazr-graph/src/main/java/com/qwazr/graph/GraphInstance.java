@@ -107,7 +107,7 @@ public class GraphInstance {
 		try {
 			for (Map.Entry<String, ColumnDefinition> entry : columnDefinitions.entrySet())
 				if (!existingColumns.containsKey(entry.getKey()))
-					table.addColumn(entry.getKey(), entry.getValue());
+					table.setColumn(entry.getKey(), entry.getValue());
 		} catch (Exception e) {
 			throw ServerException.getServerException(e);
 		}
