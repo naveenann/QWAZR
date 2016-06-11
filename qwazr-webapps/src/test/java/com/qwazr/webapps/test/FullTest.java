@@ -15,7 +15,6 @@
  **/
 package com.qwazr.webapps.test;
 
-import com.qwazr.utils.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -70,16 +69,42 @@ public class FullTest {
 
 	@Test
 	public void test100javaServlet() throws IOException {
-		HttpResponse response = checkResponse(Request.Get(TestServer.BASE_SERVLET_URL + "/java"), 200);
+		final HttpResponse response = checkResponse(Request.Get(TestServer.BASE_SERVLET_URL + "/java"), 200);
 		checkEntity(response, TEXT_HTML, TestServlet.TEST_STRING);
 	}
 
 	@Test
-	public void test150JaxRs() throws IOException {
-		final String pathParam = "sub-path";
-		HttpResponse response =
-				checkResponse(Request.Post(TestServer.BASE_SERVLET_URL + "/jaxrs/service/test/" + pathParam), 200);
+	public void test150JaxRsAppJson() throws IOException {
+		final String pathParam = "sub-path-app-json";
+		final HttpResponse response =
+				checkResponse(Request.Get(TestServer.BASE_SERVLET_URL + "/jaxrs-app/json/test/" + pathParam), 200);
 		checkEntity(response, "application/json", TestJaxRs.TEST_STRING, pathParam);
+	}
+
+	@Test
+	public void test151JaxRsAppXml() throws IOException {
+		final String pathParam = "sub-path-app-xml";
+		final HttpResponse response =
+				checkResponse(Request.Post(TestServer.BASE_SERVLET_URL + "/jaxrs-app/xml/test/" + pathParam), 200);
+		checkEntity(response, "application/xml", TestJaxRs.TEST_STRING, pathParam);
+	}
+
+	@Test
+	public void test160JaxRsClassJson() throws IOException {
+		final String pathParam = "sub-path-class-json";
+		final HttpResponse response =
+				checkResponse(Request.Get(TestServer.BASE_SERVLET_URL + "/jaxrs-class-json/json/test/" + pathParam),
+						200);
+		checkEntity(response, "application/json", TestJaxRs.TEST_STRING, pathParam);
+	}
+
+	@Test
+	public void test161JaxRsClassXml() throws IOException {
+		final String pathParam = "sub-path-class-xml";
+		final HttpResponse response =
+				checkResponse(Request.Post(TestServer.BASE_SERVLET_URL + "/jaxrs-class-xml/xml/test/" + pathParam),
+						200);
+		checkEntity(response, "application/xml", TestJaxRs.TEST_STRING, pathParam);
 	}
 
 	@Test
