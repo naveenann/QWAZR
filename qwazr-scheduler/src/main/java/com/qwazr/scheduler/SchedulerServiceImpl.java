@@ -50,8 +50,7 @@ public class SchedulerServiceImpl implements SchedulerServiceInterface {
 			return new SchedulerStatus(schedulerDef, statusList);
 		} catch (WebApplicationException | IOException
 				| URISyntaxException | ServerException e) {
-			logger.error(e.getMessage(), e);
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
