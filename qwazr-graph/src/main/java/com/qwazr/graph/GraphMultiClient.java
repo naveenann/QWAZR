@@ -62,7 +62,7 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 			return globalSet;
 
 		} catch (Exception e) {
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -82,7 +82,7 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 			return resultRef.get();
 
 		} catch (Exception e) {
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -131,7 +131,7 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 				throw new ServerException(Status.NOT_FOUND, "Graph not found: " + graphName);
 			return graphDef;
 		} catch (Exception e) {
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 

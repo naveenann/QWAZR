@@ -17,6 +17,8 @@ package com.qwazr.store;
 
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -31,6 +33,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 class StoreServiceImpl implements StoreServiceInterface {
+
+	private static final Logger logger = LoggerFactory.getLogger(StoreServiceImpl.class);
 
 	private Path getExistingPath(String schemaName, String path) throws IOException {
 		final Path filePath = StoreManager.INSTANCE.get(schemaName).getPath(path);
@@ -52,7 +56,7 @@ class StoreServiceImpl implements StoreServiceInterface {
 		} catch (ServerException | IOException e) {
 			if (storeFile != null)
 				storeFile.free();
-			return ServerException.getTextException(e).getResponse();
+			return ServerException.getTextException(logger, e).getResponse();
 		}
 	}
 
@@ -62,7 +66,7 @@ class StoreServiceImpl implements StoreServiceInterface {
 			final File file = getExistingPath(schemaName, path).toFile();
 			return new StoreFileResult(file, file.isDirectory());
 		} catch (ServerException | IOException e) {
-			throw ServerException.getJsonException(e);
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -80,7 +84,7 @@ class StoreServiceImpl implements StoreServiceInterface {
 			storeFile.buildHeader(builder);
 			return builder.build();
 		} catch (ServerException | IOException e) {
-			return ServerException.getTextException(e).getResponse();
+			return ServerException.getTextException(logger, e).getResponse();
 		}
 	}
 
@@ -93,7 +97,7 @@ class StoreServiceImpl implements StoreServiceInterface {
 			storeFile.buildHeader(builder);
 			return builder.build();
 		} catch (ServerException | IOException e) {
-			throw ServerException.getTextException(e);
+			throw ServerException.getTextException(logger, e);
 		}
 	}
 
@@ -103,7 +107,7 @@ class StoreServiceImpl implements StoreServiceInterface {
 			StoreManager.INSTANCE.get(schemaName).deletePath(path);
 			return Response.ok("File deleted: " + path, MediaType.TEXT_PLAIN).build();
 		} catch (ServerException | IOException e) {
-			throw ServerException.getTextException(e);
+			throw ServerException.getTextException(logger, e);
 		}
 	}
 
@@ -128,7 +132,7 @@ class StoreServiceImpl implements StoreServiceInterface {
 			StoreManager.INSTANCE.createUpdate(schemaName);
 			return Response.ok("Schema created: " + schemaName).build();
 		} catch (IOException e) {
-			throw new ServerException(e).getJsonException();
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 
@@ -138,7 +142,7 @@ class StoreServiceImpl implements StoreServiceInterface {
 			StoreManager.INSTANCE.delete(schemaName);
 			return Response.ok("Schema deleted: " + schemaName).build();
 		} catch (IOException e) {
-			throw new ServerException(e).getJsonException();
+			throw ServerException.getJsonException(logger, e);
 		}
 	}
 }
