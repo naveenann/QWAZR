@@ -16,7 +16,6 @@
 package com.qwazr.graph;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.qwazr.database.store.DatabaseException;
 import com.qwazr.graph.model.*;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
@@ -143,7 +142,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 	}
 
 	private GraphNode getNodeOrNotFound(GraphInstance graphInstance, String node_id)
-			throws ServerException, IOException, URISyntaxException, DatabaseException {
+			throws IOException, URISyntaxException {
 		GraphNode node = graphInstance.getNode(node_id);
 		if (node != null)
 			return node;

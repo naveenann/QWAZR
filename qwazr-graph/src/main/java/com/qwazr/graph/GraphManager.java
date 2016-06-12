@@ -16,7 +16,6 @@
 package com.qwazr.graph;
 
 import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.database.store.DatabaseException;
 import com.qwazr.database.store.Table;
 import com.qwazr.database.store.Tables;
 import com.qwazr.graph.model.GraphDefinition;
@@ -54,14 +53,10 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 		File graphDirectory = new File(serverBuilder.getServerConfiguration().dataDirectory, SERVICE_NAME_GRAPH);
 		if (!graphDirectory.exists())
 			graphDirectory.mkdir();
-		try {
-			INSTANCE = new GraphManager(serverBuilder.getExecutorService(), graphDirectory);
-			for (String name : INSTANCE.nameSet())
-				INSTANCE.addNewInstance(name, INSTANCE.get(name));
-			serverBuilder.registerWebService(GraphServiceImpl.class);
-		} catch (ServerException | DatabaseException e) {
-			throw new RuntimeException(e);
-		}
+		INSTANCE = new GraphManager(serverBuilder.getExecutorService(), graphDirectory);
+		for (String name : INSTANCE.nameSet())
+			INSTANCE.addNewInstance(name, INSTANCE.get(name));
+		serverBuilder.registerWebService(GraphServiceImpl.class);
 	}
 
 	public static GraphManager getInstance() {
