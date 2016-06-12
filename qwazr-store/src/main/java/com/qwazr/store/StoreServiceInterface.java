@@ -15,6 +15,7 @@
  */
 package com.qwazr.store;
 
+import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServiceInterface;
 import com.qwazr.utils.server.ServiceName;
 
@@ -23,6 +24,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.util.Set;
 
 @RolesAllowed(StoreServiceInterface.SERVICE_NAME)
@@ -86,4 +88,11 @@ public interface StoreServiceInterface extends ServiceInterface {
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
 	Set<String> getSchemas();
 
+	static StoreServiceInterface getClient(final RemoteService... remote) throws URISyntaxException {
+		if (remote == null || remote.length == 0)
+			return StoreServiceImpl.getInstance();
+		if (remote.length == 1)
+			return new StoreSingleClient(remote[0]);
+		throw new NotSupportedException();
+	}
 }
