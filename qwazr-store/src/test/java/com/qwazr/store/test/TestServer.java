@@ -17,22 +17,18 @@ package com.qwazr.store.test;
 
 import com.google.common.io.Files;
 import com.qwazr.store.StoreServer;
-import com.qwazr.store.StoreServiceInterface;
-import com.qwazr.store.StoreSingleClient;
-import com.qwazr.utils.server.RemoteService;
 
 import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 
 public class TestServer {
 
-	public static boolean serverStarted = false;
+	static boolean serverStarted = false;
 
-	private static final String BASE_URL = "http://localhost:9091";
+	static final String BASE_URL = "http://localhost:9091";
 
-	public static synchronized void startServer()
+	static synchronized void startServer()
 			throws InstantiationException, IllegalAccessException, ServletException, IOException {
 		if (serverStarted)
 			return;
@@ -42,15 +38,6 @@ public class TestServer {
 		System.setProperty("LISTEN_ADDR", "localhost");
 		StoreServer.main(new String[] {});
 		serverStarted = true;
-	}
-
-	public static StoreSingleClient singleClient = null;
-
-	public static synchronized StoreServiceInterface getClient() throws URISyntaxException {
-		if (singleClient != null)
-			return singleClient;
-		singleClient = new StoreSingleClient(new RemoteService(BASE_URL));
-		return singleClient;
 	}
 
 }

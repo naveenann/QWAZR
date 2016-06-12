@@ -36,6 +36,17 @@ class StoreServiceImpl implements StoreServiceInterface {
 
 	private static final Logger logger = LoggerFactory.getLogger(StoreServiceImpl.class);
 
+	static volatile StoreServiceImpl INSTANCE = null;
+
+	final static StoreServiceImpl getInstance() {
+		synchronized (StoreServiceImpl.class) {
+			if (INSTANCE != null)
+				return INSTANCE;
+			INSTANCE = new StoreServiceImpl();
+			return INSTANCE;
+		}
+	}
+
 	private Path getExistingPath(String schemaName, String path) throws IOException {
 		final Path filePath = StoreManager.INSTANCE.get(schemaName).getPath(path);
 		if (!Files.exists(filePath))
