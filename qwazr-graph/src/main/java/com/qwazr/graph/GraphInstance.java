@@ -115,9 +115,9 @@ public class GraphInstance {
 	}
 
 	private static void createUpdate(Table table, GraphDefinition graphDef, String node_id, GraphNode node)
-			throws ServerException, IOException, DatabaseException {
+			throws ServerException, IOException {
 
-		Map<String, Object> row = new HashMap<String, Object>();
+		Map<String, Object> row = new HashMap<>();
 
 		// Populate the property fields
 		if (node.properties != null && !node.properties.isEmpty()) {
@@ -160,8 +160,7 @@ public class GraphInstance {
 	 * @throws IOException        if any I/O error occurs
 	 * @throws ServerException    if any server exception occurs
 	 */
-	void createUpdateNode(String node_id, GraphNode node, Boolean upsert)
-			throws ServerException, IOException, DatabaseException {
+	void createUpdateNode(String node_id, GraphNode node, Boolean upsert) throws ServerException, IOException {
 
 		if (node == null)
 			return;
@@ -190,8 +189,7 @@ public class GraphInstance {
 	 * @throws IOException        if any I/O error occurs
 	 * @throws ServerException    if any server exception occurs
 	 */
-	void createUpdateNodes(Map<String, GraphNode> nodes, Boolean upsert)
-			throws IOException, URISyntaxException, ServerException, DatabaseException {
+	void createUpdateNodes(Map<String, GraphNode> nodes, Boolean upsert) throws IOException, URISyntaxException {
 
 		if (nodes == null || nodes.isEmpty())
 			return;
@@ -264,9 +262,9 @@ public class GraphInstance {
 	 * @throws IOException        if any I/O error occurs
 	 * @throws ServerException    if any server exception occurs
 	 */
-	GraphNode getNode(String node_id) throws ServerException, IOException, DatabaseException {
+	GraphNode getNode(String node_id) throws IOException {
 
-		Set<String> returnedFields = new LinkedHashSet<String>();
+		Set<String> returnedFields = new LinkedHashSet<>();
 		populateReturnedFields(returnedFields);
 
 		Map<String, Object> document = table.getRow(node_id, returnedFields);
@@ -286,8 +284,7 @@ public class GraphInstance {
 	 * @throws IOException        if any I/O error occurs
 	 * @throws ServerException    if any server exception occurs
 	 */
-	Map<String, GraphNode> getNodes(Set<String> node_ids)
-			throws IOException, URISyntaxException, ServerException, DatabaseException {
+	Map<String, GraphNode> getNodes(Set<String> node_ids) throws IOException, URISyntaxException {
 
 		Set<String> returnedFields = new LinkedHashSet<String>();
 		populateReturnedFields(returnedFields);
@@ -316,8 +313,7 @@ public class GraphInstance {
 	 * @throws IOException     if any I/O error occurs
 	 * @throws ServerException if any server exception occurs
 	 */
-	GraphNode createEdge(String node_id, String type, String to_node_id)
-			throws IOException, ServerException, DatabaseException {
+	GraphNode createEdge(String node_id, String type, String to_node_id) throws IOException {
 
 		// Check if the type exists
 		if (graphDef.edge_types == null || graphDef.edge_types.isEmpty())
@@ -337,8 +333,7 @@ public class GraphInstance {
 		return node;
 	}
 
-	public GraphNode deleteEdge(String node_id, String type, String to_node_id)
-			throws IOException, URISyntaxException, ServerException, DatabaseException {
+	public GraphNode deleteEdge(String node_id, String type, String to_node_id) throws IOException, URISyntaxException {
 
 		// Retrieve the node from the index
 		GraphNode node = getNode(node_id);
@@ -356,11 +351,9 @@ public class GraphInstance {
 	 * Delete a node.
 	 *
 	 * @param node_id the ID of the node to delete
-	 * @throws DatabaseException if the server parameters are wrong
-	 * @throws IOException       if any I/O error occurs
-	 * @throws ServerException   if any server exception occurs
+	 * @throws IOException if any I/O error occurs
 	 */
-	void deleteNode(String node_id) throws ServerException, IOException, DatabaseException {
+	void deleteNode(String node_id) throws IOException {
 		if (!table.deleteRow(node_id))
 			throw new ServerException(Status.NOT_FOUND, "Node not found: " + node_id);
 	}
@@ -374,8 +367,7 @@ public class GraphInstance {
 	 * @throws IOException        if any I/O error occurs
 	 * @throws ServerException    if any server exception occurs
 	 */
-	public List<GraphNodeResult> request(GraphRequest request)
-			throws IOException, URISyntaxException, ServerException, DatabaseException {
+	public List<GraphNodeResult> request(GraphRequest request) throws IOException, URISyntaxException {
 
 		List<GraphNodeResult> resultList = new ArrayList<GraphNodeResult>(request.getRowsOrDefault());
 
