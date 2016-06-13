@@ -16,6 +16,7 @@
 package com.qwazr.store;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
@@ -48,16 +49,16 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 
 	@Override
 	public StoreFileResult getDirectory(String schemaName, String path) {
-		UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName, "/", path);
-		Request request = Request.Get(uBuilder.build()).addHeader("Accept", ServiceInterface.APPLICATION_JSON_UTF8);
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
+		Request request = Request.Get(uBuilder.buildNoEx()).addHeader("Accept", ServiceInterface.APPLICATION_JSON_UTF8);
 		return commonServiceRequest(request, null, null, StoreFileResult.class, 200);
 	}
 
 	@Override
 	public Response getFile(String schemaName, String path) {
 		try {
-			UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName, "/", path);
-			Request request = Request.Get(uBuilder.build()).addHeader("Accept", MediaType.APPLICATION_OCTET_STREAM);
+			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
+			Request request = Request.Get(uBuilder.buildNoEx()).addHeader("Accept", MediaType.APPLICATION_OCTET_STREAM);
 			HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			ResponseBuilder builder = Response.ok();
@@ -75,8 +76,8 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	@Override
 	public Response headFile(String schemaName, String path) {
 		try {
-			UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName, "/", path);
-			URI uri = uBuilder.build();
+			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
+			URI uri = uBuilder.buildNoEx();
 			Request request = Request.Head(uri);
 			HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
@@ -109,12 +110,12 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	final public Response putFile(final String schemaName, final String path, final InputStream inputStream,
 			final Long lastModified) {
 		try {
-			UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName, "/", path);
+			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
 			uBuilder.setParameterObject("last_modified", lastModified);
-			Request request = Request.Put(uBuilder.build());
-			HttpResponse response = execute(request, inputStream, null);
+			final Request request = Request.Put(uBuilder.buildNoEx());
+			final HttpResponse response = execute(request, inputStream, null);
 			HttpUtils.checkStatusCodes(response, 200);
-			ResponseBuilder builder = Response.ok("File created: " + path, MediaType.TEXT_PLAIN);
+			final ResponseBuilder builder = Response.ok("File created: " + path, MediaType.TEXT_PLAIN);
 			StoreFileResult.buildHeaders(response, null, builder);
 			return builder.build();
 		} catch (HttpResponseEntityException e) {
@@ -127,11 +128,12 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	@Override
 	final public Response deleteFile(final String schemaName, final String path) {
 		try {
-			UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName, "/", path);
-			Request request = Request.Delete(uBuilder.build());
+			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
+			final Request request = Request.Delete(uBuilder.buildNoEx());
 			HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
-			ResponseBuilder builder = Response.ok(response.getStatusLine().getReasonPhrase(), MediaType.TEXT_PLAIN);
+			final ResponseBuilder builder =
+					Response.ok(response.getStatusLine().getReasonPhrase(), MediaType.TEXT_PLAIN);
 			StoreFileResult.buildHeaders(response, null, builder);
 			return builder.build();
 		} catch (HttpResponseEntityException e) {
@@ -144,11 +146,11 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	@Override
 	final public Response createSchema(final String schemaName) {
 		try {
-			UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName);
-			Request request = Request.Post(uBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName);
+			final Request request = Request.Post(uBuilder.buildNoEx());
+			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
-			ResponseBuilder builder = Response.ok("Schema created: " + schemaName, MediaType.TEXT_PLAIN);
+			final ResponseBuilder builder = Response.ok("Schema created: " + schemaName, MediaType.TEXT_PLAIN);
 			return builder.build();
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
@@ -160,11 +162,11 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	@Override
 	final public Response deleteSchema(final String schemaName) {
 		try {
-			UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName);
-			Request request = Request.Delete(uBuilder.build());
-			HttpResponse response = execute(request, null, null);
+			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName);
+			final Request request = Request.Delete(uBuilder.buildNoEx());
+			final HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
-			ResponseBuilder builder = Response.ok("Schema deleted: " + schemaName, MediaType.TEXT_PLAIN);
+			final ResponseBuilder builder = Response.ok("Schema deleted: " + schemaName, MediaType.TEXT_PLAIN);
 			return builder.build();
 		} catch (HttpResponseEntityException e) {
 			throw e.getWebApplicationException();
@@ -178,8 +180,8 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 
 	@Override
 	final public Set<String> getSchemas() {
-		UBuilder uBuilder = new UBuilder(PATH);
-		Request request = Request.Get(uBuilder.build());
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH);
+		final Request request = Request.Get(uBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
 	}
 }
