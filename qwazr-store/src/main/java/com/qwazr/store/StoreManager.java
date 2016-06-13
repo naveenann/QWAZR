@@ -18,10 +18,11 @@ package com.qwazr.store;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.server.ServerBuilder;
 import com.qwazr.utils.server.ServerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.io.filefilter.DirectoryFileFilter;
 
 import javax.ws.rs.core.Response.Status;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,8 +32,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class StoreManager {
 
 	public static volatile StoreManager INSTANCE = null;
-
-	private static final Logger logger = LoggerFactory.getLogger(StoreManager.class);
 
 	public static void load(final ServerBuilder builder) throws IOException {
 		if (INSTANCE != null)
@@ -53,14 +52,10 @@ public class StoreManager {
 		builder.registerWebService(StoreServiceImpl.class);
 		builder.registerShutdownListener(server -> shutdown());
 		schemaMap = new ConcurrentHashMap<>();
-		storeDirectory.forEach(path -> {
-			try {
-				if (Files.isDirectory(path))
-					schemaMap.put(path.toFile().getName(), new StoreSchemaInstance(path));
-			} catch (ServerException | IOException e) {
-				logger.error(e.getMessage(), e);
-			}
-		});
+		File[] files = storeDirectory.toFile().listFiles((FileFilter) DirectoryFileFilter.DIRECTORY);
+		if (files != null)
+			for (File file : files)
+				schemaMap.put(file.getName(), new StoreSchemaInstance(file.toPath()));
 	}
 
 	private void shutdown() {
