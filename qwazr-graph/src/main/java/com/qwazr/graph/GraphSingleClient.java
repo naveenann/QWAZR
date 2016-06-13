@@ -17,6 +17,7 @@ package com.qwazr.graph;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.graph.model.*;
+import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 import org.apache.http.client.fluent.Request;
@@ -40,29 +41,29 @@ public class GraphSingleClient extends JsonClientAbstract implements GraphServic
 
 	@Override
 	public Set<String> list() {
-		UBuilder uBuilder = new UBuilder(GRAPH_PREFIX);
-		Request request = Request.Get(uBuilder.build());
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX);
+		Request request = Request.Get(uBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
 	}
 
 	@Override
 	public GraphResult createUpdateGraph(String graphName, GraphDefinition graphDef) {
-		UBuilder uBuilder = new UBuilder(GRAPH_PREFIX, graphName);
-		Request request = Request.Post(uBuilder.build());
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
+		Request request = Request.Post(uBuilder.buildNoEx());
 		return commonServiceRequest(request, graphDef, null, GraphResult.class, 200);
 	}
 
 	@Override
 	public GraphResult getGraph(String graphName) {
-		UBuilder uBuilder = new UBuilder(GRAPH_PREFIX, graphName);
-		Request request = Request.Get(uBuilder.build());
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
+		Request request = Request.Get(uBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, GraphResult.class, 200);
 	}
 
 	@Override
 	public GraphResult deleteGraph(String graphName) {
-		UBuilder uBuilder = new UBuilder(GRAPH_PREFIX, graphName);
-		Request request = Request.Delete(uBuilder.build());
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
+		Request request = Request.Delete(uBuilder.buildNoEx());
 		return commonServiceRequest(request, null, null, GraphResult.class, 200);
 	}
 
