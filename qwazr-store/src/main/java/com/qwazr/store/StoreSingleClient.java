@@ -20,6 +20,7 @@ import com.qwazr.utils.http.HttpResponseEntityException;
 import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import com.qwazr.utils.server.RemoteService;
+import com.qwazr.utils.server.ServiceInterface;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
@@ -48,7 +49,7 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	@Override
 	public StoreFileResult getDirectory(String schemaName, String path) {
 		UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName, "/", path);
-		Request request = Request.Get(uBuilder.build());
+		Request request = Request.Get(uBuilder.build()).addHeader("Accept", ServiceInterface.APPLICATION_JSON_UTF8);
 		return commonServiceRequest(request, null, null, StoreFileResult.class, 200);
 	}
 
@@ -56,7 +57,7 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	public Response getFile(String schemaName, String path) {
 		try {
 			UBuilder uBuilder = new UBuilder(PATH_SLASH, schemaName, "/", path);
-			Request request = Request.Get(uBuilder.build());
+			Request request = Request.Get(uBuilder.build()).addHeader("Accept", MediaType.APPLICATION_OCTET_STREAM);
 			HttpResponse response = execute(request, null, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			ResponseBuilder builder = Response.ok();
