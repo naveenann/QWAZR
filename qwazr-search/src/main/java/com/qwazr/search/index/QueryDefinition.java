@@ -15,14 +15,19 @@
  */
 package com.qwazr.search.index;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.qwazr.search.query.AbstractQuery;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 
 @JsonInclude(Include.NON_EMPTY)
 public class QueryDefinition extends BaseQueryDefinition {
@@ -33,6 +38,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 
 	final public LinkedHashMap<String, SortEnum> sorts;
 	final public ArrayList<Function> functions;
+	final public LinkedHashMap<String, CollectorDefinition> collectors;
 
 	public enum SortEnum {
 
@@ -56,6 +62,24 @@ public class QueryDefinition extends BaseQueryDefinition {
 	final public LinkedHashMap<String, HighlighterDefinition> highlighters;
 
 	final public AbstractQuery query;
+
+	public static class CollectorDefinition {
+
+		@JsonProperty("class")
+		final public String classname;
+
+		final public Object[] arguments;
+
+		public CollectorDefinition() {
+			classname = null;
+			arguments = null;
+		}
+
+		public CollectorDefinition(final String classname, final Object... arguments) {
+			this.classname = classname;
+			this.arguments = arguments == null || arguments.length == 0 ? null : arguments;
+		}
+	}
 
 	public static class Function {
 
@@ -90,6 +114,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		facets = null;
 		sorts = null;
 		functions = null;
+		collectors = null;
 		highlighters = null;
 		query = null;
 	}
@@ -103,6 +128,7 @@ public class QueryDefinition extends BaseQueryDefinition {
 		facets = builder.facets;
 		sorts = builder.sorts;
 		functions = builder.functions;
+		collectors = builder.collectors;
 		highlighters = builder.highlighters;
 		query = builder.query;
 	}

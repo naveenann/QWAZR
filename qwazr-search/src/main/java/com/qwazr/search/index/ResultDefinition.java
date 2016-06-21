@@ -17,6 +17,7 @@ package com.qwazr.search.index;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.qwazr.search.collector.BaseCollector;
 import com.qwazr.utils.TimeTracker;
 
 import java.util.Collections;
@@ -32,6 +33,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 	final public Map<String, Map<String, Number>> facets;
 	final public String query;
 	final public List<Function> functions;
+	final public Map<String, Object> collectors;
 
 	public static class Function extends QueryDefinition.Function {
 
@@ -53,6 +55,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.documents = null;
 		this.facets = null;
 		this.functions = null;
+		this.collectors = null;
 		this.max_score = null;
 		this.query = null;
 	}
@@ -65,6 +68,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.documents = builder.documents;
 		this.facets = builder.facets;
 		this.functions = builder.functions;
+		this.collectors = builder.collectors;
 	}
 
 	protected ResultDefinition(final ResultDefinition<?> src, final List<T> documents) {
@@ -75,7 +79,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		this.documents = documents;
 		this.facets = src.facets;
 		this.functions = src.functions;
-
+		this.collectors = src.collectors;
 	}
 
 	ResultDefinition(TimeTracker timeTracker) {
@@ -84,6 +88,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		documents = Collections.emptyList();
 		facets = null;
 		functions = null;
+		collectors = null;
 		max_score = null;
 		this.timer = timeTracker != null ? timeTracker.getStatus() : null;
 	}
@@ -94,6 +99,7 @@ public abstract class ResultDefinition<T extends ResultDocumentAbstract> {
 		documents = Collections.emptyList();
 		facets = null;
 		functions = null;
+		collectors = null;
 		max_score = null;
 		this.timer = null;
 	}

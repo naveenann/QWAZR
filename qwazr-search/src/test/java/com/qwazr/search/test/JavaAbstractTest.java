@@ -17,6 +17,7 @@ package com.qwazr.search.test;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.annotations.AnnotatedIndexService;
+import com.qwazr.search.collector.MinNumericCollector;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.index.*;
 import com.qwazr.search.query.*;
@@ -39,7 +40,7 @@ import static com.qwazr.search.test.AnnotatedIndex.QUANTITY_FIELD;
 public abstract class JavaAbstractTest {
 
 	public static final String[] RETURNED_FIELDS =
-			{ FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory" };
+			{FieldDefinition.ID_FIELD, "title", "content", "price", "storedCategory"};
 
 	protected abstract IndexServiceInterface getIndexService() throws URISyntaxException;
 
@@ -366,6 +367,19 @@ public abstract class JavaAbstractTest {
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.total_hits);
 		Assert.assertEquals(new Long(2), result.total_hits);
+	}
+
+	@Test
+	public void test910collector() throws URISyntaxException {
+		final AnnotatedIndexService master = getMaster();
+		final QueryBuilder builder = new QueryBuilder();
+		builder.addCollector("minPrice", MinNumericCollector.MinDouble.class, "price");
+		builder.setQuery(new MatchAllDocsQuery());
+		ResultDefinition.WithObject<AnnotatedIndex> result = master.searchQuery(builder.build());
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.collectors);
+		Object collectorResult = result.collectors.get("minPrice");
+		Assert.assertNotNull(collectorResult);
 	}
 
 	@Test
