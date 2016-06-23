@@ -27,7 +27,7 @@ import java.io.IOException;
 public class SchedulerServer {
 
 	public static GenericServer start()
-			throws IOException, InstantiationException, ServletException, IllegalAccessException {
+			throws Exception {
 		final ServerBuilder builder = new ServerBuilder();
 		final TrackedInterface etcTracker =
 				TrackedInterface.build(builder.getServerConfiguration().etcDirectories, null);
@@ -38,7 +38,7 @@ public class SchedulerServer {
 	}
 
 	public static void main(String[] args)
-			throws IOException, ServletException, InstantiationException, IllegalAccessException {
+			throws Exception {
 		SchedulerServer.start();
 	}
 

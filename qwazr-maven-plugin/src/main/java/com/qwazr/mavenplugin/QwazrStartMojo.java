@@ -242,8 +242,7 @@ public class QwazrStartMojo extends AbstractMojo {
 			process.waitFor(5000, TimeUnit.MILLISECONDS);
 		}
 
-		private void startEmbedded(final Log log)
-				throws ParseException, InstantiationException, IllegalAccessException, ServletException, IOException {
+		private void startEmbedded(final Log log) throws Exception {
 			Qwazr.startWithConf(new QwazrConfiguration(etcFilters, services, groups, schedulerMaxThreads));
 			log.info("QWAZR started (Embedded)");
 			try {

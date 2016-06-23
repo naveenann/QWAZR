@@ -25,14 +25,14 @@ import java.io.IOException;
 public class GraphServer {
 
 	public static GenericServer start()
-			throws IOException, ServletException, IllegalAccessException, InstantiationException {
+			throws Exception {
 		final ServerBuilder builder = new ServerBuilder();
 		ClusterManager.load(builder, null);
 		GraphManager.load(builder);
 		return builder.build().start(true);
 	}
 
-	public static void main(String[] args) throws IOException, ServletException, ReflectiveOperationException {
+	public static void main(String[] args) throws Exception {
 		start();
 	}
 

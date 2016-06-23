@@ -30,7 +30,7 @@ public class TestServer {
 	private static final String BASE_URL = "http://localhost:9091";
 
 	public static synchronized void startServer()
-			throws InstantiationException, IllegalAccessException, ServletException, IOException {
+			throws Exception {
 		if (serverStarted)
 			return;
 		final File dataDir = Files.createTempDir();
@@ -42,7 +42,7 @@ public class TestServer {
 		System.setProperty("QWAZR_ETC_DIR",
 				new File("src/test/resources/com/qwazr/scheduler/test/etc").getAbsolutePath());
 
-		SchedulerServer.main(new String[] {});
+		SchedulerServer.main(new String[]{});
 		serverStarted = true;
 	}
 
