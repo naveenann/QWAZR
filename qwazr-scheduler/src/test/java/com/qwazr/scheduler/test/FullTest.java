@@ -37,16 +37,16 @@ public class FullTest {
 
 	@Test
 	public void test000StartServer()
-			throws URISyntaxException, IOException, InstantiationException, ServletException, IllegalAccessException {
+			throws Exception {
 		TestServer.startServer();
 		Assert.assertTrue(TestServer.serverStarted);
 	}
 
 	private final static String[] TASK_NAME =
-			{ "TaskRunnable", "TaskScript", "TaskJS", "TaskRunnableError", "TaskScriptError" };
+			{"TaskRunnable", "TaskScript", "TaskJS", "TaskRunnableError", "TaskScriptError"};
 	private final static String[] SCRIPT_PATHS =
-			{ "com.qwazr.scheduler.test.TaskRunnable", "com.qwazr.scheduler.test.TaskScript", "js/task.js",
-					"com.qwazr.scheduler.test.TaskRunnableError", "com.qwazr.scheduler.test.TaskScript" };
+			{"com.qwazr.scheduler.test.TaskRunnable", "com.qwazr.scheduler.test.TaskScript", "js/task.js",
+					"com.qwazr.scheduler.test.TaskRunnableError", "com.qwazr.scheduler.test.TaskScript"};
 
 	private final static String DUMMY_TASK_NAME = "DUMMY_TASK";
 

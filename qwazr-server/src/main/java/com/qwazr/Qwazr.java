@@ -118,7 +118,7 @@ public class Qwazr {
 	 * @throws ParseException
 	 */
 	public static synchronized void startWithConf(QwazrConfiguration configuration)
-			throws IOException, InstantiationException, ServletException, IllegalAccessException, ParseException {
+			throws Exception {
 		if (qwazr != null)
 			throw new IllegalAccessException("QWAZR is already started");
 		qwazr = newServer(configuration);

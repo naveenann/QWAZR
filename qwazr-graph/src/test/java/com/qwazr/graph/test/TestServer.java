@@ -30,8 +30,7 @@ public class TestServer {
 
 	private static final String BASE_URL = "http://localhost:9091";
 
-	public static synchronized void startServer()
-			throws ReflectiveOperationException, ServletException, IOException {
+	public static synchronized void startServer() throws Exception {
 		if (serverStarted)
 			return;
 		final File dataDir = Files.createTempDir();

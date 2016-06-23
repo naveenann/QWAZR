@@ -29,14 +29,14 @@ public class TestServer {
 	static final String BASE_URL = "http://localhost:9091";
 
 	static synchronized void startServer()
-			throws InstantiationException, IllegalAccessException, ServletException, IOException {
+			throws Exception {
 		if (serverStarted)
 			return;
 		final File dataDir = Files.createTempDir();
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
 		System.setProperty("PUBLIC_ADDR", "localhost");
 		System.setProperty("LISTEN_ADDR", "localhost");
-		StoreServer.main(new String[] {});
+		StoreServer.main(new String[]{});
 		serverStarted = true;
 	}
 

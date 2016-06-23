@@ -25,7 +25,7 @@ import java.io.IOException;
 public class StoreServer {
 
 	public static GenericServer start()
-			throws IOException, InstantiationException, ServletException, IllegalAccessException {
+			throws Exception {
 		final ServerBuilder builder = new ServerBuilder();
 		ClusterManager.load(builder, null);
 		StoreManager.load(builder);
@@ -33,7 +33,7 @@ public class StoreServer {
 	}
 
 	public static void main(String[] args)
-			throws IOException, ServletException, InstantiationException, IllegalAccessException {
+			throws Exception {
 		StoreServer.start();
 	}
 
