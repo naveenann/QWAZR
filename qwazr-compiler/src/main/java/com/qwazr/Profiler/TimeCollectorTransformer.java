@@ -13,51 +13,56 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.Profiler;
+package com.qwazr.profiler;
 
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
 import javassist.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
-import java.util.Collection;
 
 public class TimeCollectorTransformer implements ClassFileTransformer {
 
-	private final Collection<WildcardMatcher> wildcardMatchers;
+	private Logger LOGGER = LoggerFactory.getLogger(TimeCollectorTransformer.class);
 
-	public TimeCollectorTransformer(Collection<WildcardMatcher> wildcardMatchers) {
+	private final WildcardMatcher[] wildcardMatchers;
+
+	private final ClassPool classPool;
+	private final CtClass timeCollectorClass;
+
+	public TimeCollectorTransformer(WildcardMatcher... wildcardMatchers) throws NotFoundException {
 		this.wildcardMatchers = wildcardMatchers;
+		this.classPool = ClassPool.getDefault();
+		this.timeCollectorClass = classPool.get(ProfilerAgent.TimeCollector.class.getName());
 	}
 
 	@Override
-	public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
-			ProtectionDomain protectionDomain, byte[] classfileBuffer) throws IllegalClassFormatException {
-
+	public byte[] transform(final ClassLoader loader, final String className, final Class<?> classBeingRedefined,
+			final ProtectionDomain protectionDomain, final byte[] classfileBuffer) throws IllegalClassFormatException {
 		try {
 			for (WildcardMatcher matcher : wildcardMatchers)
 				if (matcher.match(className))
 					return profile(className);
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(), e);
 			throw new IllegalClassFormatException(e.getMessage());
 		}
 		return classfileBuffer;
 	}
 
-	private byte[] profile(String className) throws CannotCompileException, IOException, NotFoundException {
-		final ClassPool cp = ClassPool.getDefault();
-		final CtClass cc = cp.get(StringUtils.replaceChars(className, '/', '.'));
+	private byte[] profile(final String className) throws CannotCompileException, IOException, NotFoundException {
+		final CtClass cc = classPool.get(StringUtils.replaceChars(className, '/', '.'));
 		for (CtMethod m : cc.getMethods()) {
-			m.addLocalVariable("__elapsedTime", CtClass.longType);
-			m.insertBefore("__elapsedTime = System.currentTimeMillis();");
-			m.insertAfter("{__elapsedTime = System.currentTimeMillis() - __elapsedTime;"
-					+ "System.out.println(\"Method Executed in ms: \" + __elapsedTime);}");
+			final String classMethod = cc.getName() + ":" + m.getLongName();
+			m.insertBefore("com.qwazr.profiler.ProfilerAgent.TimeCollector _qwazr_timeColl = com.qwazr.profiler.ProfilerAgent.enter(\"" + classMethod + "\");");
+			m.insertAfter("_qwazr_timeColl.exit();");
 		}
-		byte[] byteCode = cc.toBytecode();
+		final byte[] byteCode = cc.toBytecode();
 		cc.detach();
 		return byteCode;
 	}
