@@ -15,29 +15,13 @@
  */
 package com.qwazr.profiler.test;
 
-import com.qwazr.profiler.ProfilerAgent;
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.junit.Assert;
-import org.junit.Test;
+import com.qwazr.profiler.ProfilerManager;
 
-import java.util.Random;
-import java.util.concurrent.ConcurrentHashMap;
+public class ProfiledClassTemplate {
 
-public class ProfilerAgentTest {
-
-	public class ProfiledClass {
-
-		public void test() throws InterruptedException {
-			Thread.sleep(1000 + new Random().nextInt(1000));
-		}
+	public void test() throws InterruptedException {
+		long _qwazr_profiler_start = System.currentTimeMillis();
+		Thread.sleep(1234);
+		ProfilerManager.methodCalled("methodKey", 5678, _qwazr_profiler_start);
 	}
-
-	@Test
-	public void profile() throws InterruptedException {
-		new ProfiledClass().test();
-		ConcurrentHashMap.KeySetView<String, SummaryStatistics> keys = ProfilerAgent.getKeys();
-		Assert.assertNotNull(keys);
-		Assert.assertFalse(keys.isEmpty());
-	}
-
 }

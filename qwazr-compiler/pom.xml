@@ -47,8 +47,13 @@
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-math3</artifactId>
-            <version>3.6.1</version>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>5.1</version>
         </dependency>
     </dependencies>
 
@@ -60,7 +65,7 @@
                 <configuration>
                     <archive>
                         <manifestEntries>
-                            <Premain-Class>com.qwazr.profiler.ProfilerAgent</Premain-Class>
+                            <Premain-Class>com.qwazr.profiler.ProfilerManager</Premain-Class>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
                         </manifestEntries>
                     </archive>
@@ -70,7 +75,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
-                    <argLine>-javaagent:target/${project.build.finalName}.jar</argLine>
+                    <useSystemClassLoader>false</useSystemClassLoader>
+                    <argLine>-javaagent:target/${project.build.finalName}.jar=com/qwazr/*</argLine>
                 </configuration>
             </plugin>
         </plugins>
