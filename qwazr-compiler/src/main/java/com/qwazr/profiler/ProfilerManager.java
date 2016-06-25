@@ -17,15 +17,16 @@ package com.qwazr.profiler;
 
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
+import com.qwazr.utils.server.ServerBuilder;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.LinkedHashMap;
 
 public class ProfilerManager {
 
@@ -57,6 +58,10 @@ public class ProfilerManager {
 		}
 		if (totalTimeArray == null || totalTimeArray.length < size)
 			totalTimeArray = new long[size + 1000];
+	}
+
+	public static void load(final ServerBuilder serverBuilder) {
+		serverBuilder.registerWebService(ProfilerServiceImpl.class);
 	}
 
 	final synchronized static int register(final String name) {
@@ -97,12 +102,17 @@ public class ProfilerManager {
 		final Map<String, MethodResult> results = new LinkedHashMap();
 		while (rows-- > 0 && iterator.hasNext()) {
 			final Map.Entry<String, Integer> entry = iterator.next();
-			final int pos = entry.getValue();
-			final int count = callCountArray[pos];
-			if (count > 0)
-				results.put(entry.getKey(), new MethodResult(count, totalTimeArray[pos]));
+			final Integer pos = entry.getValue();
+			synchronized (pos) {
+				final int count = callCountArray[pos];
+				if (count > 0)
+					results.put(entry.getKey(), new MethodResult(count, totalTimeArray[pos]));
+			}
 		}
 		return results;
 	}
 
+	public final static int size() {
+		return classMethodMap.size();
+	}
 }

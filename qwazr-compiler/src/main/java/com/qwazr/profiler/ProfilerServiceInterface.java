@@ -38,7 +38,7 @@ public interface ProfilerServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{prefix : .+}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Map<String, MethodResult> getDirectory(@PathParam("prefix") String path, @QueryParam("start") Integer start,
+	Map<String, MethodResult> getPrefix(@PathParam("prefix") String prefix, @QueryParam("start") Integer start,
 			@QueryParam("end") Integer end);
 
 }

@@ -24,6 +24,7 @@ import com.qwazr.extractor.ExtractorManager;
 import com.qwazr.graph.GraphManager;
 import com.qwazr.library.LibraryManager;
 import com.qwazr.library.LibraryServiceImpl;
+import com.qwazr.profiler.ProfilerManager;
 import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.search.index.IndexManager;
@@ -66,6 +67,9 @@ public class Qwazr {
 		ClusterManager.load(builder, config.groups);
 
 		LibraryManager.load(config.dataDirectory, etcTracker);
+
+		if (QwazrConfiguration.ServiceEnum.profiler.isActive(config))
+			ProfilerManager.load(builder);
 
 		if (QwazrConfiguration.ServiceEnum.compiler.isActive(config))
 			CompilerManager.load(builder);
@@ -117,8 +121,7 @@ public class Qwazr {
 	 * @throws IllegalAccessException
 	 * @throws ParseException
 	 */
-	public static synchronized void startWithConf(QwazrConfiguration configuration)
-			throws Exception {
+	public static synchronized void startWithConf(QwazrConfiguration configuration) throws Exception {
 		if (qwazr != null)
 			throw new IllegalAccessException("QWAZR is already started");
 		qwazr = newServer(configuration);
@@ -160,12 +163,12 @@ public class Qwazr {
 	public static void main(String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-				case "start":
-					start(args);
-					return;
-				case "stop":
-					stop(args);
-					return;
+			case "start":
+				start(args);
+				return;
+			case "stop":
+				stop(args);
+				return;
 			}
 		}
 		start(args);

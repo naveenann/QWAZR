@@ -37,7 +37,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 		QWAZR_GROUPS,
 
 		QWAZR_SCHEDULER_MAX_THREADS
-
+		
 	}
 
 	public enum ServiceEnum {
@@ -49,7 +49,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 		scripts,
 
 		schedulers,
-		
+
 		webapps,
 
 		search,
@@ -60,7 +60,9 @@ public class QwazrConfiguration extends ServerConfiguration {
 
 		store,
 
-		compiler;
+		compiler,
+
+		profiler;
 
 		/**
 		 * @param serverConfiguration
