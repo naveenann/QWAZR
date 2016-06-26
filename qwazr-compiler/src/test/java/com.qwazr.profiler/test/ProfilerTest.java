@@ -15,9 +15,15 @@
  */
 package com.qwazr.profiler.test;
 
+import com.qwazr.profiler.MethodResult;
+import com.qwazr.profiler.ProfilerManager;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,8 +31,26 @@ import java.util.concurrent.Future;
 
 public class ProfilerTest {
 
+	final private static Logger LOGGER = LoggerFactory.getLogger(ProfilerTest.class);
+
+	final private static Map<String, Long> EXPECTED = new HashMap<>();
+
+	static {
+		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:<init>@()V", 8L);
+		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:test@()V", 80L);
+		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:test@(I)V", 80L);
+		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:testEx@()V", 80L);
+		EXPECTED.put(
+				"com/qwazr/profiler/test/ProfiledClass:wait@(Ljava/util/concurrent/atomic/AtomicInteger;Ljava/util/concurrent/atomic/AtomicLong;I)V",
+				240L);
+	}
+
 	@Test
 	public void profile() throws InterruptedException, ExecutionException {
+		if (!ProfilerManager.isInitialized()) {
+			LOGGER.info("ProfilerTest skipped");
+			return;
+		}
 		final ExecutorService executorService = Executors.newCachedThreadPool();
 		final Future<?>[] futures = new Future<?>[8];
 		for (int i = 0; i < futures.length; i++) {
@@ -50,6 +74,14 @@ public class ProfilerTest {
 		Assert.assertEquals(80, ProfiledClass.testCount.get());
 		Assert.assertEquals(80, ProfiledClass.testParamCount.get());
 		Assert.assertEquals(80, ProfiledClass.testExCount.get());
+
+		Map<String, MethodResult> results =
+				ProfilerManager.getMethods("com/qwazr/profiler/test/ProfiledClass", null, null);
+		Assert.assertNotNull(results);
+		Assert.assertEquals(6, results.size());
+
+		EXPECTED.forEach((key, count) -> Assert.assertEquals((long) count, results.get(key).invocations));
+
 	}
 
 }

@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 
 public class ProfilerManager {
@@ -35,10 +35,14 @@ public class ProfilerManager {
 	final private static PatriciaTrie<Integer> classMethodMap = new PatriciaTrie<>();
 
 	private static int idSequence = 0;
-	private static int[] callCountArray;
-	private static long[] totalTimeArray;
+	private static int[] callCountArray = null;
+	private static long[] totalTimeArray = null;
+
+	private static volatile boolean initialized = false;
 
 	public static void premain(final String agentArgs, final Instrumentation inst) {
+
+		initialized = true;
 
 		final String[] matchers = StringUtils.split(agentArgs, ';');
 		final WildcardMatcher[] wildcardMatchers = new WildcardMatcher[matchers.length];
@@ -64,14 +68,20 @@ public class ProfilerManager {
 		serverBuilder.registerWebService(ProfilerServiceImpl.class);
 	}
 
+	final static public boolean isInitialized() {
+		return initialized;
+	}
+
 	final synchronized static int register(final String name) {
-		Integer id = classMethodMap.get(name);
-		if (id != null)
+		synchronized (classMethodMap) {
+			Integer id = classMethodMap.get(name);
+			if (id != null)
+				return id;
+			id = idSequence++;
+			classMethodMap.put(name, id);
+			checkArrays(idSequence);
 			return id;
-		id = idSequence++;
-		classMethodMap.put(name, id);
-		checkArrays(idSequence);
-		return id;
+		}
 	}
 
 	final static public void methodCalled(final String key, final int methodId, final long startTime) {
@@ -83,33 +93,49 @@ public class ProfilerManager {
 	}
 
 	final static public void dump() {
-		classMethodMap.forEach((methodKey, methodId) -> {
-			if (callCountArray[methodId] == 0)
-				return;
-			System.out.println(methodKey + " => " + callCountArray[methodId] + " - " + totalTimeArray[methodId] + " - "
-					+ totalTimeArray[methodId] / callCountArray[methodId]);
-		});
+		synchronized (classMethodMap) {
+			classMethodMap.forEach((methodKey, methodId) -> {
+				if (callCountArray[methodId] == 0)
+					return;
+				System.out.println(
+						methodKey + " => " + callCountArray[methodId] + " - " + totalTimeArray[methodId] + " - "
+								+ totalTimeArray[methodId] / callCountArray[methodId]);
+			});
+		}
 	}
 
 	final static public Map<String, MethodResult> getMethods(final String prefixKey, Integer start, Integer rows) {
-		final SortedMap<String, Integer> subMap = classMethodMap.prefixMap(prefixKey);
-		final Iterator<Map.Entry<String, Integer>> iterator = subMap.entrySet().iterator();
-		if (start != null)
-			while (start-- > 0 && iterator.hasNext())
-				iterator.next();
-		if (rows == null)
-			rows = 100;
-		final Map<String, MethodResult> results = new LinkedHashMap();
-		while (rows-- > 0 && iterator.hasNext()) {
-			final Map.Entry<String, Integer> entry = iterator.next();
-			final Integer pos = entry.getValue();
-			synchronized (pos) {
-				final int count = callCountArray[pos];
-				if (count > 0)
-					results.put(entry.getKey(), new MethodResult(count, totalTimeArray[pos]));
+		synchronized (classMethodMap) {
+			final SortedMap<String, Integer> prefixMap = classMethodMap.prefixMap(prefixKey);
+			final Map<String, MethodResult> results = new LinkedHashMap();
+
+			if (prefixMap.size() == 0)
+				return results;
+
+			if (start == null)
+				start = 0;
+			if (rows == null)
+				rows = 100;
+
+			final Set<String> keySet = prefixMap.keySet();
+			final String[] keys = keySet.toArray(new String[keySet.size()]);
+			for (String key : keys) {
+				if (start > 0) {
+					start--;
+					continue;
+				}
+				if (rows <= 0)
+					break;
+				rows--;
+				final Integer pos = classMethodMap.get(key);
+				synchronized (pos) {
+					final int count = callCountArray[pos];
+					if (count > 0)
+						results.put(key, new MethodResult(count, totalTimeArray[pos]));
+				}
 			}
+			return results;
 		}
-		return results;
 	}
 
 	public final static int size() {
