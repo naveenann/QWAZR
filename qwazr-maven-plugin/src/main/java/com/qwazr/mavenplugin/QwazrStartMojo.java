@@ -19,7 +19,6 @@ import com.qwazr.Qwazr;
 import com.qwazr.QwazrConfiguration;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerConfiguration;
-import org.apache.commons.cli.ParseException;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -32,7 +31,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
-import javax.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
@@ -40,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * Starts a QWAZR application
@@ -68,7 +65,6 @@ public class QwazrStartMojo extends AbstractMojo {
 	 */
 	@Parameter(property = "qwazr.publicAddr")
 	private String publicAddr;
-
 
 	/**
 	 * The local address the server will bind to for UDP connections.
@@ -135,6 +131,12 @@ public class QwazrStartMojo extends AbstractMojo {
 	 */
 	@Parameter(property = "qwazr.groups")
 	private List<String> groups;
+
+	/**
+	 * The profiled classes (wildcards are allowed).
+	 */
+	@Parameter(property = "qwazr.profilers")
+	private List<String> profilers;
 
 	/**
 	 * Pass true to start the QWAZR application as a daemon.
@@ -222,14 +224,16 @@ public class QwazrStartMojo extends AbstractMojo {
 			parameters.put("CLASSPATH", classpath);
 
 			if (etcFilters != null && !etcFilters.isEmpty())
-				parameters
-						.put(ServerConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etcFilters, ","));
+				parameters.put(ServerConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etcFilters, ','));
 
 			if (groups != null && !groups.isEmpty())
-				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_GROUPS.name(), StringUtils.join(groups, ","));
+				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_GROUPS.name(), StringUtils.join(groups, ','));
+
+			if (profilers != null && !profilers.isEmpty())
+				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_PROFILERS.name(), StringUtils.join(groups, ';'));
 
 			if (services != null && !services.isEmpty())
-				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_SERVICES.name(), StringUtils.join(services, ","));
+				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_SERVICES.name(), StringUtils.join(services, ','));
 
 			final String className = Qwazr.class.getCanonicalName();
 			final ProcessBuilder builder =
@@ -243,7 +247,7 @@ public class QwazrStartMojo extends AbstractMojo {
 		}
 
 		private void startEmbedded(final Log log) throws Exception {
-			Qwazr.startWithConf(new QwazrConfiguration(etcFilters, services, groups, schedulerMaxThreads));
+			Qwazr.startWithConf(new QwazrConfiguration(etcFilters, services, groups, schedulerMaxThreads, profilers));
 			log.info("QWAZR started (Embedded)");
 			try {
 				for (; ; )
