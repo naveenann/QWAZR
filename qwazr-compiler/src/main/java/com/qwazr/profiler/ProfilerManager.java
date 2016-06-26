@@ -15,6 +15,7 @@
  */
 package com.qwazr.profiler;
 
+import com.ea.agentloader.AgentLoader;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.WildcardMatcher;
 import com.qwazr.utils.server.ServerBuilder;
@@ -23,10 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
+import java.util.*;
 
 public class ProfilerManager {
 
@@ -40,10 +38,19 @@ public class ProfilerManager {
 
 	private static volatile boolean initialized = false;
 
-	public static void premain(final String agentArgs, final Instrumentation inst) {
+	final public static String VARIABLE_NAME = "QWAZR_PROFILERS";
 
+	private static synchronized void main(String agentArgs, final Instrumentation inst) {
+		if (agentArgs == null || agentArgs.isEmpty())
+			agentArgs = System.getenv(VARIABLE_NAME);
+		if (agentArgs == null || agentArgs.isEmpty())
+			agentArgs = System.getProperty(VARIABLE_NAME);
+		if (agentArgs == null || agentArgs.isEmpty()) {
+			LOGGER.info("Profiler not initialized. No argument provided.");
+			return;
+		}
 		initialized = true;
-
+		LOGGER.info("Profiler initialization: " + agentArgs);
 		final String[] matchers = StringUtils.split(agentArgs, ';');
 		final WildcardMatcher[] wildcardMatchers = new WildcardMatcher[matchers.length];
 		int i = 0;
@@ -54,18 +61,30 @@ public class ProfilerManager {
 		Runtime.getRuntime().addShutdownHook(new Thread(ProfilerManager::dump));
 	}
 
+	public static void premain(final String agentArgs, final Instrumentation inst) {
+		main(agentArgs, inst);
+	}
+
+	public static void agentmain(final String agentArgs, final Instrumentation inst) {
+		main(agentArgs, inst);
+	}
+
 	static private void checkArrays(int size) {
 		if (callCountArray == null || callCountArray.length < size) {
-			callCountArray = new int[size + 1000];
+			callCountArray = new int[size + 999];
 			if (LOGGER.isInfoEnabled())
 				LOGGER.info("Profiler method buffer size: " + callCountArray.length);
 		}
 		if (totalTimeArray == null || totalTimeArray.length < size)
-			totalTimeArray = new long[size + 1000];
+			totalTimeArray = new long[size + 999];
 	}
 
 	public static void load(final ServerBuilder serverBuilder) {
-		serverBuilder.registerWebService(ProfilerServiceImpl.class);
+		if (!isInitialized())
+			AgentLoader.loadAgentClass(ProfilerManager.class.getName(), null);
+
+		if (serverBuilder != null)
+			serverBuilder.registerWebService(ProfilerServiceImpl.class);
 	}
 
 	final static public boolean isInitialized() {
@@ -80,6 +99,8 @@ public class ProfilerManager {
 			id = idSequence++;
 			classMethodMap.put(name, id);
 			checkArrays(idSequence);
+			if (LOGGER.isTraceEnabled())
+				LOGGER.trace("Profiler register method: " + name);
 			return id;
 		}
 	}

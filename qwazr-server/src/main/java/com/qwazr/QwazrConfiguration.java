@@ -36,8 +36,10 @@ public class QwazrConfiguration extends ServerConfiguration {
 
 		QWAZR_GROUPS,
 
-		QWAZR_SCHEDULER_MAX_THREADS
-		
+		QWAZR_SCHEDULER_MAX_THREADS,
+
+		QWAZR_PROFILERS
+
 	}
 
 	public enum ServiceEnum {
@@ -83,7 +85,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 	public final Integer scheduler_max_threads;
 
 	public QwazrConfiguration(Collection<String> etcFilters, Collection<ServiceEnum> services,
-			Collection<String> groups, Integer schedulerMaxThreads) {
+			Collection<String> groups, Integer schedulerMaxThreads, Collection<String> profilers) {
 		this.etcFileFilter = buildEtcFileFilter(etcFilters);
 		this.services = buildServices(services);
 		this.groups = buildGroups(groups);
@@ -139,16 +141,20 @@ public class QwazrConfiguration extends ServerConfiguration {
 		return services;
 	}
 
+	private static Set<String> splitValue(String value, char separator) {
+		if (StringUtils.isEmpty(value))
+			return null;
+		String[] array = StringUtils.split(value, separator);
+		if (array == null || array.length == 0)
+			return null;
+		Set<String> values = new HashSet<>();
+		for (String v : values)
+			values.add(v.trim());
+		return values;
+	}
+
 	private static Set<String> buildGroups(String groupString) {
-		if (StringUtils.isEmpty(groupString))
-			return null;
-		String[] groups_array = StringUtils.split(groupString, ',');
-		if (groups_array == null || groups_array.length == 0)
-			return null;
-		Set<String> groups = new HashSet<>();
-		for (String group : groups_array)
-			groups.add(group.trim());
-		return groups;
+		return splitValue(groupString, ',');
 	}
 
 	private static Set<String> buildGroups(Collection<String> groupCollection) {

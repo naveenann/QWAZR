@@ -18,17 +18,20 @@ package com.qwazr.profiler.test;
 import com.qwazr.profiler.MethodResult;
 import com.qwazr.profiler.ProfilerManager;
 import org.junit.Assert;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ProfilerTest {
 
 	final private static Logger LOGGER = LoggerFactory.getLogger(ProfilerTest.class);
@@ -44,9 +47,9 @@ public class ProfilerTest {
 				"com/qwazr/profiler/test/ProfiledClass:wait@(Ljava/util/concurrent/atomic/AtomicInteger;Ljava/util/concurrent/atomic/AtomicLong;I)V",
 				240L);
 	}
-
+	
 	@Test
-	public void profile() throws InterruptedException, ExecutionException {
+	public void test100profile() throws InterruptedException, ExecutionException {
 		if (!ProfilerManager.isInitialized()) {
 			LOGGER.info("ProfilerTest skipped");
 			return;
@@ -78,7 +81,7 @@ public class ProfilerTest {
 		Map<String, MethodResult> results =
 				ProfilerManager.getMethods("com/qwazr/profiler/test/ProfiledClass", null, null);
 		Assert.assertNotNull(results);
-		Assert.assertEquals(6, results.size());
+		Assert.assertTrue(results.size() >= EXPECTED.size());
 
 		EXPECTED.forEach((key, count) -> Assert.assertEquals((long) count, results.get(key).invocations));
 
