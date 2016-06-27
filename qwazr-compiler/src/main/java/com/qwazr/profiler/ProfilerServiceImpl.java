@@ -20,8 +20,8 @@ import java.util.Map;
 public class ProfilerServiceImpl implements ProfilerServiceInterface {
 
 	@Override
-	public int get() {
-		return ProfilerManager.size();
+	public String[] get(final Integer start, final Integer end) {
+		return ProfilerManager.getMethods(start, end);
 	}
 
 	@Override
