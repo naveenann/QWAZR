@@ -17,6 +17,8 @@ package com.qwazr.profiler.test;
 
 import com.qwazr.profiler.MethodResult;
 import com.qwazr.profiler.ProfilerManager;
+import com.qwazr.profiler.ProfilerServiceImpl;
+import com.qwazr.profiler.ProfilerServiceInterface;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -85,20 +87,24 @@ public class ProfilerTest {
 		Assert.assertEquals(80, ProfiledClass.testParamCount.get());
 		Assert.assertEquals(80, ProfiledClass.testExCount.get());
 
-		Map<String, MethodResult> results =
-				ProfilerManager.getMethods("com/qwazr/profiler/test/ProfiledClass", null, null);
+		final ProfilerServiceInterface service = new ProfilerServiceImpl();
+		service.getPrefix("com/qwazr/profiler/test/ProfiledClass", null, null);
+		Assert.assertTrue(service.get(null, null).length >= EXPECTED.size());
+		final Map<String, MethodResult> results =
+				service.getPrefix("com/qwazr/profiler/test/ProfiledClass", null, null);
 		Assert.assertNotNull(results);
-		LOGGER.info("Instrumented methods: " + results.size());
-		Assert.assertEquals(EXPECTED.size(), results.size());
-		Assert.assertEquals(8, ProfilerManager.getMethods(null, null).length);
-
-		EXPECTED.forEach((key, count) -> Assert.assertEquals((long) count, results.get(key).invocations));
+		Assert.assertTrue(results.size() >= EXPECTED.size());
+		EXPECTED.forEach(
+				(key, count) -> {
+					Assert.assertNotNull("Check " + key, results.get(key));
+					Assert.assertEquals("Check " + key, (long) count, results.get(key).invocations);
+				});
 
 	}
 
 	@Test
 	public void test200dump() {
-		Assert.assertEquals(EXPECTED.size(), ProfilerManager.dump());
+		Assert.assertTrue(ProfilerManager.dump() >= EXPECTED.size());
 	}
 
 }
