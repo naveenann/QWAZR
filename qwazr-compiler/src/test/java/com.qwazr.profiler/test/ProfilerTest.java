@@ -96,4 +96,9 @@ public class ProfilerTest {
 
 	}
 
+	@Test
+	public void test200dump() {
+		Assert.assertEquals(EXPECTED.size(), ProfilerManager.dump());
+	}
+
 }

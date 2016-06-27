@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ProfilerManager {
 
@@ -113,16 +114,19 @@ public class ProfilerManager {
 		}
 	}
 
-	final static public void dump() {
+	final static public int dump() {
+		final AtomicInteger count = new AtomicInteger();
 		synchronized (classMethodMap) {
 			classMethodMap.forEach((methodKey, methodId) -> {
 				if (callCountArray[methodId] == 0)
 					return;
-				System.out.println(
-						methodKey + " => " + callCountArray[methodId] + " - " + totalTimeArray[methodId] + " - "
-								+ totalTimeArray[methodId] / callCountArray[methodId]);
+				count.incrementAndGet();
+				if (LOGGER.isInfoEnabled())
+					LOGGER.info(methodKey + " => " + callCountArray[methodId] + " - " + totalTimeArray[methodId] + " - "
+							+ totalTimeArray[methodId] / callCountArray[methodId]);
 			});
 		}
+		return count.get();
 	}
 
 	final static public String[] getMethods(Integer start, Integer rows) {
@@ -144,11 +148,10 @@ public class ProfilerManager {
 		if (start >= keys.length)
 			return StringUtils.EMPTY_ARRAY;
 
-
 		int to = start + rows;
 		if (to > keys.length)
 			to = keys.length;
-		
+
 		return Arrays.copyOfRange(keys, start, to);
 	}
 
