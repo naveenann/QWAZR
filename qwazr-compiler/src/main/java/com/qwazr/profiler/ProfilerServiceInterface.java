@@ -21,6 +21,7 @@ import com.qwazr.utils.server.ServiceName;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.Collection;
 import java.util.Map;
 
 @RolesAllowed(ProfilerServiceInterface.SERVICE_NAME)
@@ -33,7 +34,8 @@ public interface ProfilerServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/")
 	@Produces(MediaType.TEXT_PLAIN)
-	int get();
+	String[] get(@QueryParam("start") Integer start,
+			@QueryParam("end") Integer end);
 
 	@GET
 	@Path("/{prefix : .+}")

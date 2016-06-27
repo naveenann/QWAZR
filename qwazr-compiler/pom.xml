@@ -71,7 +71,9 @@
                     <archive>
                         <manifestEntries>
                             <Premain-Class>com.qwazr.profiler.ProfilerManager</Premain-Class>
-                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                            <Agent-Class>com.qwazr.profiler.ProfilerManager</Agent-Class>
+                            <Can-Retransform-Classes>false</Can-Retransform-Classes>
+                            Can-Retransform-Classes
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -83,9 +85,6 @@
                     <systemPropertyVariables>
                         <QWAZR_PROFILERS>com/qwazr/*</QWAZR_PROFILERS>
                     </systemPropertyVariables>
-                    <configuration>
-                        <argLine>-javaagent:target/${project.build.finalName}.jar</argLine>
-                    </configuration>
                 </configuration>
             </plugin>
         </plugins>

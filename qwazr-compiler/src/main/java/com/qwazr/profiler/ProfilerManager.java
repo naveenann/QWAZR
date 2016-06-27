@@ -125,6 +125,33 @@ public class ProfilerManager {
 		}
 	}
 
+	final static public String[] getMethods(Integer start, Integer rows) {
+		final String[] keys;
+
+		if (start == null)
+			start = 0;
+		if (rows == null)
+			rows = 100;
+
+		if (rows == 0)
+			return StringUtils.EMPTY_ARRAY;
+
+		synchronized (classMethodMap) {
+			final Set<String> keySet = classMethodMap.keySet();
+			keys = keySet.toArray(new String[keySet.size()]);
+		}
+
+		if (start >= keys.length)
+			return StringUtils.EMPTY_ARRAY;
+
+
+		int to = start + rows;
+		if (to > keys.length)
+			to = keys.length;
+		
+		return Arrays.copyOfRange(keys, start, to);
+	}
+
 	final static public Map<String, MethodResult> getMethods(final String prefixKey, Integer start, Integer rows) {
 		synchronized (classMethodMap) {
 			final SortedMap<String, Integer> prefixMap = classMethodMap.prefixMap(prefixKey);

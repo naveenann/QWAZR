@@ -39,6 +39,7 @@ public class ProfilerTest {
 	final private static Map<String, Long> EXPECTED = new HashMap<>();
 
 	static {
+		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:<clinit>@()V", 1L);
 		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:<init>@()V", 8L);
 		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:test@()V", 80L);
 		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:test@(I)V", 80L);
@@ -47,7 +48,13 @@ public class ProfilerTest {
 				"com/qwazr/profiler/test/ProfiledClass:wait@(Ljava/util/concurrent/atomic/AtomicInteger;Ljava/util/concurrent/atomic/AtomicLong;I)V",
 				240L);
 	}
-	
+
+	@Test
+	public void test000loadManager() {
+		ProfilerManager.load(null);
+		Assert.assertTrue(ProfilerManager.isInitialized());
+	}
+
 	@Test
 	public void test100profile() throws InterruptedException, ExecutionException {
 		if (!ProfilerManager.isInitialized()) {
@@ -81,7 +88,9 @@ public class ProfilerTest {
 		Map<String, MethodResult> results =
 				ProfilerManager.getMethods("com/qwazr/profiler/test/ProfiledClass", null, null);
 		Assert.assertNotNull(results);
-		Assert.assertTrue(results.size() >= EXPECTED.size());
+		LOGGER.info("Instrumented methods: " + results.size());
+		Assert.assertEquals(EXPECTED.size(), results.size());
+		Assert.assertEquals(8, ProfilerManager.getMethods(null, null).length);
 
 		EXPECTED.forEach((key, count) -> Assert.assertEquals((long) count, results.get(key).invocations));
 
