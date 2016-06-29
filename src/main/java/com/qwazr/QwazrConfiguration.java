@@ -84,8 +84,8 @@ public class QwazrConfiguration extends ServerConfiguration {
 	public final FileFilter etcFileFilter;
 	public final Integer scheduler_max_threads;
 
-	public QwazrConfiguration(Collection<String> etcFilters, Collection<ServiceEnum> services,
-			Collection<String> groups, Integer schedulerMaxThreads, Collection<String> profilers) {
+	public QwazrConfiguration(final Collection<String> etcFilters, final Collection<ServiceEnum> services,
+			final Collection<String> groups, Integer schedulerMaxThreads) {
 		this.etcFileFilter = buildEtcFileFilter(etcFilters);
 		this.services = buildServices(services);
 		this.groups = buildGroups(groups);
@@ -100,37 +100,37 @@ public class QwazrConfiguration extends ServerConfiguration {
 				buildSchedulerMaxThreads(getPropertyOrEnv(null, VariablesEnum.QWAZR_SCHEDULER_MAX_THREADS));
 	}
 
-	private static FileFilter buildEtcFileFilter(String etcFilter) {
+	private static FileFilter buildEtcFileFilter(final String etcFilter) {
 		if (StringUtils.isEmpty(etcFilter))
 			return FileFileFilter.FILE;
-		String[] array = StringUtils.split(etcFilter, ',');
+		final String[] array = StringUtils.split(etcFilter, ',');
 		if (array == null || array.length == 0)
 			return FileFileFilter.FILE;
 		return new AndFileFilter(FileFileFilter.FILE, new WildcardFileFilter(array));
 	}
 
-	private static FileFilter buildEtcFileFilter(Collection<String> etcFilters) {
+	private static FileFilter buildEtcFileFilter(final Collection<String> etcFilters) {
 		if (etcFilters == null || etcFilters.isEmpty())
 			return FileFileFilter.FILE;
 		return new AndFileFilter(FileFileFilter.FILE,
 				new WildcardFileFilter(etcFilters.toArray(new String[etcFilters.size()])));
 	}
 
-	private static Set<ServiceEnum> buildServices(Collection<ServiceEnum> serviceCollection) {
+	private static Set<ServiceEnum> buildServices(final Collection<ServiceEnum> serviceCollection) {
 		if (serviceCollection == null)
 			return null;
-		Set<ServiceEnum> services = new HashSet<>();
+		final Set<ServiceEnum> services = new HashSet<>();
 		services.addAll(serviceCollection);
 		return services;
 	}
 
-	private static Set<ServiceEnum> buildServices(String servicesString) {
+	private static Set<ServiceEnum> buildServices(final String servicesString) {
 		if (servicesString == null)
 			return null;
-		String[] services_array = StringUtils.split(servicesString, ',');
+		final String[] services_array = StringUtils.split(servicesString, ',');
 		if (services_array == null || services_array.length == 0)
 			return null;
-		Set<ServiceEnum> services = new HashSet<>();
+		final Set<ServiceEnum> services = new HashSet<>();
 		for (String service : services_array) {
 			try {
 				services.add(ServiceEnum.valueOf(service.trim()));
@@ -144,11 +144,11 @@ public class QwazrConfiguration extends ServerConfiguration {
 	private static Set<String> splitValue(String value, char separator) {
 		if (StringUtils.isEmpty(value))
 			return null;
-		String[] array = StringUtils.split(value, separator);
-		if (array == null || array.length == 0)
+		final String[] valueArray = StringUtils.split(value, separator);
+		if (valueArray == null || valueArray.length == 0)
 			return null;
-		Set<String> values = new HashSet<>();
-		for (String v : values)
+		final Set<String> values = new HashSet<>();
+		for (String v : valueArray)
 			values.add(v.trim());
 		return values;
 	}
@@ -160,7 +160,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 	private static Set<String> buildGroups(Collection<String> groupCollection) {
 		if (groupCollection == null || groupCollection.isEmpty())
 			return null;
-		Set<String> groups = new HashSet<>();
+		final Set<String> groups = new HashSet<>();
 		groupCollection.forEach((g) -> groups.add(g.trim()));
 		return groups;
 	}
