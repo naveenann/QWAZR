@@ -133,7 +133,7 @@ public class Qwazr {
 	 *
 	 * @param args For procrun compatbility, currently ignored
 	 */
-	public static synchronized void start(String[] args) {
+	public static synchronized void start(final String[] args) {
 		try {
 			startWithConf(new QwazrConfiguration());
 		} catch (Exception e) {
@@ -147,12 +147,10 @@ public class Qwazr {
 	 *
 	 * @param args For procrun compatbility, currently ignored
 	 */
-	public static synchronized void stop(String[] args) {
-		if (qwazr == null) {
-			System.exit(0);
-			return;
-		}
-		qwazr.stopAll();
+	public static synchronized void stop(final String[] args) {
+		if (qwazr != null)
+			qwazr.stopAll();
+		System.exit(0);
 	}
 
 	/**
@@ -160,15 +158,15 @@ public class Qwazr {
 	 *
 	 * @param args One argument: "start" or "stop"
 	 */
-	public static void main(String[] args) {
+	public static void main(final String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-			case "start":
-				start(args);
-				return;
-			case "stop":
-				stop(args);
-				return;
+				case "start":
+					start(args);
+					return;
+				case "stop":
+					stop(args);
+					return;
 			}
 		}
 		start(args);

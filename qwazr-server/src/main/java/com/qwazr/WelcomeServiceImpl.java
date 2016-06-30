@@ -36,10 +36,10 @@ public class WelcomeServiceImpl implements ServiceInterface {
 		public void run() {
 			try {
 				Thread.sleep(5000);
+				Qwazr.stop(null);
 			} catch (InterruptedException e) {
 				Qwazr.logger.warn(e.getMessage(), e);
 			}
-			System.exit(0);
 		}
 	}
 }
