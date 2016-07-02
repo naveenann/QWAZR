@@ -59,9 +59,8 @@ public class JavaCompiler implements Closeable {
 		this.classPath = classPath;
 		this.javaSourceDirectory = javaSourceDirectory;
 		String javaSourcePrefix = javaSourceDirectory.getAbsolutePath();
-		javaSourcePrefixSize = javaSourcePrefix.endsWith("/") ?
-				javaSourcePrefix.length() :
-				javaSourcePrefix.length() + 1;
+		javaSourcePrefixSize =
+				javaSourcePrefix.endsWith("/") ? javaSourcePrefix.length() : javaSourcePrefix.length() + 1;
 		this.javaClassesDirectory = javaClassesDirectory;
 		if (this.javaClassesDirectory != null && !this.javaClassesDirectory.exists())
 			this.javaClassesDirectory.mkdir();
@@ -143,8 +142,8 @@ public class JavaCompiler implements Closeable {
 			options.add(javaClassesDirectory.getAbsolutePath());
 			options.add("-sourcepath");
 			options.add(javaSourceDirectory.getAbsolutePath());
-			javax.tools.JavaCompiler.CompilationTask task = compiler
-					.getTask(pw, fileManager, diagnostics, options, null, sourceFileObjects);
+			javax.tools.JavaCompiler.CompilationTask task =
+					compiler.getTask(pw, fileManager, diagnostics, options, null, sourceFileObjects);
 			if (!task.call()) {
 				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
 					pw.format("Error on line %d in %s%n%s%n", diagnostic.getLineNumber(),
@@ -165,11 +164,11 @@ public class JavaCompiler implements Closeable {
 		final Collection<File> finalJavaFiles = new ArrayList<File>();
 		if (javaSourceFiles.length == 0)
 			return finalJavaFiles;
-		final File parentClassDir = new File(javaClassesDirectory,
-				parentDir.getAbsolutePath().substring(javaSourcePrefixSize));
+		final File parentClassDir =
+				new File(javaClassesDirectory, parentDir.getAbsolutePath().substring(javaSourcePrefixSize));
 		for (File javaSourceFile : javaSourceFiles) {
-			final File classFile = new File(parentClassDir,
-					FilenameUtils.removeExtension(javaSourceFile.getName()) + ".class");
+			final File classFile =
+					new File(parentClassDir, FilenameUtils.removeExtension(javaSourceFile.getName()) + ".class");
 			if (classFile.exists() && classFile.lastModified() > javaSourceFile.lastModified())
 				continue;
 			finalJavaFiles.add(javaSourceFile);

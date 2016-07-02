@@ -24,11 +24,7 @@ import io.undertow.servlet.api.SessionPersistenceManager;
 import org.slf4j.Logger;
 
 import javax.ws.rs.Path;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.LinkedHashMap;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -40,9 +36,11 @@ public class ServerBuilder<T extends ServerConfiguration> {
 	final Collection<String> webServicePaths;
 	final Collection<String> webServiceNames;
 	final Collection<UdpServerThread.PacketListener> packetListeners;
-	final Collection<ServletInfo> servletInfos;
+	final Collection<SecurableServletInfo> servletInfos;
+	final Collection<ServletInfo> securedServlets;
 	final Map<String, FilterInfo> filterInfos;
 	final Collection<ListenerInfo> listenerInfos;
+
 	SessionPersistenceManager sessionPersistenceManager;
 	SessionListener sessionListener;
 	Logger servletAccessLogger;
@@ -59,6 +57,7 @@ public class ServerBuilder<T extends ServerConfiguration> {
 		webServiceNames = new LinkedHashSet<>();
 		packetListeners = new LinkedHashSet<>();
 		servletInfos = new LinkedHashSet<>();
+		securedServlets = new HashSet<>();
 		filterInfos = new LinkedHashMap<>();
 		listenerInfos = new LinkedHashSet<>();
 		sessionPersistenceManager = null;
@@ -92,7 +91,7 @@ public class ServerBuilder<T extends ServerConfiguration> {
 		this.packetListeners.add(packetListener);
 	}
 
-	public void registerServlet(final ServletInfo servlet) {
+	public void registerServlet(final SecurableServletInfo servlet) {
 		this.servletInfos.add(servlet);
 	}
 

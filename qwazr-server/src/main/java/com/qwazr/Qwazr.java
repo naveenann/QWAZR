@@ -77,9 +77,6 @@ public class Qwazr {
 		if (QwazrConfiguration.ServiceEnum.extractor.isActive(config))
 			ExtractorManager.load(builder);
 
-		if (QwazrConfiguration.ServiceEnum.webapps.isActive(config))
-			WebappManager.load(builder, etcTracker, currentTempDir);
-
 		if (QwazrConfiguration.ServiceEnum.scripts.isActive(config))
 			ScriptManager.load(builder);
 
@@ -97,6 +94,9 @@ public class Qwazr {
 
 		if (QwazrConfiguration.ServiceEnum.store.isActive(config))
 			StoreManager.load(builder);
+
+		if (QwazrConfiguration.ServiceEnum.webapps.isActive(config))
+			WebappManager.load(builder, etcTracker, currentTempDir);
 
 		builder.registerWebService(LibraryServiceImpl.class);
 		builder.setIdentityManagerProvider(LibraryManager.getInstance());
@@ -161,12 +161,12 @@ public class Qwazr {
 	public static void main(final String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-				case "start":
-					start(args);
-					return;
-				case "stop":
-					stop(args);
-					return;
+			case "start":
+				start(args);
+				return;
+			case "stop":
+				stop(args);
+				return;
 			}
 		}
 		start(args);
