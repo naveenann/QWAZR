@@ -67,6 +67,7 @@ public class Qwazr {
 		ClusterManager.load(builder, config.groups);
 
 		LibraryManager.load(config.dataDirectory, etcTracker);
+		builder.setIdentityManagerProvider(LibraryManager.getInstance());
 
 		if (QwazrConfiguration.ServiceEnum.profiler.isActive(config))
 			ProfilerManager.load(builder);
@@ -99,7 +100,6 @@ public class Qwazr {
 			WebappManager.load(builder, etcTracker, currentTempDir);
 
 		builder.registerWebService(LibraryServiceImpl.class);
-		builder.setIdentityManagerProvider(LibraryManager.getInstance());
 
 		// Scheduler is last, because it may immediatly execute a scripts
 		if (QwazrConfiguration.ServiceEnum.schedulers.isActive(config))
