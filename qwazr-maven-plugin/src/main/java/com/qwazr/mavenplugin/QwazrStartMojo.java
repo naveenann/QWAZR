@@ -209,6 +209,7 @@ public class QwazrStartMojo extends AbstractMojo {
 					sb.append(artifact.getFile().getPath());
 					sb.append(File.pathSeparatorChar);
 				});
+
 			return sb.toString();
 		}
 
