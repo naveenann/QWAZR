@@ -20,9 +20,8 @@ This project is a work in progress. The current version of QWAZR (1.0.1) comes w
 - [Webapps](qwazr-webapps) : A model-view-controller application server,
 - [Scheduler](qwazr-scheduler): A multi-master scheduler,
 - [Scripts](qwazr-scripts): A distributed JAVA/Javascript execution service,
-- [Connectors](qwazr-connectors) : A set of connectors to link your application to the outside world
-(Cassandra, MongoDB, MySQL, HDFS, LDAP, FTP, etc.),
-- [Tools](qwazr-tools) : A set of tools for data management (language tools, markdown to HTML converter,
+- [Library](qwazr-library) : A set of connectors and tools to link your application to the outside world
+(Cassandra, MongoDB, MySQL, HDFS, LDAP, FTP, etc.) and data management (language tools, markdown to HTML converter,
 Freemarker, XML parser and writer, etc.).
 - [Crawlers](qwazr-crawlers) : A distributed (web) crawler,
 - [Extractor](qwazr-extractor) : Text extraction from various kinds of binaries files,
