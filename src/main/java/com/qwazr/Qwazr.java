@@ -33,7 +33,7 @@ import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.file.TrackedInterface;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
-import com.qwazr.webapps.transaction.WebappManager;
+import com.qwazr.webapps.WebappManager;
 import org.apache.commons.cli.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
