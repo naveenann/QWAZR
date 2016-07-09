@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  **/
-package com.qwazr.webapps.transaction;
+package com.qwazr.webapps;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.library.LibraryManager;
@@ -23,11 +23,10 @@ import com.qwazr.utils.FunctionUtils;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.file.TrackedInterface;
 import com.qwazr.utils.server.*;
-import com.qwazr.webapps.BaseRestApplication;
-import com.qwazr.webapps.RestServletContainer;
-import com.qwazr.webapps.WebappManagerServiceImpl;
+import io.swagger.jaxrs.config.SwaggerContextService;
 import io.undertow.servlet.Servlets;
 import io.undertow.servlet.api.InstanceHandle;
+import io.undertow.servlet.api.ServletInfo;
 import io.undertow.servlet.util.ConstructorInstanceFactory;
 import org.apache.commons.io.FilenameUtils;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -161,7 +160,6 @@ public class WebappManager {
 
 		// Set the default favicon
 		serverBuilder.registerServlet(getDefaultFaviconServlet());
-
 	}
 
 	private SecurableServletInfo getStaticServlet(final String urlPath, final String path) {
@@ -219,7 +217,7 @@ public class WebappManager {
 			registerJavaServlet(urlPath, (Class<? extends Servlet>) clazz, serverBuilder);
 			return;
 		} else if (Application.class.isAssignableFrom(clazz)) {
-			registerJavaJaxRsAppServlet(urlPath, clazz, serverBuilder);
+			registerJavaJaxRsAppServlet(urlPath, (Class<? extends Application>) clazz, serverBuilder);
 			return;
 		} else if (clazz.isAnnotationPresent(Path.class)) {
 			registerJavaJaxRsClassServlet(urlPath, classDef, serverBuilder);
@@ -245,27 +243,27 @@ public class WebappManager {
 						.setLoadOnStartup(1));
 	}
 
-	private SecurableServletInfo swagger(String urlPath, final SecurableServletInfo servletInfo, Class<?>... classes) {
+	private ServletInfo addSwaggerContext(String urlPath, final ServletInfo servletInfo) {
+		final String contextId = ServletContainer.class.getName() + '@' + urlPath;
 		urlPath = StringUtils.removeEnd(urlPath, "*");
 		urlPath = StringUtils.removeEnd(urlPath, "/");
-		final Set<String> packages = new LinkedHashSet<>();
-		for (Class<?> clazz : classes)
-			packages.add(clazz.getPackage().getName());
-		servletInfo.addInitParam("swagger.api.basepath", urlPath);
-		servletInfo.addInitParam("swagger.resources", StringUtils.join(packages, ','));
-		return servletInfo;
+		return servletInfo.addInitParam(SwaggerContextService.SCANNER_ID_KEY, contextId)
+				.addInitParam(SwaggerContextService.CONFIG_ID_KEY, contextId)
+				.addInitParam(SwaggerContextService.CONTEXT_ID_KEY, contextId)
+				.addInitParam("swagger.api.basepath", urlPath);
 	}
 
-	private void registerJavaJaxRsAppServlet(final String urlPath, final Class<?> appClass,
+	private void registerJavaJaxRsAppServlet(final String urlPath, final Class<? extends Application> appClass,
 			final ServerBuilder serverBuilder) throws NoSuchMethodException {
-		final SecurableServletInfo servletInfo = (SecurableServletInfo) SecurableServletInfo.servlet(
-				RestServletContainer.class.getName() + '@' + urlPath, RestServletContainer.class,
-				new ServletFactory(ServletContainer.class))
-				.setSecure(isSecurable(appClass))
-				.addInitParam("javax.ws.rs.Application", appClass.getName())
-				.setAsyncSupported(true)
-				.addMapping(urlPath);
-		swagger(urlPath, servletInfo, appClass);
+		final SecurableServletInfo servletInfo =
+				(SecurableServletInfo) SecurableServletInfo.servlet(ServletContainer.class.getName() + '@' + urlPath,
+						ServletContainer.class, new ServletFactory(ServletContainer.class))
+						.setSecure(isSecurable(appClass))
+						.addInitParam("javax.ws.rs.Application", appClass.getName())
+						.setAsyncSupported(true)
+						.addMapping(urlPath)
+						.setLoadOnStartup(1);
+		addSwaggerContext(urlPath, servletInfo);
 		serverBuilder.registerServlet(servletInfo);
 	}
 
@@ -273,12 +271,13 @@ public class WebappManager {
 			final ServerBuilder serverBuilder) throws NoSuchMethodException, ClassNotFoundException {
 		final String[] classes = StringUtils.split(classList, " ,");
 		final String resources = BaseRestApplication.joinResources(classes);
-		final SecurableServletInfo servletInfo = (SecurableServletInfo) SecurableServletInfo.servlet(
-				RestServletContainer.class.getName() + '@' + urlPath, RestServletContainer.class,
-				new ServletFactory(RestServletContainer.class))
-				.addInitParam("jersey.config.server.provider.classnames", resources)
-				.setAsyncSupported(true)
-				.addMapping(urlPath);
+		final SecurableServletInfo servletInfo =
+				(SecurableServletInfo) SecurableServletInfo.servlet(ServletContainer.class.getName() + '@' + urlPath,
+						ServletContainer.class, new ServletFactory(ServletContainer.class))
+						.addInitParam("jersey.config.server.provider.classnames", resources)
+						.setAsyncSupported(true)
+						.addMapping(urlPath)
+						.setLoadOnStartup(1);
 		final Set<Class<?>> classSet = new LinkedHashSet<>();
 		for (String clazz : classes) {
 			Class<?> cl = ClassLoaderManager.findClass(clazz);
@@ -286,7 +285,7 @@ public class WebappManager {
 			if (isSecurable(cl))
 				servletInfo.setSecure(true);
 		}
-		swagger(urlPath, servletInfo, classSet.toArray(new Class<?>[classSet.size()]));
+		addSwaggerContext(urlPath, servletInfo);
 		serverBuilder.registerServlet(servletInfo);
 	}
 
