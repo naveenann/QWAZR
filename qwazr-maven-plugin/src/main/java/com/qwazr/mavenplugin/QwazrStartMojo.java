@@ -115,6 +115,12 @@ public class QwazrStartMojo extends AbstractMojo {
 	private List<String> etcFilters;
 
 	/**
+	 * A list of masters.
+	 */
+	@Parameter(property = "qwazr.masters")
+	private List<String> masters;
+
+	/**
 	 * A list of services to activate.
 	 */
 	@Parameter(property = "qwazr.services")
@@ -231,8 +237,8 @@ public class QwazrStartMojo extends AbstractMojo {
 				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_GROUPS.name(), StringUtils.join(groups, ','));
 
 			if (profilers != null && !profilers.isEmpty())
-				parameters
-						.put(QwazrConfiguration.VariablesEnum.QWAZR_PROFILERS.name(), StringUtils.join(profilers, ';'));
+				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_PROFILERS.name(),
+						StringUtils.join(profilers, ';'));
 
 			if (services != null && !services.isEmpty())
 				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_SERVICES.name(), StringUtils.join(services, ','));
@@ -249,7 +255,7 @@ public class QwazrStartMojo extends AbstractMojo {
 		}
 
 		private void startEmbedded(final Log log) throws Exception {
-			Qwazr.startWithConf(new QwazrConfiguration(etcFilters, services, groups, schedulerMaxThreads));
+			Qwazr.startWithConf(new QwazrConfiguration(etcFilters, masters, services, groups, schedulerMaxThreads));
 			log.info("QWAZR started (Embedded)");
 			try {
 				for (; ; )

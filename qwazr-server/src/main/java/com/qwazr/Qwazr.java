@@ -64,7 +64,7 @@ public class Qwazr {
 
 		builder.registerWebService(WelcomeServiceImpl.class);
 
-		ClusterManager.load(builder, config.groups);
+		ClusterManager.load(builder, config.masters, config.groups);
 
 		LibraryManager.load(config.dataDirectory, etcTracker);
 		builder.setIdentityManagerProvider(LibraryManager.getInstance());
