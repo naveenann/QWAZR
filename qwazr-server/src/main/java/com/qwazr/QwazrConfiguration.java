@@ -24,6 +24,7 @@ import org.apache.commons.io.filefilter.WildcardFileFilter;
 import java.io.FileFilter;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import static com.qwazr.utils.server.ServerConfiguration.VariablesEnum.QWAZR_ETC;
@@ -31,6 +32,8 @@ import static com.qwazr.utils.server.ServerConfiguration.VariablesEnum.QWAZR_ETC
 public class QwazrConfiguration extends ServerConfiguration {
 
 	public enum VariablesEnum {
+
+		QWAZR_MASTERS,
 
 		QWAZR_SERVICES,
 
@@ -79,23 +82,26 @@ public class QwazrConfiguration extends ServerConfiguration {
 		}
 	}
 
+	public final Set<String> masters;
 	public final Set<ServiceEnum> services;
 	public final Set<String> groups;
 	public final FileFilter etcFileFilter;
 	public final Integer scheduler_max_threads;
 
-	public QwazrConfiguration(final Collection<String> etcFilters, final Collection<ServiceEnum> services,
-			final Collection<String> groups, Integer schedulerMaxThreads) {
+	public QwazrConfiguration(final Collection<String> etcFilters, final Collection<String> masters,
+			final Collection<ServiceEnum> services, final Collection<String> groups, Integer schedulerMaxThreads) {
 		this.etcFileFilter = buildEtcFileFilter(etcFilters);
 		this.services = buildServices(services);
-		this.groups = buildGroups(groups);
+		this.groups = buildStringCollection(groups);
+		this.masters = buildStringCollection(masters);
 		this.scheduler_max_threads = buildSchedulerMaxThreads(schedulerMaxThreads);
 	}
 
 	QwazrConfiguration() {
 		this.etcFileFilter = buildEtcFileFilter(getPropertyOrEnv(null, QWAZR_ETC));
+		this.masters = buildCommaSeparated(getPropertyOrEnv(null, VariablesEnum.QWAZR_MASTERS));
 		this.services = buildServices(getPropertyOrEnv(null, VariablesEnum.QWAZR_SERVICES));
-		this.groups = buildGroups(getPropertyOrEnv(null, VariablesEnum.QWAZR_GROUPS));
+		this.groups = buildCommaSeparated(getPropertyOrEnv(null, VariablesEnum.QWAZR_GROUPS));
 		this.scheduler_max_threads =
 				buildSchedulerMaxThreads(getPropertyOrEnv(null, VariablesEnum.QWAZR_SCHEDULER_MAX_THREADS));
 	}
@@ -153,14 +159,14 @@ public class QwazrConfiguration extends ServerConfiguration {
 		return values;
 	}
 
-	private static Set<String> buildGroups(String groupString) {
-		return splitValue(groupString, ',');
+	private static Set<String> buildCommaSeparated(String commaSeparated) {
+		return splitValue(commaSeparated, ',');
 	}
 
-	private static Set<String> buildGroups(Collection<String> groupCollection) {
+	private static Set<String> buildStringCollection(Collection<String> groupCollection) {
 		if (groupCollection == null || groupCollection.isEmpty())
 			return null;
-		final Set<String> groups = new HashSet<>();
+		final Set<String> groups = new LinkedHashSet<>();
 		groupCollection.forEach((g) -> groups.add(g.trim()));
 		return groups;
 	}

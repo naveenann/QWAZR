@@ -21,24 +21,19 @@ import com.qwazr.utils.file.TrackedInterface;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
 
-import javax.servlet.ServletException;
-import java.io.IOException;
-
 public class SchedulerServer {
 
-	public static GenericServer start()
-			throws Exception {
+	public static GenericServer start() throws Exception {
 		final ServerBuilder builder = new ServerBuilder();
 		final TrackedInterface etcTracker =
 				TrackedInterface.build(builder.getServerConfiguration().etcDirectories, null);
-		ClusterManager.load(builder, null);
+		ClusterManager.load(builder, null, null);
 		ScriptManager.load(builder);
 		SchedulerManager.load(builder, etcTracker, 10);
 		return builder.build().start(true);
 	}
 
-	public static void main(String[] args)
-			throws Exception {
+	public static void main(String[] args) throws Exception {
 		SchedulerServer.start();
 	}
 
