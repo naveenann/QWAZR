@@ -25,6 +25,7 @@ import com.qwazr.utils.server.ServiceInterface;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
+import org.apache.http.client.methods.HttpGet;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
@@ -58,8 +59,9 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	public Response getFile(String schemaName, String path) {
 		try {
 			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
-			Request request = Request.Get(uBuilder.buildNoEx()).addHeader("Accept", MediaType.APPLICATION_OCTET_STREAM);
-			HttpResponse response = execute(request, null, null);
+			final HttpGet request = new HttpGet(uBuilder.buildNoEx());
+			request.addHeader("Accept", MediaType.APPLICATION_OCTET_STREAM);
+			HttpResponse response = execute(request, null);
 			HttpUtils.checkStatusCodes(response, 200);
 			ResponseBuilder builder = Response.ok();
 			StoreFileResult.buildHeaders(response, null, builder);

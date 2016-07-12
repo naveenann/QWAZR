@@ -17,7 +17,7 @@ package com.qwazr.store.test;
 
 import com.qwazr.store.StoreFileResult;
 import com.qwazr.store.StoreServiceInterface;
-import com.qwazr.utils.inputstream.CounterInputStream;
+import org.apache.commons.io.input.CountingInputStream;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -137,9 +137,9 @@ public abstract class StoreAbstractTest {
 	public void test300putFile() throws URISyntaxException {
 		final StoreServiceInterface client = getClient();
 		FILES.parallelStream().forEach(file -> {
-			try (final CounterInputStream is = new CounterInputStream(getClass().getResourceAsStream(file))) {
+			try (final CountingInputStream is = new CountingInputStream(getClass().getResourceAsStream(file))) {
 				checkResponse(client.putFile(SCHEMA, DIRECTORY + "/" + file, is, null), 200);
-				FILE_SIZES.put(file, is.getCount());
+				FILE_SIZES.put(file, is.getByteCount());
 			} catch (IOException e) {
 				throw new RuntimeException(e);
 			}
