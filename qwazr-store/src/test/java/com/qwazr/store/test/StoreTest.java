@@ -23,14 +23,14 @@ import org.junit.runners.Suite;
 import java.net.URISyntaxException;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({ StoreTest.LocalTest.class, StoreTest.RemoteTest.class })
+@Suite.SuiteClasses({StoreTest.LocalTest.class, StoreTest.RemoteTest.class})
 public class StoreTest {
 
 	public static class LocalTest extends StoreAbstractTest {
 
 		@Override
 		protected StoreServiceInterface getClient() throws URISyntaxException {
-			return StoreServiceInterface.getClient(null);
+			return StoreServiceInterface.getClient();
 		}
 	}
 
