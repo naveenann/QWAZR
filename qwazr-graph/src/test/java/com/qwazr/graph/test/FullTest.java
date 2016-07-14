@@ -15,12 +15,16 @@
  */
 package com.qwazr.graph.test;
 
+import com.google.common.io.Files;
+import com.qwazr.database.store.KeyStore;
+import com.qwazr.graph.GraphServer;
 import com.qwazr.graph.model.GraphDefinition;
 import com.qwazr.graph.model.GraphDefinition.PropertyTypeEnum;
 import com.qwazr.graph.model.GraphNode;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpRequest;
 import com.qwazr.utils.json.JsonMapper;
+import com.qwazr.utils.server.GenericServer;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -33,24 +37,33 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-public class FullTest {
-
-	private static volatile boolean started;
+public abstract class FullTest {
 
 	public static final String BASE_URL = "http://localhost:9091/graph";
 	public static final String TEST_BASE = "graph-test";
 	public static final int PRODUCT_NUMBER = 1000;
 	public static final int VISIT_NUMBER = 1000;
 
+	private static GenericServer server = null;
+
 	@Test
 	public void test000startGraphServer() throws Exception {
-		TestServer.startServer();
-		Assert.assertTrue(TestServer.serverStarted);
+		if (server != null)
+			return;
+		final File dataDir = Files.createTempDir();
+		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
+		System.setProperty("LISTEN_ADDR", "localhost");
+		System.setProperty("PUBLIC_ADDR", "localhost");
+		server = GraphServer.start();
+		Assert.assertNotNull(server);
 	}
+
+	protected abstract KeyStore.Impl getStoreImplementation();
 
 	final private HttpClientContext getContext() {
 		final HttpClientContext context = HttpClientContext.create();
@@ -68,10 +81,10 @@ public class FullTest {
 		node_properties.put("date", PropertyTypeEnum.indexed);
 		node_properties.put("name", PropertyTypeEnum.stored);
 		node_properties.put("user", PropertyTypeEnum.stored);
-		HashSet<String> edge_types = new HashSet<String>();
+		HashSet<String> edge_types = new HashSet<>();
 		edge_types.add("see");
 		edge_types.add("buy");
-		GraphDefinition graphDef = new GraphDefinition(node_properties, edge_types);
+		GraphDefinition graphDef = new GraphDefinition(getStoreImplementation(), node_properties, edge_types);
 
 		try (CloseableHttpResponse response = HttpRequest.Post(BASE_URL + '/' + TEST_BASE)
 				.bodyString(JsonMapper.MAPPER.writeValueAsString(graphDef), ContentType.APPLICATION_JSON)
@@ -182,6 +195,5 @@ public class FullTest {
 	public void test999httpClient() {
 		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
 		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getPending());
-		Assert.assertTrue(HttpClients.CNX_MANAGER.getTotalStats().getAvailable() > 0);
 	}
 }
