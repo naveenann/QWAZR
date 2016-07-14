@@ -33,7 +33,6 @@ import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 
 public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 
@@ -53,7 +52,7 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 		File graphDirectory = new File(serverBuilder.getServerConfiguration().dataDirectory, SERVICE_NAME_GRAPH);
 		if (!graphDirectory.exists())
 			graphDirectory.mkdir();
-		INSTANCE = new GraphManager(serverBuilder.getExecutorService(), graphDirectory);
+		INSTANCE = new GraphManager(graphDirectory);
 		for (String name : INSTANCE.nameSet())
 			INSTANCE.addNewInstance(name, INSTANCE.get(name));
 		serverBuilder.registerWebService(GraphServiceImpl.class);
@@ -65,18 +64,18 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 		return INSTANCE;
 	}
 
-	private GraphManager(ExecutorService executorService, File directory) throws ServerException, IOException {
+	private GraphManager(File directory) throws ServerException, IOException {
 		super(directory, GraphDefinition.class);
 		this.directory = directory;
 		graphMap = new HashMap<>();
 	}
 
-	private GraphInstance addNewInstance(String graphName, GraphDefinition graphDef)
+	private GraphInstance addNewInstance(final String graphName, final GraphDefinition graphDef)
 			throws IOException, ServerException {
-		File dbDirectory = new File(directory, graphName);
+		final File dbDirectory = new File(directory, graphName);
 		if (!dbDirectory.exists())
 			dbDirectory.mkdir();
-		Table table = Tables.getInstance(dbDirectory, true);
+		final Table table = Tables.getInstance(dbDirectory, graphDef.implementation);
 		GraphInstance graphInstance = new GraphInstance(graphName, table, graphDef);
 		graphInstance.checkFields();
 		graphMap.put(graphName, graphInstance);
@@ -116,11 +115,7 @@ public class GraphManager extends DirectoryJsonManager<GraphDefinition> {
 		return rwl.writeEx(() -> {
 			GraphDefinition graphDef = super.delete(graphName);
 			File dbDirectory = new File(directory, graphName);
-			Table table = Tables.getInstance(dbDirectory, false);
-			if (table != null) {
-				table.close();
-				table.delete();
-			}
+			Tables.delete(dbDirectory);
 			FileUtils.deleteDirectory(dbDirectory);
 			graphMap.remove(graphName);
 			return graphDef;
