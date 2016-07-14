@@ -23,6 +23,7 @@ import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.util.Set;
@@ -37,12 +38,12 @@ public interface StoreServiceInterface extends ServiceInterface {
 	@GET
 	@Path("/{schema_name}/{path : .+}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	Response getFile(@PathParam("schema_name") String schemaName, @PathParam("path") String path);
+	StreamingOutput getFile(@PathParam("schema_name") String schemaName, @PathParam("path") String path);
 
 	@GET
 	@Path("/{schema_name}")
 	@Produces(MediaType.APPLICATION_OCTET_STREAM)
-	Response getFile(@PathParam("schema_name") String schemaName);
+	StreamingOutput getFile(@PathParam("schema_name") String schemaName);
 
 	@GET
 	@Path("/{schema_name}/{path : .+}")

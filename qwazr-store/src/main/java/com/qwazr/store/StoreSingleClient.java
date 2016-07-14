@@ -18,20 +18,16 @@ package com.qwazr.store;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.utils.UBuilder;
 import com.qwazr.utils.http.HttpRequest;
-import com.qwazr.utils.http.HttpResponseEntityException;
-import com.qwazr.utils.http.HttpUtils;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServiceInterface;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
-import javax.ws.rs.core.Response.Status;
-import java.io.IOException;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -52,45 +48,26 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
 		final HttpRequest request =
 				HttpRequest.Get(uBuilder.buildNoEx()).addHeader("Accept", ServiceInterface.APPLICATION_JSON_UTF8);
-		return commonServiceRequest(request, null, null, StoreFileResult.class, 200);
+		return executeJson(request, null, null, StoreFileResult.class, valid200Json);
 	}
 
 	@Override
-	public Response getFile(final String schemaName, final String path) {
-		try {
-			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
-			final HttpRequest request = HttpRequest.Get(uBuilder.buildNoEx());
-			request.addHeader("Accept", MediaType.APPLICATION_OCTET_STREAM);
-			final HttpResponse response = execute(request, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			final ResponseBuilder builder = Response.ok();
-			StoreFileResult.buildHeaders(response, null, builder);
-			builder.type(response.getEntity().getContentType().getValue());
-			builder.entity(response.getEntity().getContent());
-			return builder.build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
+	public StreamingOutput getFile(final String schemaName, final String path) {
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
+		final HttpRequest request = HttpRequest.Get(uBuilder.buildNoEx());
+		request.addHeader("Accept", MediaType.APPLICATION_OCTET_STREAM);
+		return executeStream(request, null, null, valid200Stream);
 	}
 
 	@Override
 	public Response headFile(final String schemaName, final String path) {
-		try {
-			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
-			final URI uri = uBuilder.buildNoEx();
-			final HttpRequest request = HttpRequest.Head(uri);
-			final HttpResponse response = execute(request, null, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			final ResponseBuilder builder = Response.ok();
-			StoreFileResult.buildHeaders(response, uri, builder);
-			return builder.build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
+		final URI uri = uBuilder.buildNoEx();
+		final HttpRequest request = HttpRequest.Head(uri);
+		final HttpResponse response = execute(request, null, null, valid200);
+		final ResponseBuilder builder = Response.ok();
+		StoreFileResult.buildHeaders(response, uri, builder);
+		return builder.build();
 	}
 
 	@Override
@@ -99,7 +76,7 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	}
 
 	@Override
-	final public Response getFile(final String schemaName) {
+	final public StreamingOutput getFile(final String schemaName) {
 		return getFile(schemaName, StringUtils.EMPTY);
 	}
 
@@ -111,70 +88,41 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	@Override
 	final public Response putFile(final String schemaName, final String path, final InputStream inputStream,
 			final Long lastModified) {
-		try {
-			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
-			uBuilder.setParameterObject("last_modified", lastModified);
-			final HttpRequest request = HttpRequest.Put(uBuilder.buildNoEx());
-			final HttpResponse response = execute(request, inputStream, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			final ResponseBuilder builder = Response.ok("File created: " + path, MediaType.TEXT_PLAIN);
-			StoreFileResult.buildHeaders(response, null, builder);
-			return builder.build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
+		uBuilder.setParameterObject("last_modified", lastModified);
+		final HttpRequest request = HttpRequest.Put(uBuilder.buildNoEx());
+		final HttpResponse response = execute(request, inputStream, null, valid200);
+		final ResponseBuilder builder = Response.ok("File created: " + path, MediaType.TEXT_PLAIN);
+		StoreFileResult.buildHeaders(response, null, builder);
+		return builder.build();
 	}
 
 	@Override
 	final public Response deleteFile(final String schemaName, final String path) {
-		try {
-			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
-			final HttpRequest request = HttpRequest.Delete(uBuilder.buildNoEx());
-			HttpResponse response = execute(request, null, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			final ResponseBuilder builder =
-					Response.ok(response.getStatusLine().getReasonPhrase(), MediaType.TEXT_PLAIN);
-			StoreFileResult.buildHeaders(response, null, builder);
-			return builder.build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName, "/", path);
+		final HttpRequest request = HttpRequest.Delete(uBuilder.buildNoEx());
+		final HttpResponse response = execute(request, null, null, valid200);
+		final ResponseBuilder builder = Response.ok(response.getStatusLine().getReasonPhrase(), MediaType.TEXT_PLAIN);
+		StoreFileResult.buildHeaders(response, null, builder);
+		return builder.build();
 	}
 
 	@Override
 	final public Response createSchema(final String schemaName) {
-		try {
-			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName);
-			final HttpRequest request = HttpRequest.Post(uBuilder.buildNoEx());
-			final HttpResponse response = execute(request, null, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			final ResponseBuilder builder = Response.ok("Schema created: " + schemaName, MediaType.TEXT_PLAIN);
-			return builder.build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName);
+		final HttpRequest request = HttpRequest.Post(uBuilder.buildNoEx());
+		execute(request, null, null, valid200);
+		final ResponseBuilder builder = Response.ok("Schema created: " + schemaName, MediaType.TEXT_PLAIN);
+		return builder.build();
 	}
 
 	@Override
 	final public Response deleteSchema(final String schemaName) {
-		try {
-			final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName);
-			final HttpRequest request = HttpRequest.Delete(uBuilder.buildNoEx());
-			final HttpResponse response = execute(request, null, null);
-			HttpUtils.checkStatusCodes(response, 200);
-			final ResponseBuilder builder = Response.ok("Schema deleted: " + schemaName, MediaType.TEXT_PLAIN);
-			return builder.build();
-		} catch (HttpResponseEntityException e) {
-			throw e.getWebApplicationException();
-		} catch (IOException e) {
-			throw new WebApplicationException(e.getMessage(), e, Status.INTERNAL_SERVER_ERROR);
-		}
+		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH_SLASH, schemaName);
+		final HttpRequest request = HttpRequest.Delete(uBuilder.buildNoEx());
+		execute(request, null, null, valid200);
+		final ResponseBuilder builder = Response.ok("Schema deleted: " + schemaName, MediaType.TEXT_PLAIN);
+		return builder.build();
 	}
 
 	public final static TypeReference<TreeSet<String>> SetStringTypeRef = new TypeReference<TreeSet<String>>() {
@@ -184,6 +132,6 @@ public class StoreSingleClient extends JsonClientAbstract implements StoreServic
 	final public Set<String> getSchemas() {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, PATH);
 		final HttpRequest request = HttpRequest.Get(uBuilder.buildNoEx());
-		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
+		return executeJson(request, null, null, SetStringTypeRef, valid200Json);
 	}
 }

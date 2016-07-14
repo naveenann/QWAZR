@@ -16,7 +16,7 @@
 package com.qwazr.mavenplugin;
 
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.http.HttpUtils;
+import com.qwazr.utils.http.HttpClients;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.maven.plugin.AbstractMojo;
@@ -96,7 +96,7 @@ public class QwazrStopMojo extends AbstractMojo {
 		try {
 			URI uri = new URI("http", null, publicAddr, webservicePort, "/shutdown", null, null);
 			log.info("Post HTTP Delete on: " + uri);
-			response = (CloseableHttpResponse) HttpUtils.UNSECURE_HTTP_CLIENT.execute(new HttpDelete(uri));
+			response = HttpClients.UNSECURE_HTTP_CLIENT.execute(new HttpDelete(uri));
 			log.info("HTTP Status Code: " + response.getStatusLine().getStatusCode());
 		} catch (IOException | URISyntaxException e) {
 			if (faultTolerant == null || faultTolerant)

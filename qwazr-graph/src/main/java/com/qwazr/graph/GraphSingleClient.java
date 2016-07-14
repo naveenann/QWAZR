@@ -43,28 +43,28 @@ public class GraphSingleClient extends JsonClientAbstract implements GraphServic
 	public Set<String> list() {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX);
 		final HttpRequest request = HttpRequest.Get(uBuilder.buildNoEx());
-		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
+		return executeJson(request, null, null, SetStringTypeRef, valid200Json);
 	}
 
 	@Override
 	public GraphResult createUpdateGraph(final String graphName, final GraphDefinition graphDef) {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
 		final HttpRequest request = HttpRequest.Post(uBuilder.buildNoEx());
-		return commonServiceRequest(request, graphDef, null, GraphResult.class, 200);
+		return executeJson(request, graphDef, null, GraphResult.class, valid200Json);
 	}
 
 	@Override
 	public GraphResult getGraph(final String graphName) {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
 		final HttpRequest request = HttpRequest.Get(uBuilder.buildNoEx());
-		return commonServiceRequest(request, null, null, GraphResult.class, 200);
+		return executeJson(request, null, null, GraphResult.class, valid200Json);
 	}
 
 	@Override
 	public GraphResult deleteGraph(final String graphName) {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
 		final HttpRequest request = HttpRequest.Delete(uBuilder.buildNoEx());
-		return commonServiceRequest(request, null, null, GraphResult.class, 200);
+		return executeJson(request, null, null, GraphResult.class, valid200Json);
 	}
 
 	@Override
