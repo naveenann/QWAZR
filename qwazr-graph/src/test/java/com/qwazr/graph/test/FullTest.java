@@ -19,6 +19,7 @@ import com.qwazr.graph.model.GraphDefinition;
 import com.qwazr.graph.model.GraphDefinition.PropertyTypeEnum;
 import com.qwazr.graph.model.GraphNode;
 import com.qwazr.utils.CharsetUtils;
+import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpRequest;
 import com.qwazr.utils.json.JsonMapper;
 import org.apache.commons.io.IOUtils;
@@ -131,11 +132,10 @@ public class FullTest {
 	}
 
 	private boolean nodeExists(int visiteNodeId) throws IOException {
-		try (CloseableHttpResponse response =
-				     HttpRequest.Get(BASE_URL + '/' + TEST_BASE + "/node/v" + visiteNodeId).execute(getContext())) {
+		try (CloseableHttpResponse response = HttpRequest.Get(BASE_URL + '/' + TEST_BASE + "/node/v" + visiteNodeId)
+				.execute(getContext())) {
 			Assert.assertThat(response.getStatusLine().getStatusCode(), AnyOf.anyOf(Is.is(200), Is.is(404)));
-			Assert.assertEquals(ContentType
-							.parse(response.getEntity().getContentType().getValue()).toString(),
+			Assert.assertEquals(ContentType.parse(response.getEntity().getContentType().getValue()).toString(),
 					ContentType.APPLICATION_JSON.toString());
 			return response.getStatusLine().getStatusCode() == 200;
 		}
@@ -148,11 +148,9 @@ public class FullTest {
 			if (!nodeExists(visitNodeId))
 				continue;
 			int productNodeId = RandomUtils.nextInt(PRODUCT_NUMBER / 2, PRODUCT_NUMBER);
-			try (CloseableHttpResponse response =
-					     HttpRequest
-							     .Post(BASE_URL + '/' + TEST_BASE + "/node/v" + visitNodeId + "/edge/see/p" +
-									     productNodeId)
-							     .execute(getContext())) {
+			try (CloseableHttpResponse response = HttpRequest.Post(
+					BASE_URL + '/' + TEST_BASE + "/node/v" + visitNodeId + "/edge/see/p" + productNodeId)
+					.execute(getContext())) {
 				if (response.getStatusLine().getStatusCode() == 500)
 					System.out.println(IOUtils.toString(response.getEntity().getContent(), CharsetUtils.CharsetUTF8));
 				Assert.assertThat(response.getStatusLine().getStatusCode(), AnyOf.anyOf(Is.is(200), Is.is(404)));
@@ -178,10 +176,16 @@ public class FullTest {
 	}
 
 	@Test
-	public void test999DeleteDatabase() throws IOException {
-		try (CloseableHttpResponse response =
-				     HttpRequest.Delete(BASE_URL + '/' + TEST_BASE).execute(getContext())) {
+	public void test900DeleteDatabase() throws IOException {
+		try (CloseableHttpResponse response = HttpRequest.Delete(BASE_URL + '/' + TEST_BASE).execute(getContext())) {
 			Assert.assertEquals(200, response.getStatusLine().getStatusCode());
 		}
+	}
+
+	@Test
+	public void test999httpClient() {
+		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
+		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getPending());
+		Assert.assertTrue(HttpClients.CNX_MANAGER.getTotalStats().getAvailable() > 0);
 	}
 }

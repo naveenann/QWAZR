@@ -17,7 +17,9 @@ package com.qwazr.store.test;
 
 import com.qwazr.store.StoreFileResult;
 import com.qwazr.store.StoreServiceInterface;
+import com.qwazr.utils.http.HttpClients;
 import org.apache.commons.io.input.CountingInputStream;
+import org.apache.http.pool.PoolStats;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -180,4 +182,12 @@ public abstract class StoreAbstractTest {
 		checkResponse(client.deleteSchema(SCHEMA), 200);
 		checkSchemas(client.getSchemas(), SCHEMA, false);
 	}
+
+	@Test
+	public void test999httpClient() {
+		final PoolStats stats = HttpClients.CNX_MANAGER.getTotalStats();
+		Assert.assertEquals(0, HttpClients.CNX_MANAGER.getTotalStats().getLeased());
+		Assert.assertEquals(0, stats.getPending());
+	}
+
 }

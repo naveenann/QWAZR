@@ -23,7 +23,7 @@ import org.junit.runners.Suite;
 import java.net.URISyntaxException;
 
 @RunWith(Suite.class)
-@Suite.SuiteClasses({StoreTest.LocalTest.class, StoreTest.RemoteTest.class})
+@Suite.SuiteClasses({ StoreTest.LocalTest.class, StoreTest.RemoteTest.class })
 public class StoreTest {
 
 	public static class LocalTest extends StoreAbstractTest {
@@ -40,6 +40,7 @@ public class StoreTest {
 		protected StoreServiceInterface getClient() throws URISyntaxException {
 			return StoreServiceInterface.getClient(new RemoteService(TestServer.BASE_URL));
 		}
+
 	}
 
 }
