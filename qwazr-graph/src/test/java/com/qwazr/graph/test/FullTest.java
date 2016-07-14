@@ -18,11 +18,9 @@ package com.qwazr.graph.test;
 import com.qwazr.graph.model.GraphDefinition;
 import com.qwazr.graph.model.GraphDefinition.PropertyTypeEnum;
 import com.qwazr.graph.model.GraphNode;
-import com.qwazr.utils.CharsetUtils;
 import com.qwazr.utils.http.HttpClients;
 import com.qwazr.utils.http.HttpRequest;
 import com.qwazr.utils.json.JsonMapper;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -151,8 +149,6 @@ public class FullTest {
 			try (CloseableHttpResponse response = HttpRequest.Post(
 					BASE_URL + '/' + TEST_BASE + "/node/v" + visitNodeId + "/edge/see/p" + productNodeId)
 					.execute(getContext())) {
-				if (response.getStatusLine().getStatusCode() == 500)
-					System.out.println(IOUtils.toString(response.getEntity().getContent(), CharsetUtils.CharsetUTF8));
 				Assert.assertThat(response.getStatusLine().getStatusCode(), AnyOf.anyOf(Is.is(200), Is.is(404)));
 				Assert.assertEquals(ContentType.parse(response.getEntity().getContentType().getValue()).toString(),
 						ContentType.APPLICATION_JSON.toString());
