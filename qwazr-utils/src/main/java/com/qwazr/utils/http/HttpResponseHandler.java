@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2016 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,50 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.qwazr.utils.http;
 
-import org.apache.http.HttpEntity;
+import com.qwazr.utils.IOUtils;
 import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.ResponseHandler;
-import org.apache.http.entity.ContentType;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 
-public abstract class HttpResponseHandler<T> implements ResponseHandler<T> {
+public class HttpResponseHandler extends AbstractHttpResponseHandler<HttpResponse> {
 
-	private final ContentType expectedContentType;
-	private final int[] expectedCodes;
-	protected HttpEntity httpEntity;
-	protected StatusLine statusLine;
-
-	public HttpResponseHandler(ContentType expectedContentType, int... expectedCodes) {
-		this.expectedContentType = expectedContentType;
-		this.expectedCodes = expectedCodes;
+	public HttpResponseHandler(final ResponseValidator validator) {
+		super(validator);
 	}
 
 	@Override
-	public T handleResponse(HttpResponse response) throws IOException {
-		httpEntity = response.getEntity();
-		statusLine = response.getStatusLine();
-		if (expectedCodes != null && expectedCodes.length > 0)
-			HttpUtils.checkStatusCodes(response, expectedCodes);
-		if (expectedContentType != null)
-			HttpUtils.checkIsEntity(response, expectedContentType);
-		return null;
+	final public HttpResponse handleResponse(final HttpResponse response) throws IOException {
+		try {
+			super.handleResponse(response);
+			EntityUtils.consumeQuietly(response.getEntity());
+			return response;
+		} finally {
+			IOUtils.close((CloseableHttpResponse) response);
+		}
 	}
-
-	public Integer getStatusCode() {
-		if (statusLine == null)
-			return null;
-		return statusLine.getStatusCode();
-	}
-
-	public ContentType getContentType() {
-		if (httpEntity == null)
-			return null;
-		return ContentType.get(httpEntity);
-	}
-
 }

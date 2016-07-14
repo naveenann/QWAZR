@@ -17,11 +17,11 @@ package com.qwazr.search.index;
 
 import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
+import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 
 import javax.ws.rs.core.Response;
-import java.io.InputStream;
 import java.util.*;
 
 public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient> implements IndexServiceInterface {
@@ -179,9 +179,8 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public InputStream replicationObtain(String schema_name, String index_name, String sessionID,
-			String source,
-			String fileName) {
+	public AbstractStreamingOutput replicationObtain(String schema_name, String index_name, String sessionID,
+			String source, String fileName) {
 		return null;
 	}
 
@@ -191,7 +190,7 @@ public class IndexMultiClient extends JsonMultiClientAbstract<IndexSingleClient>
 	}
 
 	@Override
-	public Response replicationUpdate(String schema_name, String index_name, String current_version) {
+	public AbstractStreamingOutput replicationUpdate(String schema_name, String index_name, String current_version) {
 		return null;
 	}
 

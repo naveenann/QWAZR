@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2016 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,26 @@
 package com.qwazr.utils.http;
 
 import com.qwazr.utils.CharsetUtils;
+import com.qwazr.utils.IOUtils;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.entity.ContentType;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 
-public class StringHttpResponseHandler extends HttpResponseHandler<String> {
+public class StringHttpResponseHandler extends AbstractHttpResponseHandler<String> {
 
-	public StringHttpResponseHandler(ContentType expectedContentType, int... expectedCodes) {
-		super(expectedContentType, expectedCodes);
+	public StringHttpResponseHandler(final ResponseValidator validator) {
+		super(validator);
 	}
 
-	public String handleResponse(HttpResponse response) throws IOException {
-		super.handleResponse(response);
-		return EntityUtils.toString(httpEntity, CharsetUtils.CharsetUTF8);
+	@Override
+	final public String handleResponse(final HttpResponse response) throws IOException {
+		try {
+			super.handleResponse(response);
+			return EntityUtils.toString(entity, CharsetUtils.CharsetUTF8);
+		} finally {
+			IOUtils.close((CloseableHttpResponse) response);
+		}
 	}
 }

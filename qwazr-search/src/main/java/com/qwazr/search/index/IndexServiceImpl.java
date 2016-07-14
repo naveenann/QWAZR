@@ -19,6 +19,7 @@ import com.qwazr.search.analysis.AnalyzerDefinition;
 import com.qwazr.search.field.FieldDefinition;
 import com.qwazr.search.query.MatchAllDocsQuery;
 import com.qwazr.search.query.TermQuery;
+import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.server.ServerException;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -32,10 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.security.Principal;
 import java.util.*;
@@ -224,7 +222,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final String fieldName, final String prefix, final Integer start, final Integer rows) {
 		try {
 			checkRight(schemaName);
-			return IndexManager.INSTANCE.get(schemaName).get(indexName, false)
+			return IndexManager.INSTANCE.get(schemaName)
+					.get(indexName, false)
 					.getTermsEnum(fieldName, prefix, start, rows);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
@@ -454,7 +453,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	final public InputStream replicationObtain(final String schemaName, final String indexName,
+	final public AbstractStreamingOutput replicationObtain(final String schemaName, final String indexName,
 			final String sessionID, final String source, String fileName) {
 		try {
 			checkRight(null);
@@ -462,7 +461,7 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			final InputStream input = replicator.obtainFile(sessionID, source, fileName);
 			if (input == null)
 				throw new ServerException(Response.Status.NOT_FOUND, "File not found: " + fileName);
-			return input;
+			return AbstractStreamingOutput.with(input);
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
 		}
@@ -480,18 +479,24 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 	}
 
 	@Override
-	final public Response replicationUpdate(final String schemaName, final String indexName,
+	final public AbstractStreamingOutput replicationUpdate(final String schemaName, final String indexName,
 			final String currentVersion) {
 		try {
 			checkRight(null);
-			final SessionToken token = IndexManager.INSTANCE.get(schemaName).get(indexName, false).getReplicator()
+			final SessionToken token = IndexManager.INSTANCE.get(schemaName)
+					.get(indexName, false)
+					.getReplicator()
 					.checkForUpdate(currentVersion);
 			if (token == null)
-				return Response.noContent().build();
-			final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-			final DataOutputStream dataOutput = new DataOutputStream(outputStream);
-			token.serialize(dataOutput);
-			return Response.ok(outputStream.toByteArray()).build();
+				throw new ServerException(Response.Status.NOT_FOUND);
+			try (final ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+				try (final DataOutputStream dataOutput = new DataOutputStream(outputStream)) {
+					token.serialize(dataOutput);
+					dataOutput.flush();
+				}
+				outputStream.flush();
+				return AbstractStreamingOutput.with(new ByteArrayInputStream(outputStream.toByteArray()));
+			}
 		} catch (Exception e) {
 			throw ServerException.getJsonException(logger, e);
 		}
@@ -547,8 +552,8 @@ final class IndexServiceImpl implements IndexServiceInterface, AnnotatedServiceI
 			throws InterruptedException, ReflectiveOperationException, QueryNodeException, ParseException, IOException {
 		checkRight(schemaName);
 		final IndexInstance index = IndexManager.INSTANCE.get(schemaName).get(indexName, false);
-		return index
-				.search(query, ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
+		return index.search(query,
+				ResultDocumentBuilder.ObjectBuilderFactory.createFactory(fields, indexDefinitionClass));
 	}
 
 	@Override

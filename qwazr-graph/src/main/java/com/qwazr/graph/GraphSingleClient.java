@@ -18,9 +18,9 @@ package com.qwazr.graph;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.qwazr.graph.model.*;
 import com.qwazr.utils.UBuilder;
+import com.qwazr.utils.http.HttpRequest;
 import com.qwazr.utils.json.client.JsonClientAbstract;
 import com.qwazr.utils.server.RemoteService;
-import org.apache.http.client.fluent.Request;
 
 import java.io.InputStream;
 import java.util.LinkedHashMap;
@@ -42,76 +42,80 @@ public class GraphSingleClient extends JsonClientAbstract implements GraphServic
 	@Override
 	public Set<String> list() {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX);
-		Request request = Request.Get(uBuilder.buildNoEx());
-		return commonServiceRequest(request, null, null, SetStringTypeRef, 200);
+		final HttpRequest request = HttpRequest.Get(uBuilder.buildNoEx());
+		return executeJson(request, null, null, SetStringTypeRef, valid200Json);
 	}
 
 	@Override
-	public GraphResult createUpdateGraph(String graphName, GraphDefinition graphDef) {
+	public GraphResult createUpdateGraph(final String graphName, final GraphDefinition graphDef) {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
-		Request request = Request.Post(uBuilder.buildNoEx());
-		return commonServiceRequest(request, graphDef, null, GraphResult.class, 200);
+		final HttpRequest request = HttpRequest.Post(uBuilder.buildNoEx());
+		return executeJson(request, graphDef, null, GraphResult.class, valid200Json);
 	}
 
 	@Override
-	public GraphResult getGraph(String graphName) {
+	public GraphResult getGraph(final String graphName) {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
-		Request request = Request.Get(uBuilder.buildNoEx());
-		return commonServiceRequest(request, null, null, GraphResult.class, 200);
+		final HttpRequest request = HttpRequest.Get(uBuilder.buildNoEx());
+		return executeJson(request, null, null, GraphResult.class, valid200Json);
 	}
 
 	@Override
-	public GraphResult deleteGraph(String graphName) {
+	public GraphResult deleteGraph(final String graphName) {
 		final UBuilder uBuilder = RemoteService.getNewUBuilder(remote, GRAPH_PREFIX, graphName);
-		Request request = Request.Delete(uBuilder.buildNoEx());
-		return commonServiceRequest(request, null, null, GraphResult.class, 200);
+		final HttpRequest request = HttpRequest.Delete(uBuilder.buildNoEx());
+		return executeJson(request, null, null, GraphResult.class, valid200Json);
 	}
 
 	@Override
-	public Set<String> createUpdateNodes(String db_name, LinkedHashMap<String, GraphNode> nodes, Boolean upsert) {
+	public Set<String> createUpdateNodes(final String db_name, final LinkedHashMap<String, GraphNode> nodes,
+			final Boolean upsert) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Long createUpdateNodes(String db_name, Boolean upsert, InputStream inpustStream) {
+	public Long createUpdateNodes(final String db_name, final Boolean upsert, final InputStream inpustStream) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public GraphNode createUpdateNode(String db_name, String node_id, GraphNode node, Boolean upsert) {
+	public GraphNode createUpdateNode(final String db_name, final String node_id, final GraphNode node,
+			final Boolean upsert) {
 		// TODO Auto-generated method stub
 
 		return null;
 	}
 
 	@Override
-	public GraphNode getNode(String db_name, String node_id) {
+	public GraphNode getNode(final String db_name, final String node_id) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public GraphNode deleteNode(String db_name, String node_id) {
+	public GraphNode deleteNode(final String db_name, final String node_id) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public GraphNode createEdge(String db_name, String node_id, String edge_type, String to_node_id) {
+	public GraphNode createEdge(final String db_name, final String node_id, final String edge_type,
+			final String to_node_id) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public GraphNode deleteEdge(String db_name, String node_id, String edge_type, String to_node_id) {
+	public GraphNode deleteEdge(final String db_name, final String node_id, final String edge_type,
+			final String to_node_id) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public List<GraphNodeResult> requestNodes(String db_name, GraphRequest request) {
+	public List<GraphNodeResult> requestNodes(final String db_name, final GraphRequest request) {
 		// TODO Auto-generated method stub
 		return null;
 	}

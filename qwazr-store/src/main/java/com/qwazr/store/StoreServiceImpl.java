@@ -15,6 +15,7 @@
  */
 package com.qwazr.store;
 
+import com.qwazr.utils.json.AbstractStreamingOutput;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -24,7 +25,9 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.StreamingOutput;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -55,19 +58,14 @@ class StoreServiceImpl implements StoreServiceInterface {
 	}
 
 	@Override
-	public Response getFile(String schemaName, String path) {
-		StoreFileResult storeFile = null;
+	public StreamingOutput getFile(String schemaName, String path) {
 		try {
 			final File file = getExistingPath(schemaName, path).toFile();
-			storeFile = new StoreFileResult(file, file.isDirectory());
-			final ResponseBuilder builder = Response.ok();
-			storeFile.buildHeader(builder);
-			storeFile.buildEntity(builder);
-			return builder.build();
-		} catch (ServerException | IOException e) {
-			if (storeFile != null)
-				storeFile.free();
-			return ServerException.getTextException(logger, e).getResponse();
+			if (!file.isFile())
+				throw new ServerException(Status.NOT_ACCEPTABLE);
+			return AbstractStreamingOutput.with(new FileInputStream(file));
+		} catch (IOException e) {
+			throw ServerException.getTextException(logger, e);
 		}
 	}
 
@@ -128,7 +126,7 @@ class StoreServiceImpl implements StoreServiceInterface {
 	}
 
 	@Override
-	final public Response getFile(String schemaName) {
+	final public StreamingOutput getFile(String schemaName) {
 		return getFile(schemaName, StringUtils.EMPTY);
 	}
 

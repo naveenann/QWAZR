@@ -17,59 +17,70 @@ package com.qwazr.utils.json;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.qwazr.utils.http.HttpResponseHandler;
+import com.qwazr.utils.IOUtils;
+import com.qwazr.utils.http.AbstractHttpResponseHandler;
+import com.qwazr.utils.http.ResponseValidator;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
-import org.apache.http.entity.ContentType;
+import org.apache.http.client.methods.CloseableHttpResponse;
 
 import java.io.IOException;
 
 public class JsonHttpResponseHandler {
 
-	public static class JsonTreeResponse extends HttpResponseHandler<JsonNode> {
+	public static class JsonTreeResponse extends AbstractHttpResponseHandler<JsonNode> {
 
-		public JsonTreeResponse(final ContentType expectedContentType, final int... expectedCodes) {
-			super(expectedContentType, expectedCodes);
+		public JsonTreeResponse(final ResponseValidator validator) {
+			super(validator);
 		}
 
 		@Override
 		final public JsonNode handleResponse(final HttpResponse response) throws IOException {
-			super.handleResponse(response);
-			return JsonMapper.MAPPER.readTree(httpEntity.getContent());
+			try {
+				super.handleResponse(response);
+				return JsonMapper.MAPPER.readTree(entity.getContent());
+			} finally {
+				IOUtils.close((CloseableHttpResponse) response);
+			}
 		}
 	}
 
-	public static class JsonValueResponse<T> extends HttpResponseHandler<T> {
+	public static class JsonValueResponse<T> extends AbstractHttpResponseHandler<T> {
 
 		private final Class<T> jsonClass;
 
-		public JsonValueResponse(final ContentType expectedContentType, final Class<T> jsonClass,
-				final int... expectedCodes) {
-			super(expectedContentType, expectedCodes);
+		public JsonValueResponse(final Class<T> jsonClass, final ResponseValidator validator) {
+			super(validator);
 			this.jsonClass = jsonClass;
 		}
 
 		@Override
 		final public T handleResponse(final HttpResponse response) throws IOException {
-			super.handleResponse(response);
-			return JsonMapper.MAPPER.readValue(httpEntity.getContent(), jsonClass);
+			try {
+				super.handleResponse(response);
+				return JsonMapper.MAPPER.readValue(entity.getContent(), jsonClass);
+			} finally {
+				IOUtils.close((CloseableHttpResponse) response);
+			}
 		}
 	}
 
-	public static class JsonValueTypeRefResponse<T> extends HttpResponseHandler<T> {
+	public static class JsonValueTypeRefResponse<T> extends AbstractHttpResponseHandler<T> {
 
 		private final TypeReference<T> typeReference;
 
-		public JsonValueTypeRefResponse(final ContentType expectedContentType, final TypeReference<T> typeReference,
-				final int... expectedCodes) {
-			super(expectedContentType, expectedCodes);
+		public JsonValueTypeRefResponse(final TypeReference<T> typeReference, final ResponseValidator validator) {
+			super(validator);
 			this.typeReference = typeReference;
 		}
 
 		@Override
 		final public T handleResponse(final HttpResponse response) throws IOException {
-			super.handleResponse(response);
-			return JsonMapper.MAPPER.readValue(httpEntity.getContent(), typeReference);
+			try {
+				super.handleResponse(response);
+				return JsonMapper.MAPPER.readValue(entity.getContent(), typeReference);
+			} finally {
+				IOUtils.close((CloseableHttpResponse) response);
+			}
 		}
 	}
 }

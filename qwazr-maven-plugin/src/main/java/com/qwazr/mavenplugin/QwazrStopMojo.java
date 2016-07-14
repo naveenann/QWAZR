@@ -16,10 +16,9 @@
 package com.qwazr.mavenplugin;
 
 import com.qwazr.utils.IOUtils;
-import com.qwazr.utils.http.HttpUtils;
+import com.qwazr.utils.http.HttpClients;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -30,9 +29,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 
 /**
  * Stops a QWAZR application
@@ -97,20 +93,18 @@ public class QwazrStopMojo extends AbstractMojo {
 		waitMs = getPropertyOrEnv(waitMs, null, 5000);
 
 		CloseableHttpResponse response = null;
-		CloseableHttpClient httpClient = null;
 		try {
-			httpClient = HttpUtils.createHttpClient_AcceptsUntrustedCerts();
 			URI uri = new URI("http", null, publicAddr, webservicePort, "/shutdown", null, null);
 			log.info("Post HTTP Delete on: " + uri);
-			response = httpClient.execute(new HttpDelete(uri));
+			response = HttpClients.UNSECURE_HTTP_CLIENT.execute(new HttpDelete(uri));
 			log.info("HTTP Status Code: " + response.getStatusLine().getStatusCode());
-		} catch (IOException | URISyntaxException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+		} catch (IOException | URISyntaxException e) {
 			if (faultTolerant == null || faultTolerant)
 				log.warn(e);
 			else
 				throw new MojoExecutionException(e.getMessage(), e);
 		} finally {
-			IOUtils.close(httpClient, response);
+			IOUtils.close(response);
 		}
 		try {
 			Thread.sleep(waitMs);

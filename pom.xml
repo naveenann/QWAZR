@@ -67,7 +67,7 @@
         <htmlunit.version>2.22</htmlunit.version>
         <lucene.version>6.1.0</lucene.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <log4j.version>2.6.1</log4j.version>
+        <log4j.version>2.6.2</log4j.version>
     </properties>
 
     <modules>
@@ -253,11 +253,6 @@
             <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpmime</artifactId>
-                <version>${httpclient.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>fluent-hc</artifactId>
                 <version>${httpclient.version}</version>
             </dependency>
             <dependency>
