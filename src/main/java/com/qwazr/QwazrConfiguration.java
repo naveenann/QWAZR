@@ -27,8 +27,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import static com.qwazr.utils.server.ServerConfiguration.VariablesEnum.QWAZR_ETC;
-
 public class QwazrConfiguration extends ServerConfiguration {
 
 	public enum VariablesEnum {
@@ -38,6 +36,8 @@ public class QwazrConfiguration extends ServerConfiguration {
 		QWAZR_SERVICES,
 
 		QWAZR_GROUPS,
+
+		QWAZR_ETC,
 
 		QWAZR_SCHEDULER_MAX_THREADS,
 
@@ -98,7 +98,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 	}
 
 	QwazrConfiguration() {
-		this.etcFileFilter = buildEtcFileFilter(getPropertyOrEnv(null, QWAZR_ETC));
+		this.etcFileFilter = buildEtcFileFilter(getPropertyOrEnv(null, VariablesEnum.QWAZR_ETC));
 		this.masters = buildCommaSeparated(getPropertyOrEnv(null, VariablesEnum.QWAZR_MASTERS));
 		this.services = buildServices(getPropertyOrEnv(null, VariablesEnum.QWAZR_SERVICES));
 		this.groups = buildCommaSeparated(getPropertyOrEnv(null, VariablesEnum.QWAZR_GROUPS));
