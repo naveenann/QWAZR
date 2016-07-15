@@ -67,7 +67,7 @@ public class QwazrStartMojo extends AbstractMojo {
 	private String publicAddr;
 
 	/**
-	 * The local address the server will bind to for UDP connections.
+	 * The local address the server will bind to for UDP connections (may be a multicast group)
 	 */
 	@Parameter(property = "qwazr.udpAddress")
 	private String udpAddress;
@@ -231,7 +231,7 @@ public class QwazrStartMojo extends AbstractMojo {
 			parameters.put("CLASSPATH", classpath);
 
 			if (etcFilters != null && !etcFilters.isEmpty())
-				parameters.put(ServerConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etcFilters, ','));
+				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etcFilters, ','));
 
 			if (groups != null && !groups.isEmpty())
 				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_GROUPS.name(), StringUtils.join(groups, ','));
