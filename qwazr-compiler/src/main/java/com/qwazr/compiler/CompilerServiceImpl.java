@@ -19,7 +19,6 @@ public class CompilerServiceImpl implements CompilerServiceInterface {
 
 	@Override
 	public CompilerStatus get() {
-		return new CompilerStatus();
-
+		return CompilerManager.getInstance().getStatus();
 	}
 }

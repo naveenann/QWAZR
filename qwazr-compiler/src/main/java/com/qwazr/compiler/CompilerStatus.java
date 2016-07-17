@@ -16,8 +16,54 @@
 
 package com.qwazr.compiler;
 
-/**
- * Created by ekeller on 31/01/16.
- */
+import com.fasterxml.jackson.annotation.JsonInclude;
+
+import javax.tools.Diagnostic;
+import java.net.URI;
+import java.util.*;
+
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class CompilerStatus {
+
+	public final SortedMap<URI, Date> compilables;
+	public final SortedMap<URI, DiagnosticStatus> diagnostics;
+
+	public CompilerStatus() {
+		compilables = null;
+		diagnostics = null;
+	}
+
+	public CompilerStatus(final Map<URI, Date> compilables, final Map<URI, DiagnosticStatus> diagnostics) {
+		this.compilables = new TreeMap<>(compilables);
+		this.diagnostics = new TreeMap<>(diagnostics);
+	}
+
+	public static class DiagnosticStatus {
+
+		public final Date date;
+		public final String code;
+		public final Diagnostic.Kind kind;
+		public final Long lineNumber;
+		public final Long columnNumber;
+		public final String message;
+
+		public DiagnosticStatus() {
+			date = null;
+			code = null;
+			kind = null;
+			lineNumber = null;
+			columnNumber = null;
+			message = null;
+		}
+
+		public DiagnosticStatus(final Date date, final Diagnostic<?> diagnostic) {
+			this.date = date;
+			this.code = diagnostic.getCode();
+			this.kind = diagnostic.getKind();
+			this.lineNumber = diagnostic.getLineNumber();
+			this.columnNumber = diagnostic.getColumnNumber();
+			this.message = diagnostic.getMessage(Locale.getDefault());
+		}
+
+	}
 }
