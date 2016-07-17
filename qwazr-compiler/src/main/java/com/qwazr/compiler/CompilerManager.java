@@ -65,4 +65,8 @@ public class CompilerManager {
 				classLoaderManager.javaLibrariesDirectory);
 	}
 
+	CompilerStatus getStatus() {
+		return javaCompiler.getStatus();
+	}
+
 }

@@ -19,6 +19,7 @@ import com.qwazr.utils.DirectoryWatcher;
 import com.qwazr.utils.IOUtils;
 import com.qwazr.utils.LockUtils;
 import com.qwazr.utils.StringUtils;
+import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.filefilter.DirectoryFileFilter;
 import org.apache.commons.io.filefilter.FileFileFilter;
@@ -27,36 +28,33 @@ import org.slf4j.LoggerFactory;
 
 import javax.tools.*;
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.net.*;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 
 public class JavaCompiler implements Closeable {
 
-	private final static Logger logger = LoggerFactory.getLogger(JavaCompiler.class);
+	private final static Logger LOGGER = LoggerFactory.getLogger(JavaCompiler.class);
 
 	private final int javaSourcePrefixSize;
 	private final File javaSourceDirectory;
 	private final File javaClassesDirectory;
+
 	private final String classPath;
 
 	private final LockUtils.ReadWriteLock compilerLock;
 
 	private final DirectoryWatcher directorWatcher;
 
-	private JavaCompiler(ExecutorService executorService, File javaSourceDirectory, File javaClassesDirectory,
-			String classPath, Collection<URL> urlList) throws IOException {
+	private final ConcurrentHashMap<URI, Date> compilableMap;
+	private final ConcurrentHashMap<URI, CompilerStatus.DiagnosticStatus> diagnosticMap;
+
+	private JavaCompiler(final ExecutorService executorService, final File javaSourceDirectory,
+			final File javaClassesDirectory, final String classPath) throws IOException {
 		this.classPath = classPath;
+		this.compilableMap = new ConcurrentHashMap<>();
+		this.diagnosticMap = new ConcurrentHashMap<>();
 		this.javaSourceDirectory = javaSourceDirectory;
 		String javaSourcePrefix = javaSourceDirectory.getAbsolutePath();
 		javaSourcePrefixSize =
@@ -66,16 +64,8 @@ public class JavaCompiler implements Closeable {
 			this.javaClassesDirectory.mkdir();
 		compilerLock = new LockUtils.ReadWriteLock();
 		compileDirectory(javaSourceDirectory);
-		directorWatcher = DirectoryWatcher.register(javaSourceDirectory.toPath(), new Consumer<Path>() {
-			@Override
-			public void accept(Path path) {
-				try {
-					compileDirectory(path.toFile());
-				} catch (IOException e) {
-					logger.error(e.getMessage(), e);
-				}
-			}
-		});
+		directorWatcher =
+				DirectoryWatcher.register(javaSourceDirectory.toPath(), path -> compileDirectory(path.toFile()));
 		executorService.execute(directorWatcher);
 	}
 
@@ -84,18 +74,18 @@ public class JavaCompiler implements Closeable {
 		IOUtils.close(directorWatcher);
 	}
 
-	static JavaCompiler newInstance(ExecutorService executorService, File javaSourceDirectory,
-			File javaClassesDirectory, File... classPathDirectories) throws IOException, URISyntaxException {
+	static JavaCompiler newInstance(final ExecutorService executorService, final File javaSourceDirectory,
+			final File javaClassesDirectory, final File... classPathDirectories)
+			throws IOException, URISyntaxException {
 		Objects.requireNonNull(javaSourceDirectory, "No source directory given (null)");
 		Objects.requireNonNull(javaClassesDirectory, "No class directory given (null)");
-		final FileSystem fs = FileSystems.getDefault();
-		final List<URL> urlList = new ArrayList<URL>();
+		final List<URL> urlList = new ArrayList<>();
 		urlList.add(javaClassesDirectory.toURI().toURL());
 		final String classPath = buildClassPath(classPathDirectories, urlList);
-		return new JavaCompiler(executorService, javaSourceDirectory, javaClassesDirectory, classPath, urlList);
+		return new JavaCompiler(executorService, javaSourceDirectory, javaClassesDirectory, classPath);
 	}
 
-	private final static String buildClassPath(File[] classPathArray, Collection<URL> urlCollection)
+	private final static String buildClassPath(final File[] classPathArray, final Collection<URL> urlCollection)
 			throws MalformedURLException, URISyntaxException {
 		final List<String> classPathes = new ArrayList<>();
 
@@ -126,14 +116,12 @@ public class JavaCompiler implements Closeable {
 		return StringUtils.join(classPathes, File.pathSeparator);
 	}
 
-	private void compile(javax.tools.JavaCompiler compiler, Collection<File> javaFiles) throws IOException {
-		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<JavaFileObject>();
-		final StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null);
-		try {
-			Iterable<? extends JavaFileObject> sourceFileObjects = fileManager.getJavaFileObjectsFromFiles(javaFiles);
-			StringWriter sw = new StringWriter();
-			PrintWriter pw = new PrintWriter(sw);
-			final List<String> options = new ArrayList<String>();
+	private void compile(final javax.tools.JavaCompiler compiler, final Collection<File> javaFiles) throws IOException {
+		final DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+		try (final StandardJavaFileManager fileManager = compiler.getStandardFileManager(diagnostics, null, null)) {
+			final Iterable<? extends JavaFileObject> sourceFileObjects =
+					fileManager.getJavaFileObjectsFromFiles(javaFiles);
+			final List<String> options = new ArrayList<>();
 			if (classPath != null) {
 				options.add("-classpath");
 				options.add(classPath);
@@ -143,25 +131,28 @@ public class JavaCompiler implements Closeable {
 			options.add("-sourcepath");
 			options.add(javaSourceDirectory.getAbsolutePath());
 			javax.tools.JavaCompiler.CompilationTask task =
-					compiler.getTask(pw, fileManager, diagnostics, options, null, sourceFileObjects);
-			if (!task.call()) {
-				for (Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics())
-					pw.format("Error on line %d in %s%n%s%n", diagnostic.getLineNumber(),
-							diagnostic.getSource().toUri(), diagnostic.getMessage(null));
-				pw.flush();
-				pw.close();
-				sw.close();
-				throw new IOException(sw.toString());
+					compiler.getTask(null, fileManager, diagnostics, options, null, sourceFileObjects);
+			final Date date = new Date();
+			task.call();
+			for (File file : javaFiles) {
+				final URI fileUri = file.toURI();
+				compilableMap.put(fileUri, date);
+				diagnosticMap.remove(fileUri);
 			}
-		} finally {
-			IOUtils.close(fileManager);
+			for (final Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
+				diagnosticMap.put(diagnostic.getSource().toUri(),
+						new CompilerStatus.DiagnosticStatus(date, diagnostic));
+				if (LOGGER.isWarnEnabled())
+					LOGGER.warn(String.format("Error on line %d in %s%n%s", diagnostic.getLineNumber(),
+							diagnostic.getSource().toUri(), diagnostic.getMessage(null)));
+			}
 		}
 	}
 
-	private Collection<File> filterUptodate(File parentDir, File[] javaSourceFiles) {
+	private Collection<File> filterUptodate(final File parentDir, final File[] javaSourceFiles) {
 		if (javaSourceFiles == null)
 			return null;
-		final Collection<File> finalJavaFiles = new ArrayList<File>();
+		final Collection<File> finalJavaFiles = new ArrayList<>();
 		if (javaSourceFiles.length == 0)
 			return finalJavaFiles;
 		final File parentClassDir =
@@ -169,25 +160,31 @@ public class JavaCompiler implements Closeable {
 		for (File javaSourceFile : javaSourceFiles) {
 			final File classFile =
 					new File(parentClassDir, FilenameUtils.removeExtension(javaSourceFile.getName()) + ".class");
-			if (classFile.exists() && classFile.lastModified() > javaSourceFile.lastModified())
+			if (classFile.exists() && classFile.lastModified() > javaSourceFile.lastModified()) {
+				compilableMap.put(javaSourceFile.toURI(), new Date(classFile.lastModified()));
 				continue;
+			}
 			finalJavaFiles.add(javaSourceFile);
 		}
 		return finalJavaFiles;
 	}
 
-	private void compileDirectory(javax.tools.JavaCompiler compiler, File sourceDirectory) throws IOException {
+	private void compileDirectory(javax.tools.JavaCompiler compiler, File sourceDirectory) {
 		final Collection<File> javaFiles = filterUptodate(sourceDirectory, sourceDirectory.listFiles(javaFileFilter));
 		if (javaFiles != null && javaFiles.size() > 0) {
-			if (logger.isInfoEnabled())
-				logger.info("Compile " + javaFiles.size() + " JAVA file(s) at " + sourceDirectory);
-			compile(compiler, javaFiles);
+			if (LOGGER.isInfoEnabled())
+				LOGGER.info("Compile " + javaFiles.size() + " JAVA file(s) at " + sourceDirectory);
+			try {
+				compile(compiler, javaFiles);
+			} catch (IOException e) {
+				throw new ServerException(e);
+			}
 		}
 		for (File dir : sourceDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE))
 			compileDirectory(compiler, dir);
 	}
 
-	private void compileDirectory(File sourceDirectory) throws IOException {
+	private void compileDirectory(File sourceDirectory) {
 		if (sourceDirectory == null)
 			return;
 		if (!sourceDirectory.isDirectory())
@@ -209,5 +206,9 @@ public class JavaCompiler implements Closeable {
 				return false;
 			return file.getName().endsWith(".java");
 		}
+	}
+
+	CompilerStatus getStatus() {
+		return new CompilerStatus(compilableMap, diagnosticMap);
 	}
 }
