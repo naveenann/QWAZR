@@ -32,7 +32,7 @@ public class WelcomeStatus {
 	WelcomeStatus() {
 		this.implementation = new ImplementationStatus();
 		endpoints = new ArrayList<>();
-		Collection<String> servicePaths = Qwazr.qwazr.getServicePaths();
+		final Collection<String> servicePaths = Qwazr.qwazr.getServicePaths();
 		if (servicePaths != null)
 			servicePaths.forEach(path -> endpoints.add(ClusterManager.INSTANCE.me.httpAddressKey + path));
 	}
@@ -45,7 +45,7 @@ public class WelcomeStatus {
 		public final String version;
 
 		ImplementationStatus() {
-			Package pkg = getClass().getPackage();
+			final Package pkg = getClass().getPackage();
 			title = pkg.getImplementationTitle();
 			vendor = pkg.getImplementationVendor();
 			version = pkg.getImplementationVersion();

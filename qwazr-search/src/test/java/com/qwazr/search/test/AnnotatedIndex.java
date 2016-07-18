@@ -21,10 +21,10 @@ import com.qwazr.search.field.FieldDefinition;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
 import org.apache.lucene.index.IndexOptions;
 
+import java.io.*;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 
 import static com.qwazr.search.field.FieldDefinition.Template.*;
@@ -39,15 +39,13 @@ public class AnnotatedIndex {
 	@IndexField(name = FieldDefinition.ID_FIELD, template = StringField, stored = true)
 	final public String id;
 
-	@IndexField(
-			analyzer = "en.EnglishAnalyzer",
+	@IndexField(analyzer = "en.EnglishAnalyzer",
 			tokenized = true,
 			stored = true,
 			indexOptions = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS)
 	final public String title;
 
-	@IndexField(
-			analyzerClass = EnglishAnalyzer.class,
+	@IndexField(analyzerClass = EnglishAnalyzer.class,
 			queryAnalyzerClass = EnglishAnalyzer.class,
 			tokenized = true,
 			stored = true,
@@ -71,18 +69,34 @@ public class AnnotatedIndex {
 	final public Collection<String> docValuesCategory;
 
 	@IndexField(name = "dynamic_simple_facet_*", template = FacetField)
-	final public Map<String, Object> simpleFacets;
+	final public LinkedHashMap<String, Object> simpleFacets;
 
 	@IndexField(name = "dynamic_multi_facet_*", template = MultiFacetField, stored = true)
-	final public Map<String, Object> multiFacets;
+	final public LinkedHashMap<String, Object> multiFacets;
+
+	@IndexField(template = StoredField)
+	final public ExternalTest externalValue;
+
+	@IndexField(template = StoredField)
+	final public SerialTest serialValue;
 
 	public AnnotatedIndex() {
-		this(null, null, null, null, null, false);
+		id = null;
+		title = null;
+		content = null;
+		category = null;
+		price = null;
+		quantity = null;
+		storedCategory = docValuesCategory = new LinkedHashSet<>();
+		simpleFacets = null;
+		multiFacets = null;
+		externalValue = null;
+		serialValue = null;
 	}
 
 	public AnnotatedIndex(Integer id, String title, String content, Double price, Long quantity, boolean withFacets,
-			String... categories) {
-		this.id = id == null ? null : id.toString();
+			boolean updateDVOnly, String... categories) {
+		this.id = id.toString();
 		this.title = title;
 		this.content = content;
 		this.category = categories;
@@ -99,6 +113,8 @@ public class AnnotatedIndex {
 		}
 		this.simpleFacets = withFacets ? new LinkedHashMap<>() : null;
 		this.multiFacets = withFacets ? new LinkedHashMap<>() : null;
+		this.externalValue = updateDVOnly ? null : new ExternalTest(id, title);
+		this.serialValue = updateDVOnly ? null : new SerialTest(price, content);
 	}
 
 	public AnnotatedIndex simpleFacet(String field, String value) {
@@ -123,6 +139,69 @@ public class AnnotatedIndex {
 		if (!Objects.equals(price, record.price))
 			return false;
 		return true;
+	}
+
+	public static class ExternalTest implements Externalizable {
+
+		public int id;
+		public String title;
+
+		public ExternalTest() {
+		}
+
+		ExternalTest(int id, String title) {
+			this.id = id;
+			this.title = title;
+		}
+
+		@Override
+		final public void writeExternal(final ObjectOutput out) throws IOException {
+			out.writeInt(id);
+			out.writeBoolean(title == null);
+			if (title != null)
+				out.writeUTF(title);
+		}
+
+		@Override
+		final public void readExternal(final ObjectInput in) throws IOException, ClassNotFoundException {
+			id = in.readInt();
+			if (!in.readBoolean())
+				title = in.readUTF();
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (!(o instanceof ExternalTest))
+				return false;
+			ExternalTest v = (ExternalTest) o;
+			if (!Objects.equals(id, v.id))
+				return false;
+			return Objects.equals(title, v.title);
+		}
+
+	}
+
+	public static class SerialTest implements Serializable {
+
+		private static final long serialVersionUID = 2670913031496416189L;
+
+		final public Double price;
+		final public String content;
+
+		SerialTest(Double price, String content) {
+			this.price = price;
+			this.content = content;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (!(o instanceof SerialTest))
+				return false;
+			SerialTest v = (SerialTest) o;
+			if (!Objects.equals(price, v.price))
+				return false;
+			return Objects.equals(content, v.content);
+		}
 	}
 
 }
