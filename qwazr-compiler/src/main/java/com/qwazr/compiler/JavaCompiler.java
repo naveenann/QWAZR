@@ -140,11 +140,18 @@ public class JavaCompiler implements Closeable {
 				diagnosticMap.remove(fileUri);
 			}
 			for (final Diagnostic<? extends JavaFileObject> diagnostic : diagnostics.getDiagnostics()) {
-				diagnosticMap.put(diagnostic.getSource().toUri(),
-						new CompilerStatus.DiagnosticStatus(date, diagnostic));
+				if (diagnostic == null)
+					continue;
+				final JavaFileObject source = diagnostic.getSource();
+				if (source == null)
+					continue;
+				final URI uri = source.toUri();
+				if (uri != null)
+					diagnosticMap.put(uri, new CompilerStatus.DiagnosticStatus(date, diagnostic));
 				if (LOGGER.isWarnEnabled())
-					LOGGER.warn(String.format("Error on line %d in %s%n%s", diagnostic.getLineNumber(),
-							diagnostic.getSource().toUri(), diagnostic.getMessage(null)));
+					LOGGER.warn(
+							String.format("Error on line %d in %s%n%s", diagnostic.getLineNumber(), source.getName(),
+									diagnostic.getMessage(null)));
 			}
 		}
 	}
