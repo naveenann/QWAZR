@@ -20,16 +20,6 @@
       "variables": {
         "SchedulerTest": "Scheduler Test"
       }
-    },
-    "TaskRunnableError": {
-      "script_path": "com.qwazr.scheduler.test.TaskRunnableError",
-      "cron": "*/7 * * * * ?",
-      "enabled": true
-    },
-    "TaskScriptError": {
-      "script_path": "com.qwazr.scheduler.test.TaskScript",
-      "cron": "*/6 * * * * ?",
-      "enabled": true
     }
   }
 }

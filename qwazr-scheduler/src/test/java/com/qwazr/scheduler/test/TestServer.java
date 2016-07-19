@@ -19,15 +19,15 @@ import com.google.common.io.Files;
 import com.qwazr.scheduler.SchedulerServer;
 import org.apache.commons.io.FileUtils;
 
-import javax.servlet.ServletException;
 import java.io.File;
-import java.io.IOException;
 
 public class TestServer {
 
 	public static boolean serverStarted = false;
 
 	private static final String BASE_URL = "http://localhost:9091";
+
+	public static File confDir;
 
 	public static synchronized void startServer()
 			throws Exception {
@@ -39,8 +39,9 @@ public class TestServer {
 		System.setProperty("LISTEN_ADDR", "localhost");
 
 		FileUtils.copyDirectoryToDirectory(new File("src/test/js"), dataDir);
-		System.setProperty("QWAZR_ETC_DIR",
-				new File("src/test/resources/com/qwazr/scheduler/test/etc").getAbsolutePath());
+		FileUtils.copyDirectoryToDirectory(new File("src/test/resources/com/qwazr/scheduler/test/conf"), dataDir);
+		confDir = new File(dataDir, "conf");
+		System.setProperty("QWAZR_ETC_DIR", confDir.getAbsolutePath());
 
 		SchedulerServer.main(new String[]{});
 		serverStarted = true;

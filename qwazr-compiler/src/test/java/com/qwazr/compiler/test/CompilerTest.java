@@ -37,8 +37,7 @@ public class CompilerTest {
 	public void test000loadManager() throws IOException {
 		final File dataDir = Files.createTempDirectory("compiler_test").toFile();
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
-		final File javaDir = new File(dataDir, "src/main/java");
-		FileUtils.copyDirectoryToDirectory(new File("src/test/src_java"), javaDir);
+		FileUtils.copyDirectoryToDirectory(new File("src/test/data/src"), dataDir);
 		ClassLoaderManager.load(dataDir, Thread.currentThread());
 		Assert.assertNotNull(ClassLoaderManager.getInstance());
 		CompilerManager.load(new ServerBuilder());
@@ -55,9 +54,9 @@ public class CompilerTest {
 
 	@Test
 	public void test300getClassloaderStatus() throws ClassNotFoundException {
-		Assert.assertNotNull(ClassLoaderManager.findClass("com.qwazr.compiler.test.TestServlet"));
+		Assert.assertNotNull(ClassLoaderManager.findClass("com.qwazr.compiler.test.CompilerTest"));
 		ClassLoaderManager.getInstance().reload();
-		Assert.assertNotNull(ClassLoaderManager.findClass("com.qwazr.compiler.test.TestServlet"));
+		Assert.assertNotNull(ClassLoaderManager.findClass("com.qwazr.compiler.test.CompilerTest"));
 	}
 
 }

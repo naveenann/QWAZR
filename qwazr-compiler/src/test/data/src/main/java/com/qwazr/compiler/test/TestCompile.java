@@ -15,20 +15,12 @@
  **/
 package com.qwazr.compiler.test;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.MediaType;
-import java.io.IOException;
+public class TestCompile {
 
-public class TestServlet extends HttpServlet {
+	public final static String TEST_STRING = "Test QWAZR Compiler";
 
-	public final static String TEST_STRING = "<h1>Test QWAZR Compiler</h1>";
-
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		resp.setContentType(MediaType.TEXT_HTML);
-		resp.getWriter().write("<html><body>" + TEST_STRING + "</body></html>");
+	protected void hello() {
+		System.out.println(TEST_STRING);
 	}
 
 }
