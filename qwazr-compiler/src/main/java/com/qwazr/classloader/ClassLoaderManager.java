@@ -67,8 +67,8 @@ public class ClassLoaderManager {
 	}
 
 	public synchronized void reload() {
-		URLClassLoader oldClassLoader = classLoader;
-		URLClassLoader newClassLoader = new URLClassLoader(urls, parentClassLoader);
+		final URLClassLoader oldClassLoader = classLoader;
+		final URLClassLoader newClassLoader = new URLClassLoader(urls, parentClassLoader);
 		mainThread.setContextClassLoader(newClassLoader);
 		classLoader = newClassLoader;
 		if (oldClassLoader != null)

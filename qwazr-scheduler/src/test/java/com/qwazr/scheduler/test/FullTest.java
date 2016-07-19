@@ -24,10 +24,10 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
-import javax.servlet.ServletException;
 import javax.ws.rs.WebApplicationException;
+import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeMap;
@@ -90,12 +90,27 @@ public class FullTest {
 			for (String task : TASK_NAME) {
 				final SchedulerStatus schedulerStatus = client.get(task, null);
 				if (schedulerStatus.script_status != null && !schedulerStatus.script_status.isEmpty())
-					for (ScriptRunStatus status : schedulerStatus.script_status)
+					for (ScriptRunStatus status : schedulerStatus.script_status) {
 						found.add(task);
+						Assert.assertNotNull(status);
+					}
 			}
 		}
 		Assert.assertTrue(TaskRunnable.EXECUTION_COUNT.get() > 0);
 		Assert.assertTrue(TaskScript.EXECUTION_COUNT.get() > 0);
 		Assert.assertEquals(TASK_NAME.length, found.size());
+	}
+
+	@Test
+	public void test400waitRemoveConf() throws IOException {
+		final SchedulerServiceInterface client = new SchedulerServiceImpl();
+		Assert.assertEquals(5, client.list().size());
+		Files.delete(new File(TestServer.confDir, "scheduler2.json").toPath());
+		final long timeOut = System.currentTimeMillis() + 1000 * 120;
+		while (System.currentTimeMillis() < timeOut) {
+			if (client.list().size() == 3)
+				return; //Success
+		}
+		Assert.fail("Scheduler not removed");
 	}
 }

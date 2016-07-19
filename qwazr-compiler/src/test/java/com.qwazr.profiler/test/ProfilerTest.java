@@ -19,6 +19,7 @@ import com.qwazr.profiler.MethodResult;
 import com.qwazr.profiler.ProfilerManager;
 import com.qwazr.profiler.ProfilerServiceImpl;
 import com.qwazr.profiler.ProfilerServiceInterface;
+import com.qwazr.utils.StringUtils;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -99,12 +100,21 @@ public class ProfilerTest {
 					Assert.assertNotNull("Check " + key, results.get(key));
 					Assert.assertEquals("Check " + key, (long) count, results.get(key).invocations);
 				});
-
+		Assert.assertEquals(1, service.getPrefix("com/qwazr/profiler/test/ProfiledClass", 2, 1).size());
 	}
 
 	@Test
-	public void test200dump() {
+	public void test120empty() {
+		final ProfilerServiceInterface service = new ProfilerServiceImpl();
+		Assert.assertArrayEquals(StringUtils.EMPTY_ARRAY, service.get(0, 0));
+		Assert.assertArrayEquals(StringUtils.EMPTY_ARRAY, service.get(Integer.MAX_VALUE, 0));
+		Assert.assertTrue(service.getPrefix("/com/dummy", null, null).isEmpty());
+	}
+
+	@Test
+	public void test200dumpSize() {
 		Assert.assertTrue(ProfilerManager.dump() >= EXPECTED.size());
+		Assert.assertTrue(ProfilerManager.size() >= EXPECTED.size());
 	}
 
 }

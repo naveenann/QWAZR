@@ -16,7 +16,6 @@
 package com.qwazr.library.test;
 
 import com.qwazr.library.LibraryManager;
-import com.qwazr.utils.file.TrackedDirectory;
 import com.qwazr.utils.file.TrackedInterface;
 import org.apache.commons.io.filefilter.FileFileFilter;
 

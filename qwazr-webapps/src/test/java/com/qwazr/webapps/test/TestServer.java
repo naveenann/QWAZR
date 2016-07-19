@@ -19,9 +19,7 @@ import com.google.common.io.Files;
 import com.qwazr.webapps.WebappServer;
 import org.apache.commons.io.FileUtils;
 
-import javax.servlet.ServletException;
 import java.io.File;
-import java.io.IOException;
 
 public class TestServer {
 
