@@ -18,7 +18,9 @@ package com.qwazr.compiler.test;
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.compiler.CompilerManager;
 import com.qwazr.compiler.CompilerServiceImpl;
+import com.qwazr.compiler.CompilerStatus;
 import com.qwazr.utils.server.ServerBuilder;
+import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -35,6 +37,8 @@ public class CompilerTest {
 	public void test000loadManager() throws IOException {
 		final File dataDir = Files.createTempDirectory("compiler_test").toFile();
 		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
+		final File javaDir = new File(dataDir, "src/main/java");
+		FileUtils.copyDirectoryToDirectory(new File("src/test/src_java"), javaDir);
 		ClassLoaderManager.load(dataDir, Thread.currentThread());
 		Assert.assertNotNull(ClassLoaderManager.getInstance());
 		CompilerManager.load(new ServerBuilder());
@@ -42,7 +46,18 @@ public class CompilerTest {
 	}
 
 	@Test
-	public void test500getStatus() {
-		Assert.assertNotNull(new CompilerServiceImpl().get());
+	public void test200getCompilerStatus() {
+		CompilerStatus status = new CompilerServiceImpl().get();
+		Assert.assertNotNull(status);
+		Assert.assertEquals(1, status.compilables.size());
+		Assert.assertEquals(0, status.diagnostics.size());
 	}
+
+	@Test
+	public void test300getClassloaderStatus() throws ClassNotFoundException {
+		Assert.assertNotNull(ClassLoaderManager.findClass("com.qwazr.compiler.test.TestServlet"));
+		ClassLoaderManager.getInstance().reload();
+		Assert.assertNotNull(ClassLoaderManager.findClass("com.qwazr.compiler.test.TestServlet"));
+	}
+
 }
