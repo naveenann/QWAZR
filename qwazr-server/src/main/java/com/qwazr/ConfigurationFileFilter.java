@@ -24,20 +24,25 @@ import java.util.List;
 
 public class ConfigurationFileFilter implements IOFileFilter {
 
-	private final List<WildcardMatcher> positives;
-	private final List<WildcardMatcher> negatives;
+	private final List<Matcher> patterns;
+	private final boolean noMatchResult;
 
 	ConfigurationFileFilter(final String[] patternArray) {
-		positives = new ArrayList<>();
-		negatives = new ArrayList<>();
-		if (patternArray == null)
+		patterns = new ArrayList<>();
+		if (patternArray == null) {
+			noMatchResult = true;
 			return;
-		for (final String pattern : patternArray) {
-			if (pattern.startsWith("~"))
-				negatives.add(new WildcardMatcher(pattern.substring(1)));
-			else
-				positives.add(new WildcardMatcher(pattern));
 		}
+		int inclusionCount = 0;
+		for (final String pattern : patternArray) {
+			if (pattern.startsWith("!"))
+				patterns.add(new Matcher(pattern.substring(1), false));
+			else {
+				patterns.add(new Matcher(pattern, true));
+				inclusionCount++;
+			}
+		}
+		noMatchResult = inclusionCount == 0;
 	}
 
 	@Override
@@ -47,16 +52,21 @@ public class ConfigurationFileFilter implements IOFileFilter {
 
 	@Override
 	final public boolean accept(final File dir, final String name) {
-		if (positives.isEmpty() && negatives.isEmpty())
-			return false;
-		for (WildcardMatcher matcher : negatives)
-			if (matcher.match(name))
-				return false;
-		if (positives.isEmpty())
+		if (patterns == null || patterns.isEmpty())
 			return true;
-		for (WildcardMatcher matcher : positives)
+		for (Matcher matcher : patterns)
 			if (matcher.match(name))
-				return true;
-		return false;
+				return matcher.result;
+		return noMatchResult;
+	}
+
+	private class Matcher extends WildcardMatcher {
+
+		private final boolean result;
+
+		public Matcher(final String pattern, final boolean result) {
+			super(pattern);
+			this.result = result;
+		}
 	}
 }
