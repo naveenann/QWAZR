@@ -73,7 +73,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 		 * @param serverConfiguration
 		 * @return true if the service is present
 		 */
-		public boolean isActive(QwazrConfiguration serverConfiguration) {
+		public boolean isActive(final QwazrConfiguration serverConfiguration) {
 			if (serverConfiguration == null)
 				return true;
 			if (serverConfiguration.services == null)
@@ -97,7 +97,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 		this.scheduler_max_threads = buildSchedulerMaxThreads(schedulerMaxThreads);
 	}
 
-	QwazrConfiguration() {
+	public QwazrConfiguration() {
 		this.etcFileFilter = buildEtcFileFilter(getPropertyOrEnv(VariablesEnum.QWAZR_ETC));
 		this.masters = buildCommaSeparated(getPropertyOrEnv(VariablesEnum.QWAZR_MASTERS));
 		this.services = buildServices(getPropertyOrEnv(VariablesEnum.QWAZR_SERVICES));
@@ -112,7 +112,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 		final String[] array = StringUtils.split(etcFilter, ',');
 		if (array == null || array.length == 0)
 			return FileFileFilter.FILE;
-		return new AndFileFilter(FileFileFilter.FILE, new WildcardFileFilter(array));
+		return new AndFileFilter(FileFileFilter.FILE, new ConfigurationFileFilter(array));
 	}
 
 	private static FileFilter buildEtcFileFilter(final Collection<String> etcFilters) {
