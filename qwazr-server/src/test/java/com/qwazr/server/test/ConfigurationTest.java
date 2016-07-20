@@ -16,7 +16,10 @@
 package com.qwazr.server.test;
 
 import com.qwazr.QwazrConfiguration;
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.File;
@@ -35,8 +38,16 @@ public class ConfigurationTest {
 	}
 
 	@Test
-	public void testWithEnvProperties() {
-		System.setProperty("QWAZR_ETC", "~*_exclude.json");
+	public void test010NoFilter() {
+		final QwazrConfiguration configuration = new QwazrConfiguration();
+		Assert.assertTrue(configuration.etcFileFilter.accept(new File(confDir, "conf_include.json")));
+		Assert.assertTrue(configuration.etcFileFilter.accept(new File(etcDir, "conf_exclude.json")));
+	}
+
+
+	@Test
+	public void test020WithEnvProperties() {
+		System.setProperty("QWAZR_ETC", "!*_exclude.json");
 		final QwazrConfiguration configuration = new QwazrConfiguration();
 		Assert.assertEquals(dataDir, configuration.dataDirectory);
 		Assert.assertEquals(2, configuration.etcDirectories.size());
@@ -45,7 +56,7 @@ public class ConfigurationTest {
 	}
 
 	@Test
-	public void testExplicitInclusion() {
+	public void test030ExplicitInclusion() {
 		System.setProperty("QWAZR_ETC", "*_include.json");
 		final QwazrConfiguration configuration = new QwazrConfiguration();
 		Assert.assertTrue(configuration.etcFileFilter.accept(new File(confDir, "conf_include.json")));
@@ -53,8 +64,16 @@ public class ConfigurationTest {
 	}
 
 	@Test
-	public void testExplicitExclusion() {
-		System.setProperty("QWAZR_ETC", "~*_exclude.json");
+	public void test040ExplicitExclusion() {
+		System.setProperty("QWAZR_ETC", "!*_exclude.json");
+		final QwazrConfiguration configuration = new QwazrConfiguration();
+		Assert.assertTrue(configuration.etcFileFilter.accept(new File(confDir, "conf_include.json")));
+		Assert.assertFalse(configuration.etcFileFilter.accept(new File(etcDir, "conf_exclude.json")));
+	}
+
+	@Test
+	public void test050BothInclusionExclusion() {
+		System.setProperty("QWAZR_ETC", "*_include.json,!*_exclude.json");
 		final QwazrConfiguration configuration = new QwazrConfiguration();
 		Assert.assertTrue(configuration.etcFileFilter.accept(new File(confDir, "conf_include.json")));
 		Assert.assertFalse(configuration.etcFileFilter.accept(new File(etcDir, "conf_exclude.json")));
