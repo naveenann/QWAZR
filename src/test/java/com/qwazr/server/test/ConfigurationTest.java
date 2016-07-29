@@ -44,7 +44,6 @@ public class ConfigurationTest {
 		Assert.assertTrue(configuration.etcFileFilter.accept(new File(etcDir, "conf_exclude.json")));
 	}
 
-
 	@Test
 	public void test020WithEnvProperties() {
 		System.setProperty("QWAZR_ETC", "!*_exclude.json");
