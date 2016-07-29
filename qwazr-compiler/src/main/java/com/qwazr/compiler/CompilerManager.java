@@ -57,7 +57,7 @@ public class CompilerManager {
 	private final JavaCompiler javaCompiler;
 
 	private CompilerManager(ExecutorService executor, File dataDirectory) throws IOException, URISyntaxException {
-		ClassLoaderManager classLoaderManager = ClassLoaderManager.getInstance();
+		final ClassLoaderManager classLoaderManager = ClassLoaderManager.getInstance();
 		javaSourceDirectory = new File(dataDirectory, "src/main/java");
 		if (!classLoaderManager.javaClassesDirectory.exists())
 			classLoaderManager.javaClassesDirectory.mkdirs();

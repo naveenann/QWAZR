@@ -33,10 +33,10 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -198,7 +198,7 @@ public class QwazrStartMojo extends AbstractMojo {
 			parameters.put(key, str);
 		}
 
-		private String buildClassPass() throws DependencyResolutionRequiredException {
+		private String buildClassPass(final Collection<URL> urls) throws DependencyResolutionRequiredException {
 			final StringBuilder sb = new StringBuilder();
 
 			// Build the runtime classpath
@@ -212,8 +212,15 @@ public class QwazrStartMojo extends AbstractMojo {
 			final Set<Artifact> artifacts = project.getArtifacts();
 			if (artifacts != null)
 				artifacts.forEach(artifact -> {
-					sb.append(artifact.getFile().getPath());
+					final File artifactFile = artifact.getFile();
+					sb.append(artifactFile.getPath());
 					sb.append(File.pathSeparatorChar);
+					if (urls != null)
+						try {
+							urls.add(artifactFile.toURI().toURL());
+						} catch (MalformedURLException e) {
+							throw new RuntimeException("Cannot extract URL from " + artifactFile, e);
+						}
 				});
 
 			return sb.toString();
@@ -227,7 +234,7 @@ public class QwazrStartMojo extends AbstractMojo {
 			if (!javaBinFile.exists())
 				throw new MojoFailureException("Cannot find JAVA: " + javaBinFile);
 
-			final String classpath = buildClassPass();
+			final String classpath = buildClassPass(null);
 			parameters.put("CLASSPATH", classpath);
 
 			if (etcFilters != null && !etcFilters.isEmpty())
@@ -255,16 +262,29 @@ public class QwazrStartMojo extends AbstractMojo {
 		}
 
 		private void startEmbedded(final Log log) throws Exception {
-			Qwazr.startWithConf(new QwazrConfiguration(etcFilters, masters, services, groups, schedulerMaxThreads));
-			log.info("QWAZR started (Embedded)");
+			final Thread thread = Thread.currentThread();
+			final ClassLoader oldClassloader = thread.getContextClassLoader();
 			try {
-				for (; ; )
-					Thread.sleep(30000);
-			} catch (InterruptedException e) {
-				log.info("QWAZR interrupted");
+				final List<URL> urls = new ArrayList<>();
+				buildClassPass(urls);
+				log.info("CLASSPATH: " + urls.size() + " jar(s)");
+				if (!urls.isEmpty())
+					thread.setContextClassLoader(
+							new URLClassLoader(urls.toArray(new URL[urls.size()]), oldClassloader));
+
+				Qwazr.startWithConf(new QwazrConfiguration(etcFilters, masters, services, groups, schedulerMaxThreads));
+				log.info("QWAZR started (Embedded)");
+				try {
+					for (; ; )
+						Thread.sleep(30000);
+				} catch (InterruptedException e) {
+					log.info("QWAZR interrupted");
+				}
+				log.info("Stopping QWAZR");
+				Qwazr.stop(null);
+			} finally {
+				thread.setContextClassLoader(oldClassloader);
 			}
-			log.info("Stopping QWAZR");
-			Qwazr.stop(null);
 		}
 	}
 }
