@@ -15,12 +15,18 @@
  **/
 package com.qwazr.compiler.test;
 
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 public class TestCompile {
 
 	public final static String TEST_STRING = "Test QWAZR Compiler";
 
-	protected void hello() {
-		System.out.println(TEST_STRING);
+	@Override
+	public void doGet(final HttpServletRequest request, final HttpServletResponse response)
+			throws IOException, ServletException {
+		response.getWriter().println(TEST_STRING);
 	}
 
 }

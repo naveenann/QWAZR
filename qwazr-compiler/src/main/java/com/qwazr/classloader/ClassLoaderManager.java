@@ -40,7 +40,7 @@ public class ClassLoaderManager {
 
 	public static volatile URLClassLoader classLoader = null;
 
-	public static <T> Class<T> findClass(String className) throws ClassNotFoundException {
+	final public static <T> Class<T> findClass(final String className) throws ClassNotFoundException {
 		return ClassLoaderUtils.findClass(classLoader, className);
 	}
 
@@ -53,7 +53,7 @@ public class ClassLoaderManager {
 
 	private final URL[] urls;
 
-	private ClassLoaderManager(File dataDirectory, Thread mainThread) throws MalformedURLException {
+	private ClassLoaderManager(final File dataDirectory, final Thread mainThread) throws MalformedURLException {
 		this.mainThread = mainThread;
 		this.parentClassLoader = mainThread.getContextClassLoader();
 		this.javaResourceDirectory = new File(dataDirectory, "src/main/resources");
@@ -61,7 +61,8 @@ public class ClassLoaderManager {
 		if (!javaClassesDirectory.exists())
 			javaClassesDirectory.mkdirs();
 		this.javaLibrariesDirectory = new File(dataDirectory, "lib");
-		urls = new URL[] { javaResourceDirectory.toURI().toURL(), javaClassesDirectory.toURI().toURL(),
+		urls = new URL[] { javaResourceDirectory.toURI().toURL(),
+				javaClassesDirectory.toURI().toURL(),
 				javaLibrariesDirectory.toURI().toURL() };
 		reload();
 	}
