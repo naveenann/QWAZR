@@ -30,6 +30,8 @@ import org.junit.runners.MethodSorters;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Map;
+import java.util.HashMap;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class CompilerTest {
@@ -37,11 +39,12 @@ public class CompilerTest {
 	@Test
 	public void test000loadManager() throws IOException {
 		final File dataDir = Files.createTempDirectory("compiler_test").toFile();
-		System.setProperty("QWAZR_DATA", dataDir.getAbsolutePath());
+		Map properties = new HashMap();
+		properties.put("QWAZR_DATA", dataDir.getAbsolutePath());
 		FileUtils.copyDirectoryToDirectory(new File("src/test/data/src"), dataDir);
 		ClassLoaderManager.load(dataDir, Thread.currentThread());
 		Assert.assertNotNull(ClassLoaderManager.getInstance());
-		CompilerManager.load(new ServerBuilder(new ServerConfiguration()));
+		CompilerManager.load(new ServerBuilder(new ServerConfiguration(properties)));
 		Assert.assertNotNull(CompilerManager.getInstance());
 	}
 

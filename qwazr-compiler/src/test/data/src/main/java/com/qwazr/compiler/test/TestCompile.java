@@ -15,11 +15,13 @@
  **/
 package com.qwazr.compiler.test;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 
-public class TestCompile {
+public class TestCompile extends HttpServlet {
 
 	public final static String TEST_STRING = "Test QWAZR Compiler";
 
