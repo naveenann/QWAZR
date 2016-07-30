@@ -40,7 +40,7 @@ public class WelcomeServiceImpl implements ServiceInterface {
 				Thread.sleep(5000);
 				Qwazr.stop(null);
 			} catch (InterruptedException e) {
-				Qwazr.logger.warn(e.getMessage(), e);
+				Qwazr.LOGGER.warn(e.getMessage(), e);
 			}
 		}
 	}
