@@ -72,16 +72,14 @@ public class QwazrConfiguration extends ServerConfiguration {
 	public final int scheduler_max_threads;
 
 	public QwazrConfiguration(final Map... properties) {
-		this(ConfigCache.getOrCreate(QwazrConfigurationProperties.class, properties));
-	}
-
-	protected QwazrConfiguration(final QwazrConfigurationProperties properties) {
 		super(properties);
-		this.etcFileFilter = buildEtcFileFilter(properties.qwazrEtc());
-		this.masters = splitValue(properties.qwazrMasters(), ',');
-		this.services = buildServices(properties.qwazrServices());
-		this.groups = splitValue(properties.qwazrGroups(), ',');
-		this.scheduler_max_threads = properties.qwazrSchedulerMaxThreads();
+		final QwazrConfigurationProperties configProperties =
+				ConfigCache.getOrCreate(QwazrConfigurationProperties.class, properties);
+		this.etcFileFilter = buildEtcFileFilter(configProperties.qwazrEtc());
+		this.masters = splitValue(configProperties.qwazrMasters(), ',');
+		this.services = buildServices(configProperties.qwazrServices());
+		this.groups = splitValue(configProperties.qwazrGroups(), ',');
+		this.scheduler_max_threads = configProperties.qwazrSchedulerMaxThreads();
 	}
 
 	private static FileFilter buildEtcFileFilter(final String etcFilter) {

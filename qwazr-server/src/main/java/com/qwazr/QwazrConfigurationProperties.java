@@ -15,25 +15,26 @@
  **/
 package com.qwazr;
 
-import com.qwazr.utils.server.ConfigurationProperties;
 import org.aeonbits.owner.Config;
 
-public interface QwazrConfigurationProperties extends ConfigurationProperties {
-	
-	@Config.Key("QWAZR_MASTERS")
+public interface QwazrConfigurationProperties extends Config {
+
+	String QWAZR_PROPERTIES = "QWAZR_PROPERTIES";
+
+	@Key("QWAZR_MASTERS")
 	String qwazrMasters();
 
-	@Config.Key("QWAZR_SERVICES")
+	@Key("QWAZR_SERVICES")
 	String qwazrServices();
 
-	@Config.Key("QWAZR_GROUPS")
+	@Key("QWAZR_GROUPS")
 	String qwazrGroups();
 
-	@Config.Key("QWAZR_ETC")
+	@Key("QWAZR_ETC")
 	String qwazrEtc();
 
-	@Config.Key("QWAZR_SCHEDULER_MAX_THREADS")
-	@Config.DefaultValue("100")
+	@Key("QWAZR_SCHEDULER_MAX_THREADS")
+	@DefaultValue("100")
 	int qwazrSchedulerMaxThreads();
 
 	@Config.Key("QWAZR_PROFILERS")

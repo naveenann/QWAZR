@@ -40,20 +40,22 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletException;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.util.Properties;
 
 public class Qwazr {
 
-	static final Logger logger = LoggerFactory.getLogger(Qwazr.class);
+	static final Logger LOGGER = LoggerFactory.getLogger(Qwazr.class);
 
 	private static final String ACCESS_LOG_LOGGER_NAME = "com.qwazr.rest.accessLogger";
-	private static final Logger accessRestLogger = LoggerFactory.getLogger(ACCESS_LOG_LOGGER_NAME);
+	private static final Logger ACCESS_REST_LOGGER = LoggerFactory.getLogger(ACCESS_LOG_LOGGER_NAME);
 
 	private final static synchronized GenericServer newServer(final QwazrConfiguration config) throws IOException {
 
 		final ServerBuilder builder = new ServerBuilder(config);
 
-		builder.setRestAccessLogger(accessRestLogger);
+		builder.setRestAccessLogger(ACCESS_REST_LOGGER);
 
 		File currentTempDir = new File(config.dataDirectory, "tmp");
 
@@ -134,10 +136,23 @@ public class Qwazr {
 	 * @param args For procrun compatbility, currently ignored
 	 */
 	public static synchronized void start(final String[] args) {
+
 		try {
-			startWithConf(new QwazrConfiguration(System.getProperties(), System.getenv()));
+
+			// Load qwazr properties
+			final Properties properties = new Properties();
+			String propertyFile = System.getProperty(QwazrConfigurationProperties.QWAZR_PROPERTIES,
+					System.getenv(QwazrConfigurationProperties.QWAZR_PROPERTIES));
+			if (propertyFile != null) {
+				try (final FileReader reader = new FileReader(new File(propertyFile))) {
+					properties.load(reader);
+				}
+			}
+
+			startWithConf(new QwazrConfiguration(System.getenv(), System.getProperties(), properties));
+
 		} catch (Exception e) {
-			logger.error(e.getMessage(), e);
+			LOGGER.error(e.getMessage(), e);
 			System.exit(1);
 		}
 	}
