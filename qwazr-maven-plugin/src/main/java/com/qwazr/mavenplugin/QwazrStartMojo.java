@@ -18,7 +18,6 @@ package com.qwazr.mavenplugin;
 import com.qwazr.Qwazr;
 import com.qwazr.QwazrConfiguration;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.server.ServerConfiguration;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.artifact.DependencyResolutionRequiredException;
@@ -170,22 +169,17 @@ public class QwazrStartMojo extends AbstractMojo {
 		private final Map<String, String> parameters = new HashMap<>();
 
 		private Launcher() {
-			setParameter(ServerConfiguration.VariablesEnum.QWAZR_DATA, dataDirectory);
-			setParameter(ServerConfiguration.VariablesEnum.LISTEN_ADDR, listenAddr);
-			setParameter(ServerConfiguration.VariablesEnum.PUBLIC_ADDR, publicAddr);
+			setParameter("QWAZR_DATA", dataDirectory);
+			setParameter("LISTEN_ADDR", listenAddr);
+			setParameter("PUBLIC_ADDR", publicAddr);
 			if (etcDirectories != null && !etcDirectories.isEmpty())
-				setParameter(ServerConfiguration.VariablesEnum.QWAZR_ETC_DIR,
-						StringUtils.join(etcDirectories, File.pathSeparatorChar));
+				setParameter("QWAZR_ETC_DIR", StringUtils.join(etcDirectories, File.pathSeparatorChar));
 			setParameter("WEBAPP_PORT", webappPort);
 			setParameter("WEBSERVICE_PORT", webservicePort);
 			setParameter("WEBAPP_REALM", webappRealm);
 			setParameter("WEBSERVICE_REALM", webserviceRealm);
 			setParameter("UDP_ADDRESS", udpAddress);
 			setParameter("UDP_PORT", udpPort);
-		}
-
-		private void setParameter(Enum<?> key, Object value) {
-			setParameter(key.name(), value);
 		}
 
 		private void setParameter(String key, Object value) {
@@ -238,17 +232,16 @@ public class QwazrStartMojo extends AbstractMojo {
 			parameters.put("CLASSPATH", classpath);
 
 			if (etcFilters != null && !etcFilters.isEmpty())
-				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_ETC.name(), StringUtils.join(etcFilters, ','));
+				parameters.put("QWAZR_ETC", StringUtils.join(etcFilters, ','));
 
 			if (groups != null && !groups.isEmpty())
-				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_GROUPS.name(), StringUtils.join(groups, ','));
+				parameters.put("QWAZR_GROUPS", StringUtils.join(groups, ','));
 
 			if (profilers != null && !profilers.isEmpty())
-				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_PROFILERS.name(),
-						StringUtils.join(profilers, ';'));
+				parameters.put("QWAZR_PROFILERS", StringUtils.join(profilers, ';'));
 
 			if (services != null && !services.isEmpty())
-				parameters.put(QwazrConfiguration.VariablesEnum.QWAZR_SERVICES.name(), StringUtils.join(services, ','));
+				parameters.put("QWAZR_SERVICES", StringUtils.join(services, ','));
 
 			final String className = Qwazr.class.getCanonicalName();
 			final ProcessBuilder builder =
@@ -272,7 +265,7 @@ public class QwazrStartMojo extends AbstractMojo {
 					thread.setContextClassLoader(
 							new URLClassLoader(urls.toArray(new URL[urls.size()]), oldClassloader));
 
-				Qwazr.startWithConf(new QwazrConfiguration(etcFilters, masters, services, groups, schedulerMaxThreads));
+				Qwazr.startWithConf(new QwazrConfiguration(parameters));
 				log.info("QWAZR started (Embedded)");
 				try {
 					for (; ; )

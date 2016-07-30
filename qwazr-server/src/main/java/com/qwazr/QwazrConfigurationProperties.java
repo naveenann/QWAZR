@@ -12,25 +12,30 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
-package com.qwazr.database;
+ **/
+package com.qwazr;
 
-import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.utils.server.GenericServer;
-import com.qwazr.utils.server.ServerBuilder;
-import com.qwazr.utils.server.ServerConfiguration;
+import com.qwazr.utils.server.ConfigurationProperties;
+import org.aeonbits.owner.Config;
 
-public class TableServer {
+public interface QwazrConfigurationProperties extends ConfigurationProperties {
+	
+	@Config.Key("QWAZR_MASTERS")
+	String qwazrMasters();
 
-	public static GenericServer start() throws Exception {
-		final ServerBuilder builder = new ServerBuilder(new ServerConfiguration());
-		ClusterManager.load(builder, null, null);
-		TableManager.load(builder);
-		return builder.build().start(true);
-	}
+	@Config.Key("QWAZR_SERVICES")
+	String qwazrServices();
 
-	public static void main(String[] args) throws Exception {
-		start();
-	}
+	@Config.Key("QWAZR_GROUPS")
+	String qwazrGroups();
 
+	@Config.Key("QWAZR_ETC")
+	String qwazrEtc();
+
+	@Config.Key("QWAZR_SCHEDULER_MAX_THREADS")
+	@Config.DefaultValue("100")
+	int qwazrSchedulerMaxThreads();
+
+	@Config.Key("QWAZR_PROFILERS")
+	String qwazrProfilers();
 }

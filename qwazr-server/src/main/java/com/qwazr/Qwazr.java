@@ -121,7 +121,7 @@ public class Qwazr {
 	 * @throws IllegalAccessException
 	 * @throws ParseException
 	 */
-	public static synchronized void startWithConf(QwazrConfiguration configuration) throws Exception {
+	public static synchronized void startWithConf(final QwazrConfiguration configuration) throws Exception {
 		if (qwazr != null)
 			throw new IllegalAccessException("QWAZR is already started");
 		qwazr = newServer(configuration);
@@ -135,7 +135,7 @@ public class Qwazr {
 	 */
 	public static synchronized void start(final String[] args) {
 		try {
-			startWithConf(new QwazrConfiguration());
+			startWithConf(new QwazrConfiguration(System.getProperties(), System.getenv()));
 		} catch (Exception e) {
 			logger.error(e.getMessage(), e);
 			System.exit(1);

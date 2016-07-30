@@ -20,11 +20,12 @@ import com.qwazr.scripts.ScriptManager;
 import com.qwazr.utils.file.TrackedInterface;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
+import com.qwazr.utils.server.ServerConfiguration;
 
 public class SchedulerServer {
 
 	public static GenericServer start() throws Exception {
-		final ServerBuilder builder = new ServerBuilder();
+		final ServerBuilder builder = new ServerBuilder(new ServerConfiguration());
 		final TrackedInterface etcTracker =
 				TrackedInterface.build(builder.getServerConfiguration().etcDirectories, null);
 		ClusterManager.load(builder, null, null);
