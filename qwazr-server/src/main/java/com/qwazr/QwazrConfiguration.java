@@ -17,33 +17,16 @@ package com.qwazr;
 
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerConfiguration;
+import org.aeonbits.owner.ConfigCache;
 import org.apache.commons.io.filefilter.AndFileFilter;
 import org.apache.commons.io.filefilter.FileFileFilter;
-import org.apache.commons.io.filefilter.WildcardFileFilter;
 
 import java.io.FileFilter;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class QwazrConfiguration extends ServerConfiguration {
-
-	public enum VariablesEnum {
-
-		QWAZR_MASTERS,
-
-		QWAZR_SERVICES,
-
-		QWAZR_GROUPS,
-
-		QWAZR_ETC,
-
-		QWAZR_SCHEDULER_MAX_THREADS,
-
-		QWAZR_PROFILERS
-
-	}
 
 	public enum ServiceEnum {
 
@@ -86,24 +69,19 @@ public class QwazrConfiguration extends ServerConfiguration {
 	public final Set<ServiceEnum> services;
 	public final Set<String> groups;
 	public final FileFilter etcFileFilter;
-	public final Integer scheduler_max_threads;
+	public final int scheduler_max_threads;
 
-	public QwazrConfiguration(final Collection<String> etcFilters, final Collection<String> masters,
-			final Collection<ServiceEnum> services, final Collection<String> groups, Integer schedulerMaxThreads) {
-		this.etcFileFilter = buildEtcFileFilter(etcFilters);
-		this.services = buildServices(services);
-		this.groups = buildStringCollection(groups);
-		this.masters = buildStringCollection(masters);
-		this.scheduler_max_threads = buildSchedulerMaxThreads(schedulerMaxThreads);
+	public QwazrConfiguration(final Map... properties) {
+		this(ConfigCache.getOrCreate(QwazrConfigurationProperties.class, properties));
 	}
 
-	public QwazrConfiguration() {
-		this.etcFileFilter = buildEtcFileFilter(getPropertyOrEnv(VariablesEnum.QWAZR_ETC));
-		this.masters = buildCommaSeparated(getPropertyOrEnv(VariablesEnum.QWAZR_MASTERS));
-		this.services = buildServices(getPropertyOrEnv(VariablesEnum.QWAZR_SERVICES));
-		this.groups = buildCommaSeparated(getPropertyOrEnv(VariablesEnum.QWAZR_GROUPS));
-		this.scheduler_max_threads =
-				buildSchedulerMaxThreads(getPropertyOrEnv(VariablesEnum.QWAZR_SCHEDULER_MAX_THREADS));
+	protected QwazrConfiguration(final QwazrConfigurationProperties properties) {
+		super(properties);
+		this.etcFileFilter = buildEtcFileFilter(properties.qwazrEtc());
+		this.masters = splitValue(properties.qwazrMasters(), ',');
+		this.services = buildServices(properties.qwazrServices());
+		this.groups = splitValue(properties.qwazrGroups(), ',');
+		this.scheduler_max_threads = properties.qwazrSchedulerMaxThreads();
 	}
 
 	private static FileFilter buildEtcFileFilter(final String etcFilter) {
@@ -113,21 +91,6 @@ public class QwazrConfiguration extends ServerConfiguration {
 		if (array == null || array.length == 0)
 			return FileFileFilter.FILE;
 		return new AndFileFilter(FileFileFilter.FILE, new ConfigurationFileFilter(array));
-	}
-
-	private static FileFilter buildEtcFileFilter(final Collection<String> etcFilters) {
-		if (etcFilters == null || etcFilters.isEmpty())
-			return FileFileFilter.FILE;
-		return new AndFileFilter(FileFileFilter.FILE,
-				new WildcardFileFilter(etcFilters.toArray(new String[etcFilters.size()])));
-	}
-
-	private static Set<ServiceEnum> buildServices(final Collection<ServiceEnum> serviceCollection) {
-		if (serviceCollection == null)
-			return null;
-		final Set<ServiceEnum> services = new HashSet<>();
-		services.addAll(serviceCollection);
-		return services;
 	}
 
 	private static Set<ServiceEnum> buildServices(final String servicesString) {
@@ -157,31 +120,6 @@ public class QwazrConfiguration extends ServerConfiguration {
 		for (String v : valueArray)
 			values.add(v.trim());
 		return values;
-	}
-
-	private static Set<String> buildCommaSeparated(String commaSeparated) {
-		return splitValue(commaSeparated, ',');
-	}
-
-	private static Set<String> buildStringCollection(Collection<String> groupCollection) {
-		if (groupCollection == null || groupCollection.isEmpty())
-			return null;
-		final Set<String> groups = new LinkedHashSet<>();
-		groupCollection.forEach((g) -> groups.add(g.trim()));
-		return groups;
-	}
-
-	/**
-	 * @return the number of allowed threads. The default value is 100.
-	 */
-	private static int buildSchedulerMaxThreads(String value) {
-		if (value == null)
-			return buildSchedulerMaxThreads((Integer) null);
-		return buildSchedulerMaxThreads(Integer.parseInt(value));
-	}
-
-	private static int buildSchedulerMaxThreads(Integer value) {
-		return value == null ? 100 : value;
 	}
 
 }

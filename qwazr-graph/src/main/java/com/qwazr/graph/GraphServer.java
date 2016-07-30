@@ -18,11 +18,12 @@ package com.qwazr.graph;
 import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
+import com.qwazr.utils.server.ServerConfiguration;
 
 public class GraphServer {
 
 	public static GenericServer start() throws Exception {
-		final ServerBuilder builder = new ServerBuilder();
+		final ServerBuilder builder = new ServerBuilder(new ServerConfiguration());
 		ClusterManager.load(builder, null, null);
 		GraphManager.load(builder);
 		return builder.build().start(true);

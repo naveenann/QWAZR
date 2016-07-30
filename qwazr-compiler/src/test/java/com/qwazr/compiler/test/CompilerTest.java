@@ -20,6 +20,7 @@ import com.qwazr.compiler.CompilerManager;
 import com.qwazr.compiler.CompilerServiceImpl;
 import com.qwazr.compiler.CompilerStatus;
 import com.qwazr.utils.server.ServerBuilder;
+import com.qwazr.utils.server.ServerConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -40,7 +41,7 @@ public class CompilerTest {
 		FileUtils.copyDirectoryToDirectory(new File("src/test/data/src"), dataDir);
 		ClassLoaderManager.load(dataDir, Thread.currentThread());
 		Assert.assertNotNull(ClassLoaderManager.getInstance());
-		CompilerManager.load(new ServerBuilder());
+		CompilerManager.load(new ServerBuilder(new ServerConfiguration()));
 		Assert.assertNotNull(CompilerManager.getInstance());
 	}
 

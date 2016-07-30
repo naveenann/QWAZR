@@ -82,6 +82,10 @@
             <artifactId>qwazr-library</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.qwazr</groupId>
+            <artifactId>qwazr-utils</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
         </dependency>
