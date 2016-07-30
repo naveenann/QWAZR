@@ -121,7 +121,7 @@ public class JavaCompiler implements Closeable {
 		}
 		if (classPathes.isEmpty())
 			return null;
-		return StringUtils.join(classPathes, File.pathSeparator);
+		return StringUtils.join(classPathes, File.pathSeparatorChar);
 	}
 
 	private void compile(final javax.tools.JavaCompiler compiler, final Collection<File> javaFiles) throws IOException {
@@ -131,7 +131,7 @@ public class JavaCompiler implements Closeable {
 					fileManager.getJavaFileObjectsFromFiles(javaFiles);
 			final List<String> options = new ArrayList<>();
 			if (classPath != null) {
-				options.add("-classpath");
+				options.add("-cp");
 				options.add(classPath);
 			}
 			options.add("-d");
