@@ -25,7 +25,8 @@ import com.qwazr.utils.server.ServerConfiguration;
 public class SchedulerServer {
 
 	public static GenericServer start() throws Exception {
-		final ServerBuilder builder = new ServerBuilder(new ServerConfiguration());
+		final ServerBuilder builder =
+				new ServerBuilder(new ServerConfiguration(System.getProperties(), System.getenv()));
 		final TrackedInterface etcTracker =
 				TrackedInterface.build(builder.getServerConfiguration().etcDirectories, null);
 		ClusterManager.load(builder, null, null);
