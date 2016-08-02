@@ -63,6 +63,10 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
+            <artifactId>qwazr-profiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qwazr</groupId>
             <artifactId>qwazr-scheduler</artifactId>
         </dependency>
         <dependency>
