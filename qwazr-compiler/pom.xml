@@ -46,42 +46,13 @@
             <artifactId>commons-collections4</artifactId>
             <version>4.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm</artifactId>
-            <version>5.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.ea.agentloader</groupId>
-            <artifactId>ea-agent-loader</artifactId>
-            <version>1.0.2</version>
-        </dependency>
     </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifestEntries>
-                            <Premain-Class>com.qwazr.profiler.ProfilerManager</Premain-Class>
-                            <Agent-Class>com.qwazr.profiler.ProfilerManager</Agent-Class>
-                            <Can-Retransform-Classes>false</Can-Retransform-Classes>
-                            Can-Retransform-Classes
-                        </manifestEntries>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <systemPropertyVariables>
-                        <QWAZR_PROFILERS>com/qwazr/*</QWAZR_PROFILERS>
-                    </systemPropertyVariables>
-                </configuration>
             </plugin>
         </plugins>
     </build>

@@ -71,7 +71,6 @@
     </properties>
 
     <modules>
-        <module>qwazr-server</module>
         <module>qwazr-cluster</module>
         <module>qwazr-compiler</module>
         <module>qwazr-crawlers</module>
@@ -80,9 +79,11 @@
         <module>qwazr-graph</module>
         <module>qwazr-library</module>
         <module>qwazr-maven-plugin</module>
+        <module>qwazr-profiler</module>
         <module>qwazr-scripts</module>
         <module>qwazr-scheduler</module>
         <module>qwazr-search</module>
+        <module>qwazr-server</module>
         <module>qwazr-store</module>
         <module>qwazr-utils</module>
         <module>qwazr-webapps</module>
@@ -188,6 +189,11 @@
             <dependency>
                 <groupId>com.qwazr</groupId>
                 <artifactId>qwazr-library</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.qwazr</groupId>
+                <artifactId>qwazr-profiler</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
