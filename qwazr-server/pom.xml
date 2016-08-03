@@ -35,23 +35,11 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-utils</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
             <artifactId>qwazr-cluster</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
             <artifactId>qwazr-extractor</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-webapps</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-scripts</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
@@ -63,6 +51,14 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
+            <artifactId>qwazr-graph</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qwazr</groupId>
+            <artifactId>qwazr-library</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.qwazr</groupId>
             <artifactId>qwazr-profiler</artifactId>
         </dependency>
         <dependency>
@@ -71,11 +67,11 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-search</artifactId>
+            <artifactId>qwazr-scripts</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-graph</artifactId>
+            <artifactId>qwazr-search</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
@@ -83,11 +79,11 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-library</artifactId>
+            <artifactId>qwazr-utils</artifactId>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-utils</artifactId>
+            <artifactId>qwazr-webapps</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
