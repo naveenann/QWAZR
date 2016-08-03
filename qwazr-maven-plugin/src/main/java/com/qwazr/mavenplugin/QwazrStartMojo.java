@@ -180,6 +180,18 @@ public class QwazrStartMojo extends AbstractMojo {
 			setParameter("WEBSERVICE_REALM", webserviceRealm);
 			setParameter("UDP_ADDRESS", udpAddress);
 			setParameter("UDP_PORT", udpPort);
+
+			if (etcFilters != null && !etcFilters.isEmpty())
+				setParameter("QWAZR_ETC", StringUtils.join(etcFilters, ','));
+
+			if (groups != null && !groups.isEmpty())
+				setParameter("QWAZR_GROUPS", StringUtils.join(groups, ','));
+
+			if (profilers != null && !profilers.isEmpty())
+				setParameter("QWAZR_PROFILERS", StringUtils.join(profilers, ';'));
+
+			if (services != null && !services.isEmpty())
+				setParameter("QWAZR_SERVICES", StringUtils.join(services, ','));
 		}
 
 		private void setParameter(String key, Object value) {
@@ -230,18 +242,6 @@ public class QwazrStartMojo extends AbstractMojo {
 
 			final String classpath = buildClassPass(null);
 			parameters.put("CLASSPATH", classpath);
-
-			if (etcFilters != null && !etcFilters.isEmpty())
-				parameters.put("QWAZR_ETC", StringUtils.join(etcFilters, ','));
-
-			if (groups != null && !groups.isEmpty())
-				parameters.put("QWAZR_GROUPS", StringUtils.join(groups, ','));
-
-			if (profilers != null && !profilers.isEmpty())
-				parameters.put("QWAZR_PROFILERS", StringUtils.join(profilers, ';'));
-
-			if (services != null && !services.isEmpty())
-				parameters.put("QWAZR_SERVICES", StringUtils.join(services, ','));
 
 			final String className = Qwazr.class.getCanonicalName();
 			final ProcessBuilder builder =
