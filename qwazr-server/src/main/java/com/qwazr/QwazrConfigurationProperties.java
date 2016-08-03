@@ -17,6 +17,7 @@ package com.qwazr;
 
 import org.aeonbits.owner.Config;
 
+@Config.LoadPolicy(Config.LoadType.MERGE)
 public interface QwazrConfigurationProperties extends Config {
 
 	String QWAZR_PROPERTIES = "QWAZR_PROPERTIES";

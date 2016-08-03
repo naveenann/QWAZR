@@ -149,7 +149,7 @@ public class Qwazr {
 				}
 			}
 
-			startWithConf(new QwazrConfiguration(System.getenv(), System.getProperties(), properties));
+			startWithConf(new QwazrConfiguration(properties, System.getProperties(), System.getenv()));
 
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
