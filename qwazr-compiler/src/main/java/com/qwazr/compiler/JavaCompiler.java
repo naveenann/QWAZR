@@ -135,8 +135,8 @@ public class JavaCompiler implements Closeable {
 			final Iterable<? extends JavaFileObject> sourceFileObjects =
 					fileManager.getJavaFileObjectsFromFiles(javaFiles);
 			final List<String> options = new ArrayList<>();
-			if (classPath != null) {
-				options.add("-cp");
+			if (classPath != null && !classPath.isEmpty()) {
+				options.add("-classpath");
 				options.add(classPath);
 			}
 			options.add("-d");
