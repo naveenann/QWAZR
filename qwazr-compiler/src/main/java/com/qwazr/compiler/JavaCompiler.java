@@ -89,20 +89,6 @@ public class JavaCompiler implements Closeable {
 		return new JavaCompiler(executorService, javaSourceDirectory, javaClassesDirectory, classPath);
 	}
 
-	private final static void classLoaderUrlExtract(final ClassLoader classLoader, final Collection<String> classPathes,
-			final Collection<URL> urlCollection) throws URISyntaxException {
-		if (classLoader == null || !(classLoader instanceof URLClassLoader))
-			return;
-		final URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
-		if (urlClassLoader.getURLs() != null) {
-			for (URL url : urlClassLoader.getURLs()) {
-				String path = new File(url.toURI()).getAbsolutePath();
-				classPathes.add(path);
-				urlCollection.add(url);
-			}
-		}
-	}
-
 	private final static LinkedHashSet buildClassPath(final File[] classPathArray, final Collection<URL> urlCollection)
 			throws MalformedURLException, URISyntaxException {
 
@@ -112,9 +98,6 @@ public class JavaCompiler implements Closeable {
 		if (!StringUtils.isEmpty(classPath))
 			for (String cp : StringUtils.split(classPath, File.pathSeparatorChar))
 				classPathes.add(cp);
-
-		classLoaderUrlExtract(URLClassLoader.getSystemClassLoader(), classPathes, urlCollection);
-		classLoaderUrlExtract(Thread.currentThread().getContextClassLoader(), classPathes, urlCollection);
 
 		if (classPathArray != null) {
 			for (File classPathFile : classPathArray) {
