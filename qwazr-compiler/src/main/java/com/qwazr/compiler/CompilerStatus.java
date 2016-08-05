@@ -27,15 +27,19 @@ public class CompilerStatus {
 
 	public final SortedMap<URI, Date> compilables;
 	public final SortedMap<URI, DiagnosticStatus> diagnostics;
+	public final SortedSet<String> classPath;
 
 	public CompilerStatus() {
 		compilables = null;
 		diagnostics = null;
+		classPath = null;
 	}
 
-	public CompilerStatus(final Map<URI, Date> compilables, final Map<URI, DiagnosticStatus> diagnostics) {
+	public CompilerStatus(final Map<URI, Date> compilables, final Map<URI, DiagnosticStatus> diagnostics,
+			final LinkedHashSet<String> classPath) {
 		this.compilables = new TreeMap<>(compilables);
 		this.diagnostics = new TreeMap<>(diagnostics);
+		this.classPath = classPath == null ? null : new TreeSet<>(classPath);
 	}
 
 	public static class DiagnosticStatus {

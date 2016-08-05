@@ -41,7 +41,8 @@ public class JavaCompiler implements Closeable {
 	private final File javaSourceDirectory;
 	private final File javaClassesDirectory;
 
-	private final String classPath;
+	private final LinkedHashSet<String> classPathSet;
+	private final String compiledClassPath;
 
 	private final LockUtils.ReadWriteLock compilerLock;
 
@@ -51,8 +52,11 @@ public class JavaCompiler implements Closeable {
 	private final ConcurrentHashMap<URI, CompilerStatus.DiagnosticStatus> diagnosticMap;
 
 	private JavaCompiler(final ExecutorService executorService, final File javaSourceDirectory,
-			final File javaClassesDirectory, final String classPath) throws IOException {
-		this.classPath = classPath;
+			final File javaClassesDirectory, final LinkedHashSet<String> classPathSet) throws IOException {
+		this.classPathSet = classPathSet;
+		this.compiledClassPath = classPathSet != null && !classPathSet.isEmpty() ?
+				StringUtils.join(classPathSet, File.pathSeparatorChar) :
+				null;
 		this.compilableMap = new ConcurrentHashMap<>();
 		this.diagnosticMap = new ConcurrentHashMap<>();
 		this.javaSourceDirectory = javaSourceDirectory;
@@ -81,25 +85,11 @@ public class JavaCompiler implements Closeable {
 		Objects.requireNonNull(javaClassesDirectory, "No class directory given (null)");
 		final LinkedHashSet<URL> urlList = new LinkedHashSet<>();
 		urlList.add(javaClassesDirectory.toURI().toURL());
-		final String classPath = buildClassPath(classPathDirectories, urlList);
+		final LinkedHashSet<String> classPath = buildClassPath(classPathDirectories, urlList);
 		return new JavaCompiler(executorService, javaSourceDirectory, javaClassesDirectory, classPath);
 	}
 
-	private final static void classLoaderUrlExtract(final ClassLoader classLoader, final Collection<String> classPathes,
-			final Collection<URL> urlCollection) throws URISyntaxException {
-		if (classLoader == null || !(classLoader instanceof URLClassLoader))
-			return;
-		final URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
-		if (urlClassLoader.getURLs() != null) {
-			for (URL url : urlClassLoader.getURLs()) {
-				String path = new File(url.toURI()).getAbsolutePath();
-				classPathes.add(path);
-				urlCollection.add(url);
-			}
-		}
-	}
-
-	private final static String buildClassPath(final File[] classPathArray, final Collection<URL> urlCollection)
+	private final static LinkedHashSet buildClassPath(final File[] classPathArray, final Collection<URL> urlCollection)
 			throws MalformedURLException, URISyntaxException {
 
 		final LinkedHashSet<String> classPathes = new LinkedHashSet<>();
@@ -108,9 +98,6 @@ public class JavaCompiler implements Closeable {
 		if (!StringUtils.isEmpty(classPath))
 			for (String cp : StringUtils.split(classPath, File.pathSeparatorChar))
 				classPathes.add(cp);
-
-		classLoaderUrlExtract(URLClassLoader.getSystemClassLoader(), classPathes, urlCollection);
-		classLoaderUrlExtract(Thread.currentThread().getContextClassLoader(), classPathes, urlCollection);
 
 		if (classPathArray != null) {
 			for (File classPathFile : classPathArray) {
@@ -126,7 +113,7 @@ public class JavaCompiler implements Closeable {
 			}
 		}
 
-		return classPathes.isEmpty() ? null : StringUtils.join(classPathes, File.pathSeparatorChar);
+		return classPathes;
 	}
 
 	private void compile(final javax.tools.JavaCompiler compiler, final Collection<File> javaFiles) throws IOException {
@@ -135,9 +122,9 @@ public class JavaCompiler implements Closeable {
 			final Iterable<? extends JavaFileObject> sourceFileObjects =
 					fileManager.getJavaFileObjectsFromFiles(javaFiles);
 			final List<String> options = new ArrayList<>();
-			if (classPath != null) {
-				options.add("-cp");
-				options.add(classPath);
+			if (compiledClassPath != null && !compiledClassPath.isEmpty()) {
+				options.add("-classpath");
+				options.add(compiledClassPath);
 			}
 			options.add("-d");
 			options.add(javaClassesDirectory.getAbsolutePath());
@@ -229,6 +216,6 @@ public class JavaCompiler implements Closeable {
 	}
 
 	CompilerStatus getStatus() {
-		return new CompilerStatus(compilableMap, diagnosticMap);
+		return new CompilerStatus(compilableMap, diagnosticMap, classPathSet);
 	}
 }
