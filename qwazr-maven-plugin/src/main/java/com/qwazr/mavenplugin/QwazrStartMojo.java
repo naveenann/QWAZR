@@ -32,10 +32,10 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -204,7 +204,7 @@ public class QwazrStartMojo extends AbstractMojo {
 			parameters.put(key, str);
 		}
 
-		private String buildClassPass(final Collection<URL> urls) throws DependencyResolutionRequiredException {
+		private String buildClassPath() throws DependencyResolutionRequiredException {
 			final StringBuilder sb = new StringBuilder();
 
 			// Build the runtime classpath
@@ -221,12 +221,6 @@ public class QwazrStartMojo extends AbstractMojo {
 					final File artifactFile = artifact.getFile();
 					sb.append(artifactFile.getPath());
 					sb.append(File.pathSeparatorChar);
-					if (urls != null)
-						try {
-							urls.add(artifactFile.toURI().toURL());
-						} catch (MalformedURLException e) {
-							throw new RuntimeException("Cannot extract URL from " + artifactFile, e);
-						}
 				});
 
 			return sb.toString();
@@ -240,7 +234,7 @@ public class QwazrStartMojo extends AbstractMojo {
 			if (!javaBinFile.exists())
 				throw new MojoFailureException("Cannot find JAVA: " + javaBinFile);
 
-			final String classpath = buildClassPass(null);
+			final String classpath = buildClassPath();
 			parameters.put("CLASSPATH", classpath);
 
 			final String className = Qwazr.class.getCanonicalName();
@@ -255,15 +249,11 @@ public class QwazrStartMojo extends AbstractMojo {
 		}
 
 		private void startEmbedded(final Log log) throws Exception {
-			final Thread thread = Thread.currentThread();
-			final ClassLoader oldClassloader = thread.getContextClassLoader();
+			final String oldClassPath = System.getProperty("java.class.path");
 			try {
-				final List<URL> urls = new ArrayList<>();
-				buildClassPass(urls);
-				log.info("CLASSPATH: " + urls.size() + " jar(s)");
-				if (!urls.isEmpty())
-					thread.setContextClassLoader(
-							new URLClassLoader(urls.toArray(new URL[urls.size()]), oldClassloader));
+				final String classpath = buildClassPath();
+				if (classpath != null && !classpath.isEmpty())
+					System.setProperty("java.class.path", classpath);
 
 				Qwazr.startWithConf(new QwazrConfiguration(parameters));
 				log.info("QWAZR started (Embedded)");
@@ -276,7 +266,8 @@ public class QwazrStartMojo extends AbstractMojo {
 				log.info("Stopping QWAZR");
 				Qwazr.stop(null);
 			} finally {
-				thread.setContextClassLoader(oldClassloader);
+				if (oldClassPath != null)
+					System.setProperty("java.class.path", oldClassPath);
 			}
 		}
 	}
