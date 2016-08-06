@@ -155,6 +155,7 @@
                                         <Main-Class>com.qwazr.Qwazr</Main-Class>
                                         <Implementation-Version>${project.version}-${buildNumber}
                                         </Implementation-Version>
+                                        <Specification-Version>${project.version}-${buildNumber}</Specification-Version>
                                     </manifestEntries>
                                 </transformer>
                                 <transformer
