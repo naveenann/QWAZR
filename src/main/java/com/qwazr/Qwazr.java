@@ -51,18 +51,21 @@ public class Qwazr {
 	private static final String ACCESS_LOG_LOGGER_NAME = "com.qwazr.rest.accessLogger";
 	private static final Logger ACCESS_REST_LOGGER = LoggerFactory.getLogger(ACCESS_LOG_LOGGER_NAME);
 
+	static Thread mainThread = null;
+
 	private final static synchronized GenericServer newServer(final QwazrConfiguration config) throws IOException {
 
 		final ServerBuilder builder = new ServerBuilder(config);
 
 		builder.setRestAccessLogger(ACCESS_REST_LOGGER);
 
-		File currentTempDir = new File(config.dataDirectory, "tmp");
+		final File currentTempDir = new File(config.dataDirectory, "tmp");
 
 		// Load the configuration
-		TrackedInterface etcTracker = TrackedInterface.build(config.etcDirectories, config.etcFileFilter);
+		final TrackedInterface etcTracker = TrackedInterface.build(config.etcDirectories, config.etcFileFilter);
 
-		ClassLoaderManager.load(config.dataDirectory, Thread.currentThread());
+		mainThread = Thread.currentThread();
+		ClassLoaderManager.load(config.dataDirectory, mainThread);
 
 		builder.registerWebService(WelcomeServiceImpl.class);
 
