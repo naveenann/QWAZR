@@ -18,6 +18,7 @@ package com.qwazr;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.cluster.manager.ClusterManager;
+import com.qwazr.utils.RuntimeUtils;
 
 import java.util.*;
 
@@ -27,10 +28,12 @@ public class WelcomeStatus {
 	public final TitleVendorVersion implementation;
 	public final TitleVendorVersion specification;
 	public final List<String> endpoints;
+	public final MemoryStatus memory;
+	public final RuntimeStatus runtime;
 	public final SortedMap<String, Object> properties;
 	public final SortedMap<String, String> env;
 
-	WelcomeStatus() {
+	WelcomeStatus(final Boolean showProperties, final Boolean showEnvVars) {
 		endpoints = new ArrayList<>();
 		final Collection<String> servicePaths = Qwazr.qwazr.getServicePaths();
 		if (servicePaths != null)
@@ -40,9 +43,17 @@ public class WelcomeStatus {
 				pkg.getImplementationVersion());
 		specification = new TitleVendorVersion(pkg.getSpecificationTitle(), pkg.getSpecificationVendor(),
 				pkg.getSpecificationVersion());
-		properties = new TreeMap<>();
-		System.getProperties().forEach((key, value) -> properties.put(key.toString(), value));
-		env = new TreeMap<>(System.getenv());
+		memory = new MemoryStatus();
+		runtime = new RuntimeStatus();
+		if (showProperties != null && showProperties) {
+			properties = new TreeMap<>();
+			System.getProperties().forEach((key, value) -> properties.put(key.toString(), value));
+		} else
+			properties = null;
+		if (showEnvVars != null && showEnvVars)
+			env = new TreeMap<>(System.getenv());
+		else
+			env = null;
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
@@ -56,6 +67,33 @@ public class WelcomeStatus {
 			this.title = title;
 			this.vendor = vendor;
 			this.version = version;
+		}
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public class MemoryStatus {
+
+		public final Long free;
+		public final Long total;
+		public final Long max;
+
+		MemoryStatus() {
+			Runtime runtime = Runtime.getRuntime();
+			free = runtime.freeMemory();
+			total = runtime.totalMemory();
+			max = runtime.maxMemory();
+		}
+	}
+
+	@JsonInclude(JsonInclude.Include.NON_NULL)
+	public class RuntimeStatus {
+
+		public final Integer activeThreads;
+		public final Long openFiles;
+
+		RuntimeStatus() {
+			activeThreads = Qwazr.mainThread == null ? null : Qwazr.mainThread.activeCount();
+			openFiles = RuntimeUtils.getOpenFileCount();
 		}
 	}
 

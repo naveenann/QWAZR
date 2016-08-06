@@ -14,7 +14,7 @@
             #Fields:\tdate\ttime\tc-ip\ts-ip\tcs-method\tcs-uri-stem\tcs-uri-query\tsc-status\tcs(Referer)\tcs(User-Agent)\tcs(bytes)\tsc(bytes)\ttime-taken\tcs(host)%n
         </Property>
 
-        <!-- The content of the Axcess logs -->
+        <!-- The content of the Access logs -->
         <Property name="W3CLogs">
             %X{date}\t%X{time}\t%X{c-ip}\t%X{s-ip}\t%X{cs-method}\t%X{cs-uri-stem}\t%X{cs-uri-query}\t%X{sc-status}\t%X{cs-referer}\t%X{cs-user-agent}\t%X{cs-bytes}\t%X{sc-bytes}\t%X{time-taken}\t%X{cs-host}%n
         </Property>
