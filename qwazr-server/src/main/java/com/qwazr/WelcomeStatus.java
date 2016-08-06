@@ -19,36 +19,43 @@ package com.qwazr;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.qwazr.cluster.manager.ClusterManager;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WelcomeStatus {
 
-	public final ImplementationStatus implementation;
+	public final TitleVendorVersion implementation;
+	public final TitleVendorVersion specification;
 	public final List<String> endpoints;
+	public final SortedMap<String, Object> properties;
+	public final SortedMap<String, String> env;
 
 	WelcomeStatus() {
-		this.implementation = new ImplementationStatus();
 		endpoints = new ArrayList<>();
 		final Collection<String> servicePaths = Qwazr.qwazr.getServicePaths();
 		if (servicePaths != null)
 			servicePaths.forEach(path -> endpoints.add(ClusterManager.INSTANCE.me.httpAddressKey + path));
+		final Package pkg = getClass().getPackage();
+		implementation = new TitleVendorVersion(pkg.getImplementationTitle(), pkg.getImplementationVendor(),
+				pkg.getImplementationVersion());
+		specification = new TitleVendorVersion(pkg.getSpecificationTitle(), pkg.getSpecificationVendor(),
+				pkg.getSpecificationVersion());
+		properties = new TreeMap<>();
+		System.getProperties().forEach((key, value) -> properties.put(key.toString(), value));
+		env = new TreeMap<>(System.getenv());
 	}
 
 	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public class ImplementationStatus {
+	public class TitleVendorVersion {
 
 		public final String title;
 		public final String vendor;
 		public final String version;
 
-		ImplementationStatus() {
-			final Package pkg = getClass().getPackage();
-			title = pkg.getImplementationTitle();
-			vendor = pkg.getImplementationVendor();
-			version = pkg.getImplementationVersion();
+		TitleVendorVersion(final String title, final String vendor, final String version) {
+			this.title = title;
+			this.vendor = vendor;
+			this.version = version;
 		}
 	}
 

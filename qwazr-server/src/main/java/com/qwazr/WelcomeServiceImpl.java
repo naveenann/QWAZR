@@ -3,7 +3,6 @@ package com.qwazr;
 import com.qwazr.utils.server.ServiceInterface;
 import com.qwazr.utils.server.ServiceName;
 
-import javax.annotation.security.PermitAll;
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -17,7 +16,6 @@ public class WelcomeServiceImpl implements ServiceInterface {
 
 	@GET
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	@PermitAll
 	public WelcomeStatus welcome() {
 		return new WelcomeStatus();
 	}
