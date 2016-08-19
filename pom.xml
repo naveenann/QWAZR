@@ -147,6 +147,26 @@
                 <version>1.4.01</version>
             </dependency>
             <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.3.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.jena</groupId>
+                <artifactId>jena-iri</artifactId>
+                <version>0.9.6</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-util</artifactId>
+                <version>9.3.8.v20160314</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-io</artifactId>
+                <version>9.3.8.v20160314</version>
+            </dependency>
+            <dependency>
                 <artifactId>commons-net</artifactId>
                 <groupId>commons-net</groupId>
                 <version>3.5</version>
@@ -205,6 +225,11 @@
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-jdk8</artifactId>
                 <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>5.1</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
