@@ -42,6 +42,12 @@
         <dependency>
             <groupId>com.qwazr</groupId>
             <artifactId>qwazr-cluster</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>guava</artifactId>
+                    <groupId>com.google.guava</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
