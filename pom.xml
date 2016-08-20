@@ -159,12 +159,12 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-util</artifactId>
-                <version>9.3.8.v20160314</version>
+                <version>9.3.10.M0</version>
             </dependency>
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-io</artifactId>
-                <version>9.3.8.v20160314</version>
+                <version>9.3.10.M0</version>
             </dependency>
             <dependency>
                 <artifactId>commons-net</artifactId>
