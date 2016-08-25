@@ -61,9 +61,9 @@ public class ClassLoaderManager {
 		if (!javaClassesDirectory.exists())
 			javaClassesDirectory.mkdirs();
 		this.javaLibrariesDirectory = new File(dataDirectory, "lib");
-		urls = new URL[] { javaResourceDirectory.toURI().toURL(),
+		urls = new URL[]{javaResourceDirectory.toURI().toURL(),
 				javaClassesDirectory.toURI().toURL(),
-				javaLibrariesDirectory.toURI().toURL() };
+				javaLibrariesDirectory.toURI().toURL()};
 		reload();
 	}
 

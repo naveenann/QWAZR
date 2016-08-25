@@ -172,28 +172,22 @@ public class Qwazr {
 	}
 
 	/**
-	 * Main with Procun compatibility
+	 * Main with Procrun compatibility
 	 *
 	 * @param args One argument: "start" or "stop"
 	 */
 	public static void main(final String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-			case "start":
-				start(args);
-				return;
-			case "stop":
-				stop(args);
-				return;
+				case "start":
+					start(args);
+					return;
+				case "stop":
+					stop(args);
+					return;
 			}
 		}
 		start(args);
-	}
-
-	final public static void inject(final Object object) {
-		if (object == null)
-			return;
-		AnnotationsUtils.browseFieldsRecursive(object.getClass(), new QwazrInjector(object));
 	}
 
 }
