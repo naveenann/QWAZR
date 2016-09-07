@@ -29,7 +29,6 @@ import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.search.index.IndexManager;
 import com.qwazr.store.StoreManager;
-import com.qwazr.utils.AnnotationsUtils;
 import com.qwazr.utils.file.TrackedInterface;
 import com.qwazr.utils.server.GenericServer;
 import com.qwazr.utils.server.ServerBuilder;
@@ -140,6 +139,8 @@ public class Qwazr {
 	 */
 	public static synchronized void start(final String[] args) {
 
+		if (LOGGER.isInfoEnabled())
+			LOGGER.info("QWAZR is starting...");
 		try {
 
 			// Load qwazr properties
@@ -153,7 +154,8 @@ public class Qwazr {
 			}
 
 			startWithConf(new QwazrConfiguration(properties, System.getProperties(), System.getenv()));
-
+			if (LOGGER.isInfoEnabled())
+				LOGGER.info("QWAZR started successfully.");
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
 			System.exit(1);
@@ -166,8 +168,11 @@ public class Qwazr {
 	 * @param args For procrun compatbility, currently ignored
 	 */
 	public static synchronized void stop(final String[] args) {
+		if (LOGGER.isInfoEnabled())
+			LOGGER.info("QWAZR is stopping...");
 		if (qwazr != null)
 			qwazr.stopAll();
+		LOGGER.info("QWAZR stopped.");
 		System.exit(0);
 	}
 
