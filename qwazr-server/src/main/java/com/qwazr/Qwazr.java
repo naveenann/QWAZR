@@ -54,6 +54,13 @@ public class Qwazr {
 
 	private final static synchronized GenericServer newServer(final QwazrConfiguration config) throws IOException {
 
+		if (config.dataDirectory == null)
+			throw new IOException("The data directory has not been set.");
+		if (!config.dataDirectory.exists())
+			throw new IOException("The data directory does not exists: " + config.dataDirectory.getAbsolutePath());
+		if (!config.dataDirectory.isDirectory())
+			throw new IOException("The data directory is not a directory: " + config.dataDirectory.getAbsolutePath());
+
 		final ServerBuilder builder = new ServerBuilder(config);
 
 		builder.setRestAccessLogger(ACCESS_REST_LOGGER);
