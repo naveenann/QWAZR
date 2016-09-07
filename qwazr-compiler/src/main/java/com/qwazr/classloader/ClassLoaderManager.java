@@ -58,8 +58,6 @@ public class ClassLoaderManager {
 		this.parentClassLoader = mainThread.getContextClassLoader();
 		this.javaResourceDirectory = new File(dataDirectory, "src/main/resources");
 		this.javaClassesDirectory = new File(dataDirectory, "target/classes");
-		if (!javaClassesDirectory.exists())
-			javaClassesDirectory.mkdirs();
 		this.javaLibrariesDirectory = new File(dataDirectory, "lib");
 		urls = new URL[]{javaResourceDirectory.toURI().toURL(),
 				javaClassesDirectory.toURI().toURL(),
