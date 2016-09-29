@@ -152,7 +152,7 @@ public class Qwazr {
 
 			// Load qwazr properties
 			final Properties properties = new Properties();
-			String propertyFile = System.getProperty(QwazrConfigurationProperties.QWAZR_PROPERTIES,
+			final String propertyFile = System.getProperty(QwazrConfigurationProperties.QWAZR_PROPERTIES,
 					System.getenv(QwazrConfigurationProperties.QWAZR_PROPERTIES));
 			if (propertyFile != null) {
 				try (final FileReader reader = new FileReader(new File(propertyFile))) {
