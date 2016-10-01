@@ -191,12 +191,12 @@ public class Qwazr {
 	public static void main(final String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-				case "start":
-					start(args);
-					return;
-				case "stop":
-					stop(args);
-					return;
+			case "start":
+				start(args);
+				return;
+			case "stop":
+				stop(args);
+				return;
 			}
 		}
 		start(args);

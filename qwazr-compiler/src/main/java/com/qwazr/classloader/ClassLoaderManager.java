@@ -23,19 +23,21 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Objects;
 
 public class ClassLoaderManager {
 
 	private static volatile ClassLoaderManager INSTANCE = null;
 
-	public static ClassLoaderManager getInstance() {
+	final public static ClassLoaderManager getInstance() {
+		Objects.requireNonNull(INSTANCE, "The ClassloaderManager has not been initialized");
 		return INSTANCE;
 	}
 
-	public static void load(File dataDirectory, Thread mainThread) throws IOException {
+	public static void load(final File dataDirectory, final Thread mainThread) throws IOException {
 		if (INSTANCE != null)
 			throw new IOException("Already loaded");
-		INSTANCE = new ClassLoaderManager(dataDirectory, mainThread);
+		INSTANCE = new ClassLoaderManager(dataDirectory, mainThread == null ? Thread.currentThread() : mainThread);
 	}
 
 	public static volatile URLClassLoader classLoader = null;
@@ -53,15 +55,18 @@ public class ClassLoaderManager {
 
 	private final URL[] urls;
 
+	private volatile ClassFactory classFactory;
+
 	private ClassLoaderManager(final File dataDirectory, final Thread mainThread) throws MalformedURLException {
 		this.mainThread = mainThread;
+		this.classFactory = ClassFactory.DefaultFactory.INSTANCE;
 		this.parentClassLoader = mainThread.getContextClassLoader();
 		this.javaResourceDirectory = new File(dataDirectory, "src/main/resources");
 		this.javaClassesDirectory = new File(dataDirectory, "target/classes");
 		this.javaLibrariesDirectory = new File(dataDirectory, "lib");
-		urls = new URL[]{javaResourceDirectory.toURI().toURL(),
+		urls = new URL[] { javaResourceDirectory.toURI().toURL(),
 				javaClassesDirectory.toURI().toURL(),
-				javaLibrariesDirectory.toURI().toURL()};
+				javaLibrariesDirectory.toURI().toURL() };
 		reload();
 	}
 
@@ -72,6 +77,23 @@ public class ClassLoaderManager {
 		classLoader = newClassLoader;
 		if (oldClassLoader != null)
 			IOUtils.close(oldClassLoader);
+	}
+
+	final public void register(final ClassFactory classFactory) {
+		this.classFactory = classFactory == null ? ClassFactory.DefaultFactory.INSTANCE : classFactory;
+	}
+
+	final public <T> T newInstance(final Class<T> clazz) throws ReflectiveOperationException {
+		return clazz == null ? null : classFactory.newInstance(clazz);
+	}
+
+	final public <T> T newInstance(final String className, final String[] classPrefixes)
+			throws IOException, ReflectiveOperationException {
+		return newInstance(ClassLoaderUtils.findClass(classLoader, className, classPrefixes));
+	}
+
+	final public <T> T newInstance(final String className) throws IOException, ReflectiveOperationException {
+		return newInstance(ClassLoaderUtils.findClass(ClassLoaderManager.classLoader, className));
 	}
 
 }
