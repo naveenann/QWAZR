@@ -21,7 +21,6 @@ import com.qwazr.utils.concurrent.ThreadUtils;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
 import com.qwazr.utils.server.ServerException;
-import com.qwazr.utils.server.WebAppExceptionHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
