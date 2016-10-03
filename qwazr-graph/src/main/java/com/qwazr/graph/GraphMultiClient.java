@@ -16,6 +16,7 @@
 package com.qwazr.graph;
 
 import com.qwazr.graph.model.*;
+import com.qwazr.utils.ExceptionUtils;
 import com.qwazr.utils.concurrent.ThreadUtils;
 import com.qwazr.utils.json.client.JsonMultiClientAbstract;
 import com.qwazr.utils.server.RemoteService;
@@ -88,7 +89,7 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 
 	@Override
 	public GraphResult getGraph(String graphName) {
-		WebAppExceptionHolder exceptionHolder = new WebAppExceptionHolder(logger);
+		ExceptionUtils.Holder exceptionHolder = new ExceptionUtils.Holder(logger);
 
 		for (GraphSingleClient client : this) {
 			try {
@@ -100,8 +101,7 @@ public class GraphMultiClient extends JsonMultiClientAbstract<GraphSingleClient>
 					exceptionHolder.switchAndWarn(e);
 			}
 		}
-		if (exceptionHolder.getException() != null)
-			throw exceptionHolder.getException();
+		exceptionHolder.thrownIfAny();
 		return null;
 	}
 
