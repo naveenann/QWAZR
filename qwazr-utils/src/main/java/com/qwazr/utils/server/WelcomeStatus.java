@@ -1,5 +1,5 @@
 /**
- * Copyright 2014-2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2016 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,15 @@
  * limitations under the License.
  **/
 
-package com.qwazr;
+package com.qwazr.utils.server;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.qwazr.cluster.manager.ClusterManager;
 import com.qwazr.utils.RuntimeUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class WelcomeStatus {
@@ -33,18 +35,15 @@ public class WelcomeStatus {
 	public final SortedMap<String, Object> properties;
 	public final SortedMap<String, String> env;
 
-	WelcomeStatus(final Boolean showProperties, final Boolean showEnvVars) {
-		endpoints = new ArrayList<>();
-		final Collection<String> servicePaths = Qwazr.qwazr.getServicePaths();
-		if (servicePaths != null)
-			servicePaths.forEach(path -> endpoints.add(ClusterManager.INSTANCE.me.httpAddressKey + path));
+	public WelcomeStatus(final GenericServer server, final Boolean showProperties, final Boolean showEnvVars) {
+		endpoints = new ArrayList<>(server.getServicePaths());
 		final Package pkg = getClass().getPackage();
 		implementation = new TitleVendorVersion(pkg.getImplementationTitle(), pkg.getImplementationVendor(),
 				pkg.getImplementationVersion());
 		specification = new TitleVendorVersion(pkg.getSpecificationTitle(), pkg.getSpecificationVendor(),
 				pkg.getSpecificationVersion());
 		memory = new MemoryStatus();
-		runtime = new RuntimeStatus();
+		runtime = new RuntimeStatus(server.mainThread);
 		if (showProperties != null && showProperties) {
 			properties = new TreeMap<>();
 			System.getProperties().forEach((key, value) -> properties.put(key.toString(), value));
@@ -91,8 +90,8 @@ public class WelcomeStatus {
 		public final Integer activeThreads;
 		public final Long openFiles;
 
-		RuntimeStatus() {
-			activeThreads = Qwazr.mainThread == null ? null : Qwazr.mainThread.activeCount();
+		RuntimeStatus(final Thread mainThread) {
+			activeThreads = mainThread.getThreadGroup().activeCount();
 			openFiles = RuntimeUtils.getOpenFileCount();
 		}
 	}
