@@ -27,7 +27,7 @@ import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.json.JsonMapper;
 import com.qwazr.utils.server.ServerException;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.DirectoryFileFilter;
+import org.apache.commons.io.filefilter.FileFileFilter;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.facet.sortedset.SortedSetDocValuesReaderState;
@@ -228,7 +228,7 @@ final public class IndexInstance implements Closeable {
 	}
 
 	public Query createJoinQuery(JoinQuery joinQuery)
-			throws InterruptedException, IOException, ParseException, ReflectiveOperationException, QueryNodeException {
+			throws IOException, ParseException, ReflectiveOperationException, QueryNodeException {
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
 			final IndexSearcher indexSearcher = searcherManager.acquire();
@@ -255,41 +255,36 @@ final public class IndexInstance implements Closeable {
 		schema.mayBeRefresh(true);
 	}
 
-	final synchronized BackupStatus backup(final Integer keepLastCount, final File backupIndexRootDirectory)
-			throws IOException, InterruptedException {
+	final synchronized BackupStatus backup(final File backupIndexDirectory)
+			throws IOException {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			if (!backupIndexRootDirectory.exists())
-				backupIndexRootDirectory.mkdir();
-			if (!backupIndexRootDirectory.exists() || !backupIndexRootDirectory.isDirectory())
+			if (!backupIndexDirectory.exists())
+				backupIndexDirectory.mkdir();
+			if (!backupIndexDirectory.exists() || !backupIndexDirectory.isDirectory())
 				throw new IOException(
-						"Cannot create the root backup directory: " + backupIndexRootDirectory.getAbsolutePath());
-			File backupDir = null;
+						"Cannot create the backup directory: " + backupIndexDirectory.getAbsolutePath());
+			// Get the existing files
+			final Map<String, File> fileMap = new HashMap<>();
+			for (File file : backupIndexDirectory.listFiles((FileFilter) FileFileFilter.FILE))
+				fileMap.put(file.getName(), file);
 			final IndexCommit commit = snapshotDeletionPolicy.snapshot();
 			try {
-				int files_count = 0;
-				long bytes_size = 0;
-				backupDir = new File(backupIndexRootDirectory, Long.toString(commit.getGeneration()));
-				if (!backupDir.exists())
-					backupDir.mkdir();
-				if (!backupDir.exists() || !backupDir.isDirectory())
-					throw new IOException("Cannot create the backup directory: " + backupDir.getAbsolutePath());
 				for (String fileName : commit.getFileNames()) {
+					fileMap.remove(fileName);
 					final File sourceFile = new File(fileSet.dataDirectory, fileName);
-					final File targetFile = new File(backupDir, fileName);
-					files_count++;
-					bytes_size += sourceFile.length();
+					final File targetFile = new File(backupIndexDirectory, fileName);
 					if (targetFile.exists() && targetFile.length() == sourceFile.length()
 							&& targetFile.lastModified() == sourceFile.lastModified())
 						continue;
 					FileUtils.copyFile(sourceFile, targetFile, true);
 				}
-				purgeBackups(keepLastCount, backupIndexRootDirectory);
-				return new BackupStatus(commit.getGeneration(), backupDir.lastModified(), bytes_size, files_count);
+				// Delete files from previous backup
+				fileMap.forEach((name, file) -> file.delete());
+				return BackupStatus.newBackupStatus(backupIndexDirectory);
 			} catch (IOException e) {
-				if (backupDir != null)
-					FileUtils.deleteQuietly(backupDir);
+				FileUtils.deleteQuietly(backupIndexDirectory);
 				throw e;
 			} finally {
 				snapshotDeletionPolicy.release(commit);
@@ -300,43 +295,11 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	private void purgeBackups(final Integer keepLastCount, final File backupIndexDirectory) {
-		checkIsMaster();
-		if (keepLastCount == null)
-			return;
-		if (keepLastCount == 0)
-			return;
-		final List<BackupStatus> backups = backups(backupIndexDirectory);
-		if (backups.size() <= keepLastCount)
-			return;
-		for (int i = keepLastCount; i < backups.size(); i++) {
-			final File backupDir = new File(backupIndexDirectory, Long.toString(backups.get(i).generation));
-			FileUtils.deleteQuietly(backupDir);
-		}
-	}
-
-	private List<BackupStatus> backups(final File backupIndexDirectory) {
-		checkIsMaster();
-		final List<BackupStatus> list = new ArrayList<>();
-		if (!backupIndexDirectory.exists())
-			return list;
-		final File[] dirs = backupIndexDirectory.listFiles((FileFilter) DirectoryFileFilter.INSTANCE);
-		if (dirs == null)
-			return list;
-		for (File dir : dirs) {
-			BackupStatus status = BackupStatus.newBackupStatus(dir);
-			if (status != null)
-				list.add(status);
-		}
-		list.sort((o1, o2) -> o2.generation.compareTo(o1.generation));
-		return list;
-	}
-
-	final List<BackupStatus> getBackups(final File backupIndexDirectory) throws InterruptedException {
+	final BackupStatus getBackup(final File backupIndexDirectory) throws IOException {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireReadSemaphore();
 		try {
-			return backups(backupIndexDirectory);
+			return BackupStatus.newBackupStatus(backupIndexDirectory);
 		} finally {
 			if (sem != null)
 				sem.release();
@@ -352,7 +315,7 @@ final public class IndexInstance implements Closeable {
 		return replicator;
 	}
 
-	void replicationCheck() throws IOException, InterruptedException {
+	void replicationCheck() throws IOException {
 		if (replicationClient == null)
 			throw new UnsupportedOperationException("No replication master has been setup.");
 
@@ -402,7 +365,7 @@ final public class IndexInstance implements Closeable {
 		}
 	}
 
-	final void deleteAll() throws IOException, InterruptedException, ServerException {
+	final void deleteAll() throws IOException {
 		checkIsMaster();
 		final Semaphore sem = schema.acquireWriteSemaphore();
 		try {
