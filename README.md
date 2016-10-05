@@ -102,7 +102,7 @@ Issues and milestones are tracked on GitHub:
 License
 -------
 
-Copyright 2015 [Emmanuel Keller / QWAZR S.A.S.](http://www.qwazr.com)
+Copyright 2015/2016 [Emmanuel Keller / QWAZR](http://www.qwazr.com)
 
 
 Licensed under the Apache License, Version 2.0 (the "License");
