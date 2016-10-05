@@ -50,8 +50,6 @@ public class Qwazr {
 	private static final String ACCESS_LOG_LOGGER_NAME = "com.qwazr.rest.accessLogger";
 	private static final Logger ACCESS_REST_LOGGER = LoggerFactory.getLogger(ACCESS_LOG_LOGGER_NAME);
 
-	static Thread mainThread = null;
-
 	private final static synchronized GenericServer newServer(final QwazrConfiguration config) throws IOException {
 
 		if (config.dataDirectory == null)
@@ -70,10 +68,9 @@ public class Qwazr {
 		// Load the configuration
 		final TrackedInterface etcTracker = TrackedInterface.build(config.etcDirectories, config.etcFileFilter);
 
-		mainThread = Thread.currentThread();
-		ClassLoaderManager.load(config.dataDirectory, mainThread);
+		ClassLoaderManager.load(config.dataDirectory, null);
 
-		builder.registerWebService(WelcomeServiceImpl.class);
+		builder.registerWebService(WelcomeShutdownService.class);
 
 		ClusterManager.load(builder, config.masters, config.groups);
 
@@ -191,12 +188,12 @@ public class Qwazr {
 	public static void main(final String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-			case "start":
-				start(args);
-				return;
-			case "stop":
-				stop(args);
-				return;
+				case "start":
+					start(args);
+					return;
+				case "stop":
+					stop(args);
+					return;
 			}
 		}
 		start(args);
