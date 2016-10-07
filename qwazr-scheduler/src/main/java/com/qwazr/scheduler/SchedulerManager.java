@@ -103,8 +103,8 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		final Map<String, SchedulerDefinition> scMap = schedulerMap;
 		if (scMap == null)
 			return map;
-		scMap.forEach((name, schedulerDef) -> map
-				.put(name, ClusterManager.INSTANCE.me.httpAddressKey + "/schedulers/" + name));
+		scMap.forEach((name, schedulerDef) -> map.put(name,
+				ClusterManager.INSTANCE.me.httpAddressKey + "/schedulers/" + name));
 		return map;
 	}
 
@@ -151,7 +151,7 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		if (logger.isInfoEnabled())
 			logger.info("execute " + scheduler_name + " / " + scheduler.script_path);
 		final long startTime = System.currentTimeMillis();
-		final List<ScriptRunStatus> statusList = ScriptServiceInterface.getClient(false, scheduler.group)
+		final List<ScriptRunStatus> statusList = ScriptServiceInterface.getClient(null, scheduler.group)
 				.runScriptVariables(scheduler.script_path, scheduler.group, scheduler.rule, scheduler.variables);
 		if (statusList == null)
 			return null;
