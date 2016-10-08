@@ -20,6 +20,7 @@ import com.qwazr.utils.IOUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -44,6 +45,10 @@ public class ClassLoaderManager {
 
 	final public static <T> Class<T> findClass(final String className) throws ClassNotFoundException {
 		return ClassLoaderUtils.findClass(classLoader, className);
+	}
+
+	final public static InputStream getResourceAsStream(final String name) {
+		return ClassLoaderUtils.getResourceAsStream(classLoader, name);
 	}
 
 	public final File javaResourceDirectory;
