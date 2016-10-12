@@ -15,17 +15,18 @@
  **/
 package com.qwazr.profiler;
 
-import java.util.Map;
+import javax.ws.rs.BeanParam;
 
 public class ProfilerServiceImpl implements ProfilerServiceInterface {
 
 	@Override
-	public ProfilerInfo get(final Integer start, final Integer end) {
-		return new ProfilerInfo(ProfilerManager.size(), ProfilerManager.getMethods(start, end));
+	public ProfilerResult get(final Parameters params) {
+		return ProfilerManager.getMethods(params);
 	}
 
 	@Override
-	public Map<String, MethodResult> getPrefix(final String prefix, final Integer start, final Integer end) {
-		return ProfilerManager.getMethods(prefix, start, end);
+	public ProfilerResult getPrefix(final Parameters params) {
+		return ProfilerManager.getMethods(params);
 	}
+
 }

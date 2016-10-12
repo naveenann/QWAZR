@@ -53,4 +53,13 @@ public class ProfiledClass {
 		wait(testExCount, testExTime, 250);
 		throw new InterruptedException();
 	}
+
+	public static class InnerClass {
+
+		final public static AtomicInteger testCount = new AtomicInteger();
+
+		public void test() {
+			testCount.incrementAndGet();
+		}
+	}
 }
