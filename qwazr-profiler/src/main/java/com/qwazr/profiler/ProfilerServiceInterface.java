@@ -33,8 +33,8 @@ public interface ProfilerServiceInterface extends ServiceInterface {
 
 	@GET
 	@Path("/")
-	@Produces(MediaType.TEXT_PLAIN)
-	String[] get(@QueryParam("start") Integer start,
+	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
+	ProfilerInfo get(@QueryParam("start") Integer start,
 			@QueryParam("end") Integer end);
 
 	@GET

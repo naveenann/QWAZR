@@ -90,7 +90,7 @@ public class ProfilerTest {
 
 		final ProfilerServiceInterface service = new ProfilerServiceImpl();
 		service.getPrefix("com/qwazr/profiler/test/ProfiledClass", null, null);
-		Assert.assertTrue(service.get(null, null).length >= EXPECTED.size());
+		Assert.assertTrue(service.get(null, null).methods.length >= EXPECTED.size());
 		final Map<String, MethodResult> results =
 				service.getPrefix("com/qwazr/profiler/test/ProfiledClass", null, null);
 		Assert.assertNotNull(results);
@@ -106,8 +106,8 @@ public class ProfilerTest {
 	@Test
 	public void test120empty() {
 		final ProfilerServiceInterface service = new ProfilerServiceImpl();
-		Assert.assertArrayEquals(StringUtils.EMPTY_ARRAY, service.get(0, 0));
-		Assert.assertArrayEquals(StringUtils.EMPTY_ARRAY, service.get(Integer.MAX_VALUE, 0));
+		Assert.assertArrayEquals(StringUtils.EMPTY_ARRAY, service.get(0, 0).methods);
+		Assert.assertArrayEquals(StringUtils.EMPTY_ARRAY, service.get(Integer.MAX_VALUE, 0).methods);
 		Assert.assertTrue(service.getPrefix("/com/dummy", null, null).isEmpty());
 	}
 
