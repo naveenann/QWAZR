@@ -27,7 +27,7 @@ public class MethodResult {
 		mean_time = 0;
 	}
 
-	public MethodResult(int invocations, long totalTime) {
+	MethodResult(int invocations, long totalTime) {
 		this.invocations = invocations;
 		this.total_time = totalTime;
 		this.mean_time = totalTime == 0 || invocations == 0 ? 0 : totalTime / invocations;

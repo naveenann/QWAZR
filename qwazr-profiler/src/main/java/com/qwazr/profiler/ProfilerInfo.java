@@ -1,5 +1,5 @@
 /**
- * Copyright 2016 Emmanuel Keller / QWAZR
+ * Copyright 2015-2016 Emmanuel Keller / QWAZR
  * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,20 +12,25 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- **/
+ */
 package com.qwazr.profiler;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-public class ProfilerServiceImpl implements ProfilerServiceInterface {
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public class ProfilerInfo {
 
-	@Override
-	public ProfilerInfo get(final Integer start, final Integer end) {
-		return new ProfilerInfo(ProfilerManager.size(), ProfilerManager.getMethods(start, end));
+	public final Integer instrumented_methods;
+	public final String[] methods;
+
+	public ProfilerInfo() {
+		instrumented_methods = null;
+		methods = null;
 	}
 
-	@Override
-	public Map<String, MethodResult> getPrefix(final String prefix, final Integer start, final Integer end) {
-		return ProfilerManager.getMethods(prefix, start, end);
+	ProfilerInfo(final int instrumentedMethods, final String[] methods) {
+		this.instrumented_methods = instrumentedMethods;
+		this.methods = methods;
 	}
+
 }
