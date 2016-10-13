@@ -20,27 +20,129 @@ import com.qwazr.utils.server.ServiceName;
 
 import javax.annotation.security.RolesAllowed;
 import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.util.Collection;
-import java.util.Map;
 
 @RolesAllowed(ProfilerServiceInterface.SERVICE_NAME)
 @Path("/profiler")
 @ServiceName(ProfilerServiceInterface.SERVICE_NAME)
 public interface ProfilerServiceInterface extends ServiceInterface {
 
+	enum SortBy {
+		invocations, total_time, mean_time, method;
+	}
+
 	String SERVICE_NAME = "profiler";
 
 	@GET
 	@Path("/")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	ProfilerInfo get(@QueryParam("start") Integer start,
-			@QueryParam("end") Integer end);
+	ProfilerResult get(@BeanParam Parameters params);
 
 	@GET
 	@Path("/{prefix : .+}")
 	@Produces(ServiceInterface.APPLICATION_JSON_UTF8)
-	Map<String, MethodResult> getPrefix(@PathParam("prefix") String prefix, @QueryParam("start") Integer start,
-			@QueryParam("end") Integer end);
+	ProfilerResult getPrefix(@BeanParam Parameters params);
 
+	class Parameters {
+
+		@PathParam("prefix")
+		String prefix;
+
+		@QueryParam("start")
+		Integer start;
+
+		@QueryParam("rows")
+		Integer rows;
+
+		@QueryParam("sort")
+		SortBy sort;
+
+		@QueryParam("invocations")
+		Integer invocations;
+
+		@QueryParam("invocations")
+		Long total_time;
+
+		@QueryParam("invocations")
+		Long mean_time;
+
+
+		public Parameters() {
+			prefix = null;
+			start = null;
+			rows = null;
+			sort = null;
+			invocations = null;
+			total_time = null;
+			mean_time = null;
+		}
+
+		Parameters(final Builder builder) {
+			prefix = builder.prefix;
+			start = builder.start;
+			rows = builder.rows;
+			sort = builder.sort;
+			invocations = builder.invocations;
+			total_time = builder.totalTime;
+			mean_time = builder.meanTime;
+		}
+
+		static public Builder of() {
+			return new Builder();
+		}
+
+		static public Builder of(final String prefix) {
+			return new Builder().prefix(prefix);
+		}
+
+		static public class Builder {
+
+			String prefix;
+			Integer start;
+			Integer rows;
+			SortBy sort;
+			Integer invocations;
+			Long totalTime;
+			Long meanTime;
+
+			public Parameters build() {
+				return new Parameters(this);
+			}
+
+			public Builder prefix(final String prefix) {
+				this.prefix = prefix;
+				return this;
+			}
+
+			public Builder start(final Integer start) {
+				this.start = start;
+				return this;
+			}
+
+			public Builder rows(final Integer rows) {
+				this.rows = rows;
+				return this;
+			}
+
+			public Builder sort(final SortBy sort) {
+				this.sort = sort;
+				return this;
+			}
+
+			public Builder invocations(final Integer invocations) {
+				this.invocations = invocations;
+				return this;
+			}
+
+			public Builder totalTime(final Long totalTime) {
+				this.totalTime = totalTime;
+				return this;
+			}
+
+			public Builder meanTime(final Long meanTime) {
+				this.meanTime = meanTime;
+				return this;
+			}
+
+		}
+	}
 }

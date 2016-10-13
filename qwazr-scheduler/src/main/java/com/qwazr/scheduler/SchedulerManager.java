@@ -103,8 +103,8 @@ public class SchedulerManager implements TrackedInterface.FileChangeConsumer {
 		final Map<String, SchedulerDefinition> scMap = schedulerMap;
 		if (scMap == null)
 			return map;
-		scMap.forEach((name, schedulerDef) -> map.put(name,
-				ClusterManager.INSTANCE.me.httpAddressKey + "/schedulers/" + name));
+		final String me = ClusterManager.INSTANCE.getHttpAddressKey();
+		scMap.forEach((name, schedulerDef) -> map.put(name, me + "/schedulers/" + name));
 		return map;
 	}
 

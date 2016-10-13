@@ -24,8 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.instrument.Instrumentation;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 public class ProfilerManager {
 
@@ -129,67 +132,84 @@ public class ProfilerManager {
 		return count.get();
 	}
 
-	final static public String[] getMethods(Integer start, Integer rows) {
-		final String[] keys;
+	static private ProfilerResult getMethods(final Set<String> keys,
+			final ProfilerServiceInterface.Parameters params) {
 
-		if (start == null)
-			start = 0;
-		if (rows == null)
-			rows = 100;
+		final List<MethodResult> results = new ArrayList<>();
 
-		if (rows == 0)
-			return StringUtils.EMPTY_ARRAY;
-
-		synchronized (classMethodMap) {
-			final Set<String> keySet = classMethodMap.keySet();
-			keys = keySet.toArray(new String[keySet.size()]);
+		// Filtering
+		final List<Function<MethodResult, Boolean>> checkers = new ArrayList<>();
+		if (params != null) {
+			if (params.invocations != null)
+				checkers.add(result -> result.invocations >= params.invocations);
+			if (params.total_time != null)
+				checkers.add(result -> result.total_time >= params.total_time);
+			if (params.mean_time != null)
+				checkers.add(result -> result.mean_time >= params.mean_time);
 		}
 
-		if (start >= keys.length)
-			return StringUtils.EMPTY_ARRAY;
-
-		int to = start + rows;
-		if (to > keys.length)
-			to = keys.length;
-
-		return Arrays.copyOfRange(keys, start, to);
-	}
-
-	final static public Map<String, MethodResult> getMethods(final String prefixKey, Integer start, Integer rows) {
-		synchronized (classMethodMap) {
-			final SortedMap<String, Integer> prefixMap = classMethodMap.prefixMap(prefixKey);
-			final Map<String, MethodResult> results = new LinkedHashMap();
-
-			if (prefixMap.size() == 0)
-				return results;
-
-			if (start == null)
-				start = 0;
-			if (rows == null)
-				rows = 100;
-
-			final Set<String> keySet = prefixMap.keySet();
-			final String[] keys = keySet.toArray(new String[keySet.size()]);
-			for (String key : keys) {
-				if (start > 0) {
-					start--;
-					continue;
-				}
-				if (rows <= 0)
-					break;
-				rows--;
-				final Integer pos = classMethodMap.get(key);
-				synchronized (pos) {
-					final int count = callCountArray[pos];
-					if (count > 0)
-						results.put(key, new MethodResult(count, totalTimeArray[pos]));
+		// Extract counters
+		int count = 0;
+		for (String key : keys) {
+			final Integer pos = classMethodMap.get(key);
+			synchronized (pos) {
+				final MethodResult methodResult = new MethodResult(key, callCountArray[pos], totalTimeArray[pos]);
+				int checked = 0;
+				for (Function<MethodResult, Boolean> checker : checkers)
+					if (checker.apply(methodResult))
+						checked++;
+				if (checkers.size() == checked) {
+					results.add(methodResult);
+					count++;
 				}
 			}
-			return results;
+		}
+
+		// Sorting
+		final ProfilerServiceInterface.SortBy sort =
+				params == null || params.sort == null ? ProfilerServiceInterface.SortBy.method : params.sort;
+		switch (sort)
+
+		{
+			case invocations:
+				results.sort((o1, o2) -> Integer.compare(o2.invocations, o1.invocations));
+				break;
+			case mean_time:
+				results.sort((o1, o2) -> Long.compare(o2.mean_time, o1.mean_time));
+				break;
+			case total_time:
+				results.sort((o1, o2) -> Long.compare(o2.total_time, o1.total_time));
+				break;
+			default:
+			case method:
+				results.sort((o1, o2) -> o1.method.compareTo(o2.method));
+				break;
+		}
+
+		// Paging
+		int start = params == null || params.start == null ? 0 : params.start;
+		if (start >= count)
+			return new ProfilerResult(count, null);
+		int rows = params == null || params.rows == null ? 100 : params.rows;
+		if (rows > count - start)
+			rows = count - start;
+		if (rows <= 0)
+			return new ProfilerResult(count, null);
+
+		return new ProfilerResult(count, results.subList(start, start + rows));
+	}
+
+	final static public ProfilerResult getMethods(final ProfilerServiceInterface.Parameters params) {
+		synchronized (classMethodMap) {
+			final Set<String> keySet = params == null || StringUtils.isEmpty(params.prefix) ? classMethodMap.keySet() :
+					classMethodMap.prefixMap(params.prefix).keySet();
+			return getMethods(keySet, params);
 		}
 	}
 
-	public final static int size() {
-		return classMethodMap.size();
+	final public static int size() {
+		synchronized (classMethodMap) {
+			return classMethodMap.size();
+		}
 	}
 }

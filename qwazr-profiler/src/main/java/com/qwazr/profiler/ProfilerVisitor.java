@@ -55,17 +55,17 @@ public class ProfilerVisitor extends ClassVisitor {
 
 		@Override
 		final protected void onMethodEnter() {
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
+			visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
 			localTimeVar = newLocal(Type.LONG_TYPE);
-			super.visitVarInsn(Opcodes.LSTORE, localTimeVar);
+			visitVarInsn(Opcodes.LSTORE, localTimeVar);
 		}
 
 		@Override
 		final protected void onMethodExit(final int opcode) {
-			super.visitLdcInsn(methodKey);
-			super.visitIntInsn(SIPUSH, methodId);
-			super.visitVarInsn(Opcodes.LLOAD, localTimeVar);
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodCalled",
+			visitLdcInsn(methodKey);
+			visitIntInsn(SIPUSH, methodId);
+			visitVarInsn(Opcodes.LLOAD, localTimeVar);
+			visitMethodInsn(Opcodes.INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodCalled",
 					"(Ljava/lang/String;IJ)V", false);
 		}
 	}

@@ -17,18 +17,20 @@ package com.qwazr.profiler;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.Collection;
+
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class ProfilerInfo {
+public class ProfilerResult {
 
 	public final Integer instrumented_methods;
-	public final String[] methods;
+	public final Collection<MethodResult> methods;
 
-	public ProfilerInfo() {
+	public ProfilerResult() {
 		instrumented_methods = null;
 		methods = null;
 	}
 
-	ProfilerInfo(final int instrumentedMethods, final String[] methods) {
+	ProfilerResult(final int instrumentedMethods, final Collection<MethodResult> methods) {
 		this.instrumented_methods = instrumentedMethods;
 		this.methods = methods;
 	}

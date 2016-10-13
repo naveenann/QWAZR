@@ -17,19 +17,35 @@ package com.qwazr.profiler;
 
 public class MethodResult {
 
+	final public String method;
 	final public int invocations;
 	final public long total_time;
 	final public long mean_time;
 
 	public MethodResult() {
+		method = null;
 		invocations = 0;
 		total_time = 0;
 		mean_time = 0;
 	}
 
-	MethodResult(int invocations, long totalTime) {
+	MethodResult(final String method, final int invocations, final long totalTime) {
+		this.method = method;
 		this.invocations = invocations;
 		this.total_time = totalTime;
 		this.mean_time = totalTime == 0 || invocations == 0 ? 0 : totalTime / invocations;
+	}
+
+	@Override
+	public String toString() {
+		final StringBuilder sb = new StringBuilder("method: ");
+		sb.append(method);
+		sb.append(" - invocations: ");
+		sb.append(invocations);
+		sb.append(" - total time: ");
+		sb.append(total_time);
+		sb.append(" - mean time: ");
+		sb.append(mean_time);
+		return sb.toString();
 	}
 }

@@ -15,11 +15,8 @@
  */
 package com.qwazr.profiler.test;
 
-import com.qwazr.profiler.MethodResult;
-import com.qwazr.profiler.ProfilerManager;
-import com.qwazr.profiler.ProfilerServiceImpl;
-import com.qwazr.profiler.ProfilerServiceInterface;
-import com.qwazr.utils.StringUtils;
+import com.qwazr.profiler.*;
+import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -27,12 +24,15 @@ import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ProfilerTest {
@@ -50,12 +50,24 @@ public class ProfilerTest {
 		EXPECTED.put(
 				"com/qwazr/profiler/test/ProfiledClass:wait@(Ljava/util/concurrent/atomic/AtomicInteger;Ljava/util/concurrent/atomic/AtomicLong;I)V",
 				240L);
+		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass$InnerClass:<clinit>@()V", 1L);
+		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass$InnerClass:<init>@()V", 8L);
+		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass$InnerClass:test@()V", 8L);
 	}
 
 	@Test
 	public void test000loadManager() {
 		ProfilerManager.load(null);
 		Assert.assertTrue(ProfilerManager.isInitialized());
+	}
+
+	private MethodResult findMethod(final String method, Collection<MethodResult> results) {
+		if (CollectionUtils.isEmpty(results))
+			return null;
+		for (MethodResult result : results)
+			if (method.equals(result.method))
+				return result;
+		return null;
 	}
 
 	@Test
@@ -77,6 +89,7 @@ public class ProfilerTest {
 					} catch (Exception e) {
 					}
 				}
+				new ProfiledClass.InnerClass().test();
 			});
 		}
 		for (Future<?> future : futures)
@@ -87,28 +100,86 @@ public class ProfilerTest {
 		Assert.assertEquals(80, ProfiledClass.testCount.get());
 		Assert.assertEquals(80, ProfiledClass.testParamCount.get());
 		Assert.assertEquals(80, ProfiledClass.testExCount.get());
+		Assert.assertEquals(8, ProfiledClass.InnerClass.testCount.get());
 
 		final ProfilerServiceInterface service = new ProfilerServiceImpl();
-		service.getPrefix("com/qwazr/profiler/test/ProfiledClass", null, null);
-		Assert.assertTrue(service.get(null, null).methods.length >= EXPECTED.size());
-		final Map<String, MethodResult> results =
-				service.getPrefix("com/qwazr/profiler/test/ProfiledClass", null, null);
-		Assert.assertNotNull(results);
-		Assert.assertTrue(results.size() >= EXPECTED.size());
+		service.getPrefix(ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/ProfiledClass").build());
+		Assert.assertTrue(service.get(null).methods.size() >= EXPECTED.size());
+		final ProfilerResult result =
+				service.getPrefix(
+						ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/ProfiledClass").build());
+		Assert.assertNotNull(result);
+		Assert.assertNotNull(result.methods);
+		Assert.assertTrue(result.methods.size() >= EXPECTED.size());
 		EXPECTED.forEach(
-				(key, count) -> {
-					Assert.assertNotNull("Check " + key, results.get(key));
-					Assert.assertEquals("Check " + key, (long) count, results.get(key).invocations);
+				(method, count) -> {
+					MethodResult methodResult = findMethod(method, result.methods);
+					Assert.assertNotNull("Check " + method, methodResult);
+					Assert.assertEquals("Check " + method, (long) count, methodResult.invocations);
 				});
-		Assert.assertEquals(1, service.getPrefix("com/qwazr/profiler/test/ProfiledClass", 2, 1).size());
+		Assert.assertEquals(1,
+				service.getPrefix(
+						ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/ProfiledClass").start(2).rows(1)
+								.build()).methods.size());
 	}
 
 	@Test
 	public void test120empty() {
 		final ProfilerServiceInterface service = new ProfilerServiceImpl();
-		Assert.assertArrayEquals(StringUtils.EMPTY_ARRAY, service.get(0, 0).methods);
-		Assert.assertArrayEquals(StringUtils.EMPTY_ARRAY, service.get(Integer.MAX_VALUE, 0).methods);
-		Assert.assertTrue(service.getPrefix("/com/dummy", null, null).isEmpty());
+		Assert.assertTrue(CollectionUtils
+				.isEmpty(service.get(ProfilerServiceInterface.Parameters.of().start(0).rows(0).build()).methods));
+		Assert.assertTrue(CollectionUtils
+				.isEmpty(service.get(
+						ProfilerServiceInterface.Parameters.of().start(Integer.MAX_VALUE).rows(0).build()).methods));
+		Assert.assertTrue(CollectionUtils
+				.isEmpty(service.getPrefix(ProfilerServiceInterface.Parameters.of("/com/dummy").build()).methods));
+	}
+
+	private final void checkSorting(final ProfilerServiceInterface.Parameters.Builder paramsBuilder,
+			final Comparator<MethodResult> comparator) {
+		final ProfilerServiceInterface service = new ProfilerServiceImpl();
+		ProfilerResult results = service.get(paramsBuilder == null ? null : paramsBuilder.build());
+		Assert.assertNotNull(results);
+		Assert.assertNotNull(results.methods);
+		Assert.assertTrue(results.methods.size() >= EXPECTED.size());
+		MethodResult last = null;
+		for (MethodResult method : results.methods) {
+			if (last != null)
+				Assert.assertTrue(comparator.compare(method, last) >= 0);
+			last = method;
+		}
+	}
+
+	@Test
+	public void test150sort() {
+		checkSorting(ProfilerServiceInterface.Parameters.of().sort(ProfilerServiceInterface.SortBy.invocations),
+				(o1, o2) -> Integer.compare(o2.invocations, o1.invocations));
+		checkSorting(ProfilerServiceInterface.Parameters.of().sort(ProfilerServiceInterface.SortBy.mean_time),
+				(o1, o2) -> Long.compare(o2.mean_time, o1.mean_time));
+		checkSorting(ProfilerServiceInterface.Parameters.of().sort(ProfilerServiceInterface.SortBy.total_time),
+				(o1, o2) -> Long.compare(o2.total_time, o1.total_time));
+		checkSorting(ProfilerServiceInterface.Parameters.of().sort(ProfilerServiceInterface.SortBy.method),
+				(o1, o2) -> o1.method.compareTo(o2.method));
+		checkSorting(null,
+				(o1, o2) -> o1.method.compareTo(o2.method));
+	}
+
+	private final void checkFiltering(final ProfilerServiceInterface.Parameters.Builder paramsBuilder,
+			final Function<MethodResult, Boolean> checker) {
+		final ProfilerServiceInterface service = new ProfilerServiceImpl();
+		ProfilerResult results = service.get(paramsBuilder.build());
+		Assert.assertNotNull(results);
+		Assert.assertNotNull(results.methods);
+		Assert.assertTrue(results.methods.size() >= 0);
+		for (MethodResult method : results.methods)
+			Assert.assertTrue(method.toString(), checker.apply(method));
+	}
+
+	@Test
+	public void test180filter() {
+		checkFiltering(ProfilerServiceInterface.Parameters.of().invocations(80), res -> res.invocations >= 80);
+		checkFiltering(ProfilerServiceInterface.Parameters.of().meanTime(10L), res -> res.mean_time >= 10);
+		checkFiltering(ProfilerServiceInterface.Parameters.of().totalTime(1000L), res -> res.total_time >= 1000);
 	}
 
 	@Test
