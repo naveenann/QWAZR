@@ -21,8 +21,10 @@ import com.qwazr.utils.server.UdpServerThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.net.DatagramPacket;
+import java.io.Externalizable;
+import java.io.IOException;
+import java.io.ObjectInput;
+import java.io.ObjectOutput;
 import java.net.SocketAddress;
 import java.util.Collection;
 
@@ -33,17 +35,13 @@ class MessageContent implements Externalizable {
 	private ClusterProtocol command;
 	private Externalizable content;
 
+	public MessageContent() {
+		this(null, null);
+	}
+
 	MessageContent(final ClusterProtocol command, final Externalizable content) {
 		this.command = command;
 		this.content = content;
-	}
-
-	MessageContent(final DatagramPacket packet) throws IOException, ReflectiveOperationException {
-		try (final ByteArrayInputStream bis = new ByteArrayInputStream(packet.getData())) {
-			try (final ObjectInputStream ois = new ObjectInputStream(bis)) {
-				readExternal(ois);
-			}
-		}
 	}
 
 	final ClusterProtocol getCommand() {
