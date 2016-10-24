@@ -24,8 +24,8 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.File;
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ConfigurationTest {
@@ -38,6 +38,9 @@ public class ConfigurationTest {
 
 	@BeforeClass
 	public static void before() {
+		properties.put("QWAZR_MASTERS", "localhost:9191,localhost:9291");
+		properties.put("WEBAPP_PORT", Integer.toString(9190));
+		properties.put("WEBSERVICE_PORT", Integer.toString(9191));
 		properties.put("QWAZR_DATA", dataDir.getAbsolutePath());
 		properties.put("QWAZR_ETC_DIR", confDir.getAbsolutePath() + File.pathSeparator + etcDir.getAbsolutePath());
 	}
@@ -45,6 +48,15 @@ public class ConfigurationTest {
 	public QwazrConfiguration getConfig() {
 		ConfigCache.clear();
 		return new QwazrConfiguration(properties);
+	}
+
+	@Test
+	public void test005WebPort() {
+		final QwazrConfiguration configuration = getConfig();
+		Assert.assertEquals(configuration.webAppConnector.port, 9190);
+		Assert.assertEquals(configuration.webServiceConnector.port, 9191);
+		Assert.assertTrue(configuration.masters.contains("localhost:9191"));
+		Assert.assertTrue(configuration.masters.contains("localhost:9291"));
 	}
 
 	@Test
