@@ -20,13 +20,19 @@ import com.qwazr.utils.server.ServerConfiguration;
 import org.aeonbits.owner.ConfigCache;
 import org.apache.commons.io.filefilter.AndFileFilter;
 import org.apache.commons.io.filefilter.FileFileFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileFilter;
+import java.net.SocketException;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
 public class QwazrConfiguration extends ServerConfiguration {
+
+	final static Logger LOGGER = LoggerFactory.getLogger(QwazrConfiguration.class);
 
 	public enum ServiceEnum {
 
@@ -76,7 +82,13 @@ public class QwazrConfiguration extends ServerConfiguration {
 		final QwazrConfigurationProperties configProperties =
 				ConfigCache.getOrCreate(QwazrConfigurationProperties.class, properties);
 		this.etcFileFilter = buildEtcFileFilter(configProperties.qwazrEtc());
-		this.masters = splitValue(configProperties.qwazrMasters(), ',');
+		final LinkedHashSet<String> set = new LinkedHashSet<>();
+		try {
+			findMatchingAddress(configProperties.qwazrMasters(), set);
+		} catch (SocketException e) {
+			LOGGER.warn("Failed in extracting IP information. No master server is configured.");
+		}
+		this.masters = set.isEmpty() ? null : set;
 		this.services = buildServices(configProperties.qwazrServices());
 		this.groups = splitValue(configProperties.qwazrGroups(), ',');
 		this.scheduler_max_threads = configProperties.qwazrSchedulerMaxThreads();
