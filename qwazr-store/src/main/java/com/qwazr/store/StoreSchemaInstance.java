@@ -141,10 +141,10 @@ class StoreSchemaInstance implements Closeable {
 				if (files != null && files.length > 0)
 					throw new ServerException(Response.Status.NOT_ACCEPTABLE, "The directory is not empty");
 			}
+			final Path parent = path.getParent();
 			if (!Files.deleteIfExists(path) && Files.exists(path))
 				throw new ServerException(Response.Status.INTERNAL_SERVER_ERROR,
 						"Unable to delete the file: " + relativePath);
-			final Path parent = path.getParent();
 			if (Files.isSameFile(parent, dataDirectory))
 				return path;
 			final String[] parentFiles = parent.toFile().list();
