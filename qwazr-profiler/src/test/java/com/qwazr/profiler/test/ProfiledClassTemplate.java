@@ -21,7 +21,10 @@ public class ProfiledClassTemplate {
 
 	public void test() throws InterruptedException {
 		final long _qwazr_profiler_start = System.currentTimeMillis();
-		Thread.sleep(1234);
-		ProfilerManager.methodCalled("methodKey", 5678, _qwazr_profiler_start);
+		try {
+			Thread.sleep(1234);
+		} finally {
+			ProfilerManager.methodCalled("methodKey", 5678, _qwazr_profiler_start);
+		}
 	}
 }

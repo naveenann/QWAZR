@@ -59,10 +59,10 @@ public interface ProfilerServiceInterface extends ServiceInterface {
 		@QueryParam("invocations")
 		Integer invocations;
 
-		@QueryParam("invocations")
+		@QueryParam("total_time")
 		Long total_time;
 
-		@QueryParam("invocations")
+		@QueryParam("mean_time")
 		Long mean_time;
 
 

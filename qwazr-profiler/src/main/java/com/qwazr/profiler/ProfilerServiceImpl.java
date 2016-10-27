@@ -15,8 +15,6 @@
  **/
 package com.qwazr.profiler;
 
-import javax.ws.rs.BeanParam;
-
 public class ProfilerServiceImpl implements ProfilerServiceInterface {
 
 	@Override

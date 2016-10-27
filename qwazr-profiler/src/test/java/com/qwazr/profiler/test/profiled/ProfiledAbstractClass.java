@@ -26,8 +26,8 @@ public class ProfiledAbstractClass {
 
 	protected static void wait(final AtomicInteger count, final AtomicLong time, final int waitBase)
 			throws InterruptedException {
-		count.incrementAndGet();
 		long ms = System.currentTimeMillis();
+		count.incrementAndGet();
 		Thread.sleep(waitBase + new Random().nextInt(waitBase));
 		time.addAndGet(System.currentTimeMillis() - ms);
 	}
