@@ -1,9 +1,6 @@
 package com.qwazr.profiler;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.AnalyzerAdapter;
 
@@ -40,6 +37,7 @@ public class ProfilerVisitor extends ClassVisitor {
 		private final String methodKey;
 		private final int methodId;
 		private int localTimeVar;
+		private final Label startFinally = new Label();
 
 		public ProfileMethod(final int access, final String name, final String desc, final MethodVisitor mv) {
 			super(Opcodes.ASM5, mv, access, name, desc);
@@ -48,19 +46,43 @@ public class ProfilerVisitor extends ClassVisitor {
 		}
 
 		@Override
-		final protected void onMethodEnter() {
-			visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
+		final public void visitCode() {
+			super.visitCode();
+			mv.visitLabel(startFinally);
 			localTimeVar = newLocal(Type.LONG_TYPE);
-			visitVarInsn(Opcodes.LSTORE, localTimeVar);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
+			mv.visitVarInsn(Opcodes.LSTORE, localTimeVar);
+		}
+
+		@Override
+		final public void visitMaxs(final int maxStack, final int maxLocals) {
+			final Label endFinally = new Label();
+			mv.visitTryCatchBlock(startFinally,
+					endFinally, endFinally, null);
+			mv.visitLabel(endFinally);
+			onFinally(ATHROW);
+			mv.visitMaxs(maxStack + 4, maxLocals + 4);
+		}
+
+		@Override
+		final protected void onMethodEnter() {
+
 		}
 
 		@Override
 		final protected void onMethodExit(final int opcode) {
-			visitLdcInsn(methodKey);
-			visitIntInsn(SIPUSH, methodId);
-			visitVarInsn(Opcodes.LLOAD, localTimeVar);
-			visitMethodInsn(Opcodes.INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodCalled",
-					"(Ljava/lang/String;IJ)V", false);
+			if (opcode != ATHROW)
+				onFinally(opcode);
 		}
+
+		private void onFinally(int opcode) {
+			mv.visitLdcInsn(methodKey);
+			mv.visitIntInsn(Opcodes.SIPUSH, methodId);
+			mv.visitVarInsn(Opcodes.LLOAD, localTimeVar);
+			mv.visitMethodInsn(Opcodes.INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodCalled",
+					"(Ljava/lang/String;IJ)V", false);
+			mv.visitInsn(opcode);
+		}
+
 	}
 }
