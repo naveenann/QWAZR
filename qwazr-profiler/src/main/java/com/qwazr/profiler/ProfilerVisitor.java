@@ -10,8 +10,6 @@ import org.objectweb.asm.commons.AnalyzerAdapter;
 public class ProfilerVisitor extends ClassVisitor {
 
 	private String owner = null;
-	private boolean isInterface = false;
-	private boolean isAbstract = false;
 
 	private String profilerClass = ProfilerManager.class.getName().replace('.', '/');
 
@@ -24,8 +22,6 @@ public class ProfilerVisitor extends ClassVisitor {
 			final String superName, final String[] interfaces) {
 		super.visit(version, access, name, signature, superName, interfaces);
 		owner = name;
-		isInterface = (access & Opcodes.ACC_INTERFACE) != 0;
-		isAbstract = (access & Opcodes.ACC_ABSTRACT) != 0;
 	}
 
 	@Override
@@ -33,8 +29,6 @@ public class ProfilerVisitor extends ClassVisitor {
 			final String[] exceptions) {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 		if (profilerClass.equals(owner))
-			return mv;
-		if (isInterface || isAbstract || mv == null)
 			return mv;
 		mv = new AnalyzerAdapter(owner, access, name, desc, mv);
 		mv = new ProfileMethod(access, name, desc, mv);
