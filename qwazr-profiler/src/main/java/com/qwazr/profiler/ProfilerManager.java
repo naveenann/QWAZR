@@ -42,6 +42,8 @@ public class ProfilerManager {
 
 	private static volatile boolean initialized = false;
 
+	private static final long zeroNano = System.nanoTime();
+
 	final public static String VARIABLE_NAME = "QWAZR_PROFILERS";
 
 	private static synchronized void main(String agentArgs, final Instrumentation inst) {
@@ -109,8 +111,15 @@ public class ProfilerManager {
 		}
 	}
 
-	final static public void methodCalled(final String key, final int methodId, final long startTime) {
-		final long t = (System.nanoTime() - startTime) / 1000000;
+	final static public void methodEnter(final String key, final int methodId) {
+		final long t = System.nanoTime() - zeroNano;
+		synchronized (key) {
+			totalTimeArray[methodId] -= t;
+		}
+	}
+
+	final static public void methodExit(final String key, final int methodId) {
+		final long t = System.nanoTime() - zeroNano;
 		synchronized (key) {
 			callCountArray[methodId]++;
 			totalTimeArray[methodId] += t;
@@ -125,8 +134,10 @@ public class ProfilerManager {
 					return;
 				count.incrementAndGet();
 				if (LOGGER.isInfoEnabled())
-					LOGGER.info(methodKey + " => " + callCountArray[methodId] + " - " + totalTimeArray[methodId] + " - "
-							+ totalTimeArray[methodId] / callCountArray[methodId]);
+					LOGGER.info(
+							methodKey + " => " + callCountArray[methodId] + " - " +
+									(totalTimeArray[methodId]) / 1000000 + " - " +
+									(totalTimeArray[methodId] / callCountArray[methodId]) / 1000000);
 			});
 		}
 		return count.get();

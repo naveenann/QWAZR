@@ -42,7 +42,7 @@ public class ProfilerTransformer implements ClassFileTransformer {
 
 	private byte[] profile(final byte[] classFileBuffer) {
 		final ClassReader cr = new ClassReader(classFileBuffer);
-		final ClassWriter cw = new ClassWriter(cr, 0);
+		final ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 		final ClassVisitor cv = new ProfilerVisitor(cw);
 		cr.accept(cv, 0);
 		return cw.toByteArray();
