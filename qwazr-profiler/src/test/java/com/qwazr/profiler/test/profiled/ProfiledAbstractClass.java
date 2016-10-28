@@ -13,30 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.qwazr.profiler.test;
+package com.qwazr.profiler.test.profiled;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class ProfiledClass {
+public class ProfiledAbstractClass {
 
-	final public static AtomicInteger constructorCount = new AtomicInteger();
 	final public static AtomicInteger testCount = new AtomicInteger();
 	final public static AtomicLong testTime = new AtomicLong();
-	final public static AtomicInteger testParamCount = new AtomicInteger();
-	final public static AtomicLong testParamTime = new AtomicLong();
-	final public static AtomicInteger testExCount = new AtomicInteger();
-	final public static AtomicLong testExTime = new AtomicLong();
 
-	public ProfiledClass() {
-		constructorCount.incrementAndGet();
-	}
-
-	private static void wait(final AtomicInteger count, final AtomicLong time, final int waitBase)
+	protected static void wait(final AtomicInteger count, final AtomicLong time, final int waitBase)
 			throws InterruptedException {
-		count.incrementAndGet();
 		long ms = System.currentTimeMillis();
+		count.incrementAndGet();
 		Thread.sleep(waitBase + new Random().nextInt(waitBase));
 		time.addAndGet(System.currentTimeMillis() - ms);
 	}
@@ -45,21 +36,4 @@ public class ProfiledClass {
 		wait(testCount, testTime, 250);
 	}
 
-	public void test(int waitBase) throws InterruptedException {
-		wait(testParamCount, testParamTime, waitBase);
-	}
-
-	public void testEx() throws InterruptedException {
-		wait(testExCount, testExTime, 250);
-		throw new InterruptedException();
-	}
-
-	public static class InnerClass {
-
-		final public static AtomicInteger testCount = new AtomicInteger();
-
-		public void test() {
-			testCount.incrementAndGet();
-		}
-	}
 }

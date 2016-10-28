@@ -16,6 +16,7 @@
 package com.qwazr.profiler.test;
 
 import com.qwazr.profiler.*;
+import com.qwazr.profiler.test.profiled.ProfiledClass;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
@@ -42,17 +43,17 @@ public class ProfilerTest {
 	final private static Map<String, Long> EXPECTED = new HashMap<>();
 
 	static {
-		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:<clinit>@()V", 1L);
-		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:<init>@()V", 8L);
-		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:test@()V", 80L);
-		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:test@(I)V", 80L);
-		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass:testEx@()V", 80L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass:<clinit>@()V", 1L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass:<init>@()V", 8L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledAbstractClass:test@()V", 80L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass:test@(I)V", 80L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass:testEx@()V", 80L);
 		EXPECTED.put(
-				"com/qwazr/profiler/test/ProfiledClass:wait@(Ljava/util/concurrent/atomic/AtomicInteger;Ljava/util/concurrent/atomic/AtomicLong;I)V",
+				"com/qwazr/profiler/test/profiled/ProfiledAbstractClass:wait@(Ljava/util/concurrent/atomic/AtomicInteger;Ljava/util/concurrent/atomic/AtomicLong;I)V",
 				240L);
-		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass$InnerClass:<clinit>@()V", 1L);
-		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass$InnerClass:<init>@()V", 8L);
-		EXPECTED.put("com/qwazr/profiler/test/ProfiledClass$InnerClass:test@()V", 8L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass$InnerClass:<clinit>@()V", 1L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass$InnerClass:<init>@()V", 8L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass$InnerClass:test@()V", 8L);
 	}
 
 	@Test
@@ -103,11 +104,11 @@ public class ProfilerTest {
 		Assert.assertEquals(8, ProfiledClass.InnerClass.testCount.get());
 
 		final ProfilerServiceInterface service = new ProfilerServiceImpl();
-		service.getPrefix(ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/ProfiledClass").build());
+		service.getPrefix(ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/profiled").build());
 		Assert.assertTrue(service.get(null).methods.size() >= EXPECTED.size());
 		final ProfilerResult result =
 				service.getPrefix(
-						ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/ProfiledClass").build());
+						ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/profiled").build());
 		Assert.assertNotNull(result);
 		Assert.assertNotNull(result.methods);
 		Assert.assertTrue(result.methods.size() >= EXPECTED.size());
@@ -119,7 +120,7 @@ public class ProfilerTest {
 				});
 		Assert.assertEquals(1,
 				service.getPrefix(
-						ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/ProfiledClass").start(2).rows(1)
+						ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/profiled").start(2).rows(1)
 								.build()).methods.size());
 	}
 

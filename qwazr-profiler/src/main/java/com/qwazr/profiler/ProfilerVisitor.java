@@ -1,17 +1,13 @@
 package com.qwazr.profiler;
 
-import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
+import org.objectweb.asm.*;
 import org.objectweb.asm.commons.AdviceAdapter;
 import org.objectweb.asm.commons.AnalyzerAdapter;
+import org.objectweb.asm.util.CheckMethodAdapter;
 
 public class ProfilerVisitor extends ClassVisitor {
 
 	private String owner = null;
-	private boolean isInterface = false;
-	private boolean isAbstract = false;
 
 	private String profilerClass = ProfilerManager.class.getName().replace('.', '/');
 
@@ -24,9 +20,8 @@ public class ProfilerVisitor extends ClassVisitor {
 			final String superName, final String[] interfaces) {
 		super.visit(version, access, name, signature, superName, interfaces);
 		owner = name;
-		isInterface = (access & Opcodes.ACC_INTERFACE) != 0;
-		isAbstract = (access & Opcodes.ACC_ABSTRACT) != 0;
 	}
+
 
 	@Override
 	public MethodVisitor visitMethod(final int access, final String name, final String desc, final String signature,
@@ -34,39 +29,38 @@ public class ProfilerVisitor extends ClassVisitor {
 		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 		if (profilerClass.equals(owner))
 			return mv;
-		if (isInterface || isAbstract || mv == null)
-			return mv;
 		mv = new AnalyzerAdapter(owner, access, name, desc, mv);
+		mv = new CheckMethodAdapter(mv);
 		mv = new ProfileMethod(access, name, desc, mv);
 		return mv;
 	}
 
-	final class ProfileMethod extends AdviceAdapter {
+	final class ProfileMethod extends AdviceAdapter implements Opcodes {
 
 		private final String methodKey;
 		private final int methodId;
-		private int localTimeVar;
 
 		public ProfileMethod(final int access, final String name, final String desc, final MethodVisitor mv) {
-			super(Opcodes.ASM5, mv, access, name, desc);
+			super(ASM5, mv, access, name, desc);
 			this.methodKey = owner + ":" + name + "@" + desc;
 			this.methodId = ProfilerManager.register(methodKey);
 		}
 
 		@Override
 		final protected void onMethodEnter() {
-			visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/System", "nanoTime", "()J", false);
-			localTimeVar = newLocal(Type.LONG_TYPE);
-			visitVarInsn(Opcodes.LSTORE, localTimeVar);
+			visitLdcInsn(methodKey);
+			visitIntInsn(SIPUSH, methodId);
+			visitMethodInsn(INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodEnter", "(Ljava/lang/String;I)V",
+					true);
 		}
 
 		@Override
 		final protected void onMethodExit(final int opcode) {
 			visitLdcInsn(methodKey);
 			visitIntInsn(SIPUSH, methodId);
-			visitVarInsn(Opcodes.LLOAD, localTimeVar);
-			visitMethodInsn(Opcodes.INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodCalled",
-					"(Ljava/lang/String;IJ)V", false);
+			visitMethodInsn(INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodExit", "(Ljava/lang/String;I)V",
+					true);
 		}
+
 	}
 }
