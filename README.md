@@ -6,8 +6,7 @@ Welcome to QWAZR
 [![Join the chat at https://gitter.im/qwazr/QWAZR](https://badges.gitter.im/qwazr/QWAZR.svg)](https://gitter.im/qwazr/QWAZR)
 [![Coverage Status](https://coveralls.io/repos/github/qwazr/QWAZR/badge.svg?branch=master)](https://coveralls.io/github/qwazr/QWAZR?branch=master)
 
-QWAZR is a an **application server** dedicated to scalable, failover, distributed projects.
-It can be used to create a web application or a **microservice** written in Java and/or Javascript.
+QWAZR is a set of microservices dedicated to scalable, failover, distributed projects.
 
 By building QWAZR, our goal is to provide an easy and efficient way to build **scalable applications**
 that require both distributed processes and fail-over abilities.
@@ -19,7 +18,7 @@ This project is a work in progress. The current version of QWAZR (1.0.1) comes w
 
 - [Webapps](qwazr-webapps) : A model-view-controller application server,
 - [Scheduler](qwazr-scheduler): A multi-master scheduler,
-- [Scripts](qwazr-scripts): A distributed JAVA/Javascript execution service,
+- [Scripts](qwazr-scripts): A distributed JAVA/Javascript job service,
 - [Library](qwazr-library) : A set of connectors and tools to link your application to the outside world
 (Cassandra, MongoDB, MySQL, HDFS, LDAP, FTP, etc.) and data management (language tools, markdown to HTML converter,
 Freemarker, XML parser and writer, etc.).
@@ -31,6 +30,9 @@ Freemarker, XML parser and writer, etc.).
 
 Getting started
 ---------------
+
+The **Search microservice** is currently available as a
+[stand-alone Docker image](https://hub.docker.com/r/qwazr/search/).
 
 Here is two examples of QWAZR applications which can be used as tutorials.
 By running one of this 5 minutes tutorials you will create a small web site,
