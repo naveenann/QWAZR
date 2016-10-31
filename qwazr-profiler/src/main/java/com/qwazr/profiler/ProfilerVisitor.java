@@ -51,7 +51,7 @@ public class ProfilerVisitor extends ClassVisitor {
 			visitLdcInsn(methodKey);
 			visitIntInsn(SIPUSH, methodId);
 			visitMethodInsn(INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodEnter", "(Ljava/lang/String;I)V",
-					true);
+					false);
 		}
 
 		@Override
@@ -59,7 +59,7 @@ public class ProfilerVisitor extends ClassVisitor {
 			visitLdcInsn(methodKey);
 			visitIntInsn(SIPUSH, methodId);
 			visitMethodInsn(INVOKESTATIC, "com/qwazr/profiler/ProfilerManager", "methodExit", "(Ljava/lang/String;I)V",
-					true);
+					false);
 		}
 
 	}

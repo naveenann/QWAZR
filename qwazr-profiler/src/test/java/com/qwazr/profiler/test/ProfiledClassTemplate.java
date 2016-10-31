@@ -19,8 +19,10 @@ import com.qwazr.profiler.ProfilerManager;
 
 public class ProfiledClassTemplate {
 
-	public void test() throws InterruptedException {
+	public double[] test() throws InterruptedException {
 		ProfilerManager.methodEnter("methodKey", 5678);
+		final double[] d = new double[]{1, 2, 3};
 		ProfilerManager.methodExit("methodKey", 5678);
+		return d;
 	}
 }

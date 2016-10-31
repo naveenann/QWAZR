@@ -130,14 +130,16 @@ public class ProfilerManager {
 		final AtomicInteger count = new AtomicInteger();
 		synchronized (classMethodMap) {
 			classMethodMap.forEach((methodKey, methodId) -> {
-				if (callCountArray[methodId] == 0)
+				final long callCount = callCountArray[methodId];
+				if (callCount == 0)
 					return;
 				count.incrementAndGet();
+				final long nsTotalTime = totalTimeArray[methodId];
+
 				if (LOGGER.isInfoEnabled())
-					LOGGER.info(
-							methodKey + " => " + callCountArray[methodId] + " - " +
-									(totalTimeArray[methodId]) / 1000000 + " - " +
-									(totalTimeArray[methodId] / callCountArray[methodId]) / 1000000);
+					LOGGER.info(methodKey + " => " + callCountArray[methodId] + " - " +
+							(nsTotalTime == 0 ? 0 : nsTotalTime / 1000000) + " - " +
+							(nsTotalTime == 0 ? 0 : nsTotalTime / callCount) / 1000000);
 			});
 		}
 		return count.get();
