@@ -15,6 +15,8 @@
  */
 package com.qwazr.profiler.test.profiled;
 
+import org.apache.commons.lang3.RandomUtils;
+
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -25,6 +27,10 @@ public class ProfiledClass extends ProfiledAbstractClass {
 	final public static AtomicLong testParamTime = new AtomicLong();
 	final public static AtomicInteger testExCount = new AtomicInteger();
 	final public static AtomicLong testExTime = new AtomicLong();
+
+	private final double d1 = RandomUtils.nextDouble();
+	private final double d2 = RandomUtils.nextDouble();
+	private final double d3 = RandomUtils.nextDouble();
 
 	public ProfiledClass() {
 		constructorCount.incrementAndGet();
@@ -37,6 +43,10 @@ public class ProfiledClass extends ProfiledAbstractClass {
 	public void testEx() throws InterruptedException {
 		wait(testExCount, testExTime, 250);
 		throw new InterruptedException();
+	}
+
+	public double[] toArray() {
+		return new double[]{d1, d2, d3};
 	}
 
 	public static class InnerClass {

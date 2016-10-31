@@ -48,6 +48,7 @@ public class ProfilerTest {
 		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledAbstractClass:test@()V", 80L);
 		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass:test@(I)V", 80L);
 		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass:testEx@()V", 80L);
+		EXPECTED.put("com/qwazr/profiler/test/profiled/ProfiledClass:toArray@()[D", 80L);
 		EXPECTED.put(
 				"com/qwazr/profiler/test/profiled/ProfiledAbstractClass:wait@(Ljava/util/concurrent/atomic/AtomicInteger;Ljava/util/concurrent/atomic/AtomicLong;I)V",
 				240L);
@@ -86,6 +87,7 @@ public class ProfilerTest {
 					try {
 						profiledClass.test();
 						profiledClass.test(250);
+						profiledClass.toArray();
 						profiledClass.testEx();
 					} catch (Exception e) {
 					}
@@ -181,6 +183,15 @@ public class ProfilerTest {
 		checkFiltering(ProfilerServiceInterface.Parameters.of().invocations(80), res -> res.invocations >= 80);
 		checkFiltering(ProfilerServiceInterface.Parameters.of().meanTime(10L), res -> res.mean_time >= 10);
 		checkFiltering(ProfilerServiceInterface.Parameters.of().totalTime(1000L), res -> res.total_time >= 1000);
+	}
+
+	@Test
+	public void test190testReturn() {
+		final ProfilerServiceInterface service = new ProfilerServiceImpl();
+		final ProfilerResult result = service.getPrefix(
+				ProfilerServiceInterface.Parameters.of("com/qwazr/profiler/test/profiled/ProfiledClass").invocations(1)
+						.sort(ProfilerServiceInterface.SortBy.total_time).build());
+		Assert.assertNotNull(result);
 	}
 
 	@Test
