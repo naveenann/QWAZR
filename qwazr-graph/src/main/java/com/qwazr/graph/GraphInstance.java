@@ -286,15 +286,15 @@ public class GraphInstance {
 	 */
 	Map<String, GraphNode> getNodes(Set<String> node_ids) throws IOException, URISyntaxException {
 
-		Set<String> returnedFields = new LinkedHashSet<String>();
+		final Set<String> returnedFields = new LinkedHashSet<>();
 		populateReturnedFields(returnedFields);
 
-		List<LinkedHashMap<String, Object>> documents = new ArrayList<LinkedHashMap<String, Object>>();
+		final List<Map<String, Object>> documents = new ArrayList<>();
 		table.getRows(node_ids, returnedFields, documents);
 		if (documents == null || documents.isEmpty())
 			return null;
-		Iterator<String> iteratorId = node_ids.iterator();
-		Map<String, GraphNode> graphNodes = new LinkedHashMap<String, GraphNode>();
+		final Iterator<String> iteratorId = node_ids.iterator();
+		final Map<String, GraphNode> graphNodes = new LinkedHashMap<>();
 		for (Map<String, Object> document : documents) {
 			GraphNode node = new GraphNode();
 			populateGraphNode(document, node);
