@@ -13,6 +13,7 @@
     <name>QWAZR Parent Project</name>
 
     <url>https://github.com/qwazr</url>
+
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -20,15 +21,27 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
     <organization>
         <name>QWAZR / Emmanuel Keller</name>
         <url>https://www.qwazr.com</url>
     </organization>
+
+    <developers>
+        <developer>
+            <name>Emmanuel Keller</name>
+            <email>emmanuel@qwazr.com</email>
+            <organization>QWAZR</organization>
+            <organizationUrl>https://www.qwazr.com</organizationUrl>
+        </developer>
+    </developers>
+
     <scm>
         <connection>scm:git:git@github.com:qwazr/QWAZR.git</connection>
         <developerConnection>scm:git:git@github.com:qwazr/QWAZR.git</developerConnection>
         <url>git@github.com:qwazr/QWAZR.git</url>
     </scm>
+
     <issueManagement>
         <url>https://github.com/qwazr/issues</url>
     </issueManagement>
