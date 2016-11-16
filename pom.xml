@@ -21,7 +21,7 @@
         </license>
     </licenses>
     <organization>
-        <name>QWAZR SAS / Emmanuel Keller</name>
+        <name>QWAZR / Emmanuel Keller</name>
         <url>https://www.qwazr.com</url>
     </organization>
     <scm>
@@ -675,7 +675,7 @@
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>rpm-maven-plugin</artifactId>
                 <configuration>
-                    <license>Apache 2 (c) 2014-2015, Emmanuel Keller / QWAZR</license>
+                    <license>Apache 2 (c) 2014-2016, Emmanuel Keller / QWAZR</license>
                     <group>Application/Internet</group>
                 </configuration>
             </plugin>
