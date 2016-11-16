@@ -115,7 +115,7 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <doCheck>true</doCheck>
+                    <doCheck>false</doCheck>
                     <doUpdate>false</doUpdate>
                     <shortRevisionLength>7</shortRevisionLength>
                 </configuration>
