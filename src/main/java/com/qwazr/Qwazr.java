@@ -70,6 +70,9 @@ public class Qwazr {
 
 		ClassLoaderManager.load(config.dataDirectory, null);
 
+		if (QwazrConfiguration.ServiceEnum.compiler.isActive(config))
+			CompilerManager.load(builder);
+
 		builder.registerWebService(WelcomeShutdownService.class);
 
 		ClusterManager.load(builder, config.masters, config.groups);
@@ -79,9 +82,6 @@ public class Qwazr {
 
 		if (QwazrConfiguration.ServiceEnum.profiler.isActive(config))
 			ProfilerManager.load(builder);
-
-		if (QwazrConfiguration.ServiceEnum.compiler.isActive(config))
-			CompilerManager.load(builder);
 
 		if (QwazrConfiguration.ServiceEnum.extractor.isActive(config))
 			ExtractorManager.load(builder);
@@ -188,12 +188,12 @@ public class Qwazr {
 	public static void main(final String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-				case "start":
-					start(args);
-					return;
-				case "stop":
-					stop(args);
-					return;
+			case "start":
+				start(args);
+				return;
+			case "stop":
+				stop(args);
+				return;
 			}
 		}
 		start(args);
