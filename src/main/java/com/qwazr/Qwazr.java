@@ -43,30 +43,22 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
-public class Qwazr {
+public class QwazrServer extends GenericServer {
 
-	static final Logger LOGGER = LoggerFactory.getLogger(Qwazr.class);
+	static final Logger LOGGER = LoggerFactory.getLogger(QwazrServer.class);
 
 	private static final String ACCESS_LOG_LOGGER_NAME = "com.qwazr.rest.accessLogger";
 	private static final Logger ACCESS_REST_LOGGER = LoggerFactory.getLogger(ACCESS_LOG_LOGGER_NAME);
 
-	private final static synchronized GenericServer newServer(final QwazrConfiguration config) throws IOException {
+	private QwazrServer(final QwazrConfiguration config) throws IOException {
+		super(config);
 
-		if (config.dataDirectory == null)
-			throw new IOException("The data directory has not been set.");
-		if (!config.dataDirectory.exists())
-			throw new IOException("The data directory does not exists: " + config.dataDirectory.getAbsolutePath());
-		if (!config.dataDirectory.isDirectory())
-			throw new IOException("The data directory is not a directory: " + config.dataDirectory.getAbsolutePath());
-
-		final ServerBuilder builder = new ServerBuilder(config);
+		final ServerBuilder builder = getBuilder();
+		final TrackedInterface etcTracker = getEtcTracker();
 
 		builder.setRestAccessLogger(ACCESS_REST_LOGGER);
 
 		final File currentTempDir = new File(config.dataDirectory, "tmp");
-
-		// Load the configuration
-		final TrackedInterface etcTracker = TrackedInterface.build(config.etcDirectories, config.etcFileFilter);
 
 		ClassLoaderManager.load(config.dataDirectory, null);
 
@@ -75,9 +67,9 @@ public class Qwazr {
 
 		builder.registerWebService(WelcomeShutdownService.class);
 
-		ClusterManager.load(builder, config.masters, config.groups);
+		ClusterManager.load(builder);
 
-		LibraryManager.load(config.dataDirectory, etcTracker);
+		LibraryManager.load(builder);
 		builder.setIdentityManagerProvider(LibraryManager.getInstance());
 
 		if (QwazrConfiguration.ServiceEnum.profiler.isActive(config))
@@ -107,15 +99,11 @@ public class Qwazr {
 		if (QwazrConfiguration.ServiceEnum.webapps.isActive(config))
 			WebappManager.load(builder, etcTracker, currentTempDir);
 
-		builder.registerWebService(LibraryServiceImpl.class);
-
 		// Scheduler is last, because it may immediatly execute a scripts
 		if (QwazrConfiguration.ServiceEnum.schedulers.isActive(config))
 			SchedulerManager.load(builder, etcTracker, config.scheduler_max_threads);
 
 		etcTracker.check();
-
-		return builder.build();
 	}
 
 	static GenericServer qwazr = null;
