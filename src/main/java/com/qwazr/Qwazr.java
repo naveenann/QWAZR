@@ -35,7 +35,9 @@ import com.qwazr.webapps.WebappManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.concurrent.ExecutorService;
 
 public class Qwazr extends GenericServer {
@@ -54,7 +56,7 @@ public class Qwazr extends GenericServer {
 
 	@Override
 	protected void build(final ExecutorService executorService, final ServerBuilder builder,
-			final ServerConfiguration configuration) throws IOException {
+			final ServerConfiguration configuration, final Collection<File> etcFiles) throws IOException {
 
 		builder.setRestAccessLogger(ACCESS_REST_LOGGER);
 
@@ -66,7 +68,7 @@ public class Qwazr extends GenericServer {
 		builder.registerWebService(WelcomeShutdownService.class);
 
 		ClusterManager.load(builder, configuration);
-		LibraryManager.load(builder, configuration);
+		LibraryManager.load(builder, configuration, etcFiles);
 		builder.setIdentityManagerProvider(LibraryManager.getInstance());
 
 		if (QwazrConfiguration.ServiceEnum.profiler.isActive(config))
@@ -94,11 +96,11 @@ public class Qwazr extends GenericServer {
 			StoreManager.load(builder, configuration);
 
 		if (QwazrConfiguration.ServiceEnum.webapps.isActive(config))
-			WebappManager.load(builder, configuration);
+			WebappManager.load(builder, configuration, etcFiles);
 
 		// Scheduler is last, because it may immediatly execute a scripts
 		if (QwazrConfiguration.ServiceEnum.schedulers.isActive(config))
-			SchedulerManager.load(builder, configuration);
+			SchedulerManager.load(builder, configuration, etcFiles);
 	}
 
 	/**
