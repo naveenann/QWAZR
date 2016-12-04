@@ -16,7 +16,6 @@
 package com.qwazr.server.test;
 
 import com.qwazr.QwazrConfiguration;
-import org.aeonbits.owner.ConfigCache;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
@@ -24,8 +23,10 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.Properties;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ConfigurationTest {
@@ -34,24 +35,28 @@ public class ConfigurationTest {
 	private static final File etcDir = new File(dataDir, "etc").getAbsoluteFile();
 	private static final File confDir = new File(dataDir, "conf").getAbsoluteFile();
 
-	private static final Map<String, String> properties = new HashMap<>();
+	private static final Properties properties = new Properties();
 
 	@BeforeClass
-	public static void before() {
+	public static void before() throws IOException {
 		properties.put("QWAZR_MASTERS", "localhost:9191,localhost:9291");
 		properties.put("WEBAPP_PORT", Integer.toString(9190));
 		properties.put("WEBSERVICE_PORT", Integer.toString(9191));
 		properties.put("QWAZR_DATA", dataDir.getAbsolutePath());
 		properties.put("QWAZR_ETC_DIR", confDir.getAbsolutePath() + File.pathSeparator + etcDir.getAbsolutePath());
+
 	}
 
-	public QwazrConfiguration getConfig() {
-		ConfigCache.clear();
-		return new QwazrConfiguration(properties);
+	public QwazrConfiguration getConfig() throws IOException {
+		File propFile = Files.createTempFile("qwazr-test", ".properties").toFile();
+		try (final FileWriter writer = new FileWriter(propFile)) {
+			properties.store(writer, null);
+		}
+		return new QwazrConfiguration("--QWAZR_PROPERTIES=" + propFile.getAbsolutePath());
 	}
 
 	@Test
-	public void test005WebPort() {
+	public void test005WebPort() throws IOException {
 		final QwazrConfiguration configuration = getConfig();
 		Assert.assertEquals(configuration.webAppConnector.port, 9190);
 		Assert.assertEquals(configuration.webServiceConnector.port, 9191);
@@ -60,14 +65,14 @@ public class ConfigurationTest {
 	}
 
 	@Test
-	public void test010NoFilter() {
+	public void test010NoFilter() throws IOException {
 		final QwazrConfiguration configuration = getConfig();
 		Assert.assertTrue(configuration.etcFileFilter.accept(new File(confDir, "conf_include.json")));
 		Assert.assertTrue(configuration.etcFileFilter.accept(new File(etcDir, "conf_exclude.json")));
 	}
 
 	@Test
-	public void test020WithEnvProperties() {
+	public void test020WithEnvProperties() throws IOException {
 		properties.put("QWAZR_ETC", "!*_exclude.json");
 		final QwazrConfiguration configuration = getConfig();
 		Assert.assertEquals(dataDir, configuration.dataDirectory);
@@ -77,7 +82,7 @@ public class ConfigurationTest {
 	}
 
 	@Test
-	public void test030ExplicitInclusion() {
+	public void test030ExplicitInclusion() throws IOException {
 		properties.put("QWAZR_ETC", "*_include.json");
 		final QwazrConfiguration configuration = getConfig();
 		Assert.assertTrue(configuration.etcFileFilter.accept(new File(confDir, "conf_include.json")));
@@ -85,7 +90,7 @@ public class ConfigurationTest {
 	}
 
 	@Test
-	public void test040ExplicitExclusion() {
+	public void test040ExplicitExclusion() throws IOException {
 		properties.put("QWAZR_ETC", "!*_exclude.json");
 		final QwazrConfiguration configuration = getConfig();
 		Assert.assertTrue(configuration.etcFileFilter.accept(new File(confDir, "conf_include.json")));
@@ -93,7 +98,7 @@ public class ConfigurationTest {
 	}
 
 	@Test
-	public void test050BothInclusionExclusion() {
+	public void test050BothInclusionExclusion() throws IOException {
 		properties.put("QWAZR_ETC", "*_include.json,!*_exclude.json");
 		final QwazrConfiguration configuration = getConfig();
 		Assert.assertTrue(configuration.etcFileFilter.accept(new File(confDir, "conf_include.json")));

@@ -15,23 +15,17 @@
  **/
 package com.qwazr;
 
+import com.qwazr.profiler.ProfilerManager;
+import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.utils.StringUtils;
 import com.qwazr.utils.server.ServerConfiguration;
-import org.apache.commons.io.filefilter.AndFileFilter;
-import org.apache.commons.io.filefilter.FileFileFilter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.FileFilter;
-import java.net.SocketException;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
-public class QwazrConfiguration extends ServerConfiguration implements QwazrConfigurationProperties {
+public class QwazrConfiguration extends ServerConfiguration {
 
-	final static Logger LOGGER = LoggerFactory.getLogger(QwazrConfiguration.class);
+	public final static String QWAZR_SERVICES = "QWAZR_SERVICES";
 
 	public enum ServiceEnum {
 
@@ -71,44 +65,78 @@ public class QwazrConfiguration extends ServerConfiguration implements QwazrConf
 	}
 
 	public final Set<ServiceEnum> services;
-	public final int scheduler_max_threads;
 
-	public QwazrConfiguration(final String... args) {
-		super(args);
-
-
-		this.services = buildServices(configProperties.qwazrServices());
-		this.scheduler_max_threads = configProperties.qwazrSchedulerMaxThreads();
+	public QwazrConfiguration(final String... args) throws IOException {
+		this(System.getenv(), System.getProperties(), argsToMap(args));
 	}
 
+	protected QwazrConfiguration(final Map<?, ?>... propertiesMaps) throws IOException {
+		super(propertiesMaps);
+		this.services = buildServices(getStringProperty(QWAZR_SERVICES, null));
+	}
 
 	private static Set<ServiceEnum> buildServices(final String servicesString) {
 		if (servicesString == null)
 			return null;
-		final String[] services_array = StringUtils.split(servicesString, ',');
-		if (services_array == null || services_array.length == 0)
-			return null;
 		final Set<ServiceEnum> services = new HashSet<>();
-		for (String service : services_array) {
+		fillStringListProperty(servicesString, ",; ", true, service -> {
 			try {
 				services.add(ServiceEnum.valueOf(service.trim()));
 			} catch (IllegalArgumentException e) {
 				throw new IllegalArgumentException("Unknown service in QWAZR_SERVICES: " + service);
 			}
-		}
-		return services;
+		});
+		return services.isEmpty() ? null : Collections.unmodifiableSet(services);
 	}
 
-	private static Set<String> splitValue(String value, char separator) {
-		if (StringUtils.isEmpty(value))
-			return null;
-		final String[] valueArray = StringUtils.split(value, separator);
-		if (valueArray == null || valueArray.length == 0)
-			return null;
-		final Set<String> values = new HashSet<>();
-		for (String v : valueArray)
-			values.add(v.trim());
-		return values;
+	public static Builder of() {
+		return new Builder();
+	}
+
+	public static class Builder extends ServerConfiguration.Builder {
+
+		private final Set<String> services;
+		private final Set<String> profilers;
+
+		protected Builder() {
+			this.services = new LinkedHashSet<>();
+			this.profilers = new LinkedHashSet<>();
+
+		}
+
+		public Builder service(final ServiceEnum service) {
+			if (service != null)
+				services.add(service.name());
+			return this;
+		}
+
+		public Builder profiler(final String profiler) {
+			if (profiler != null)
+				profilers.add(profiler);
+			return this;
+		}
+
+		public Builder maxSchedulerThreads(final Integer maxThreads) {
+			if (maxThreads != null)
+				map.put(SchedulerManager.QWAZR_SCHEDULER_MAX_THREADS, maxThreads.toString());
+			return this;
+		}
+
+		@Override
+		public Map<String, String> finalMap() {
+			super.finalMap();
+			if (!services.isEmpty())
+				map.put(QWAZR_SERVICES, StringUtils.join(services, ','));
+			if (!profilers.isEmpty())
+				map.put(ProfilerManager.QWAZR_PROFILERS, StringUtils.join(profilers, ';'));
+			return map;
+		}
+
+		@Override
+		public QwazrConfiguration build() throws IOException {
+			return new QwazrConfiguration(finalMap());
+		}
+
 	}
 
 }
