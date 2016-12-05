@@ -47,16 +47,15 @@ public class Qwazr extends GenericServer {
 	private static final String ACCESS_LOG_LOGGER_NAME = "com.qwazr.rest.accessLogger";
 	private static final Logger ACCESS_REST_LOGGER = LoggerFactory.getLogger(ACCESS_LOG_LOGGER_NAME);
 
-	private final QwazrConfiguration config;
-
 	public Qwazr(final QwazrConfiguration config) throws IOException {
 		super(config);
-		this.config = config;
 	}
 
 	@Override
 	protected void build(final ExecutorService executorService, final ServerBuilder builder,
 			final ServerConfiguration configuration, final Collection<File> etcFiles) throws IOException {
+
+		final QwazrConfiguration config = (QwazrConfiguration) configuration;
 
 		builder.setRestAccessLogger(ACCESS_REST_LOGGER);
 
