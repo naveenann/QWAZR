@@ -83,7 +83,7 @@ public class Qwazr extends GenericServer {
 			WebCrawlerManager.load(executorService, builder);
 
 		if (QwazrConfiguration.ServiceEnum.search.isActive(config))
-			IndexManager.load(builder, configuration);
+			IndexManager.load(builder, configuration, executorService);
 
 		if (QwazrConfiguration.ServiceEnum.graph.isActive(config))
 			GraphManager.load(builder, configuration);
@@ -144,12 +144,12 @@ public class Qwazr extends GenericServer {
 	public static void main(final String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-			case "start":
-				start(args);
-				return;
-			case "stop":
-				stop(args);
-				return;
+				case "start":
+					start(args);
+					return;
+				case "stop":
+					stop(args);
+					return;
 			}
 		}
 		start(args);
