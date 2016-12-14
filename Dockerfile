@@ -1,13 +1,22 @@
-FROM openjdk:8-jdk-alpine
+FROM ubuntu:xenial
 
 MAINTAINER Emmanuel Keller
 
-ADD target/qwazr-server-1.1-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr-server.jar
+RUN apt-get update \
+ && apt-get install -y \
+          openjdk-8-jre-headless ca-certificates-java ghostscript tesseract-ocr tesseract-ocr-* phantomjs \
+ && rm -rf /var/lib/apt/lists/*
+
+ENV LANG C.UTF-8
+
+RUN /var/lib/dpkg/info/ca-certificates-java.postinst configure
+
+ADD target/qwazr-1.1-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr.jar
 
 VOLUME /var/lib/qwazr
 
-EXPOSE 9090 9091
+EXPOSE 9091 9090
 
 WORKDIR /var/lib/qwazr/
 
-CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/usr/share/qwazr/qwazr-server.jar"]
+CMD ["java", "-Dfile.encoding=UTF-8", "-jar", "/usr/share/qwazr/qwazr.jar"]

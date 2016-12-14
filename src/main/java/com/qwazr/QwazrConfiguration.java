@@ -17,8 +17,8 @@ package com.qwazr;
 
 import com.qwazr.profiler.ProfilerManager;
 import com.qwazr.scheduler.SchedulerManager;
+import com.qwazr.server.configuration.ServerConfiguration;
 import com.qwazr.utils.StringUtils;
-import com.qwazr.utils.server.ServerConfiguration;
 
 import java.io.IOException;
 import java.util.*;

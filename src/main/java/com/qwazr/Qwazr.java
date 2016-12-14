@@ -27,10 +27,11 @@ import com.qwazr.profiler.ProfilerManager;
 import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.search.index.IndexManager;
+import com.qwazr.server.GenericServer;
+import com.qwazr.server.ServerBuilder;
+import com.qwazr.server.WelcomeShutdownService;
+import com.qwazr.server.configuration.ServerConfiguration;
 import com.qwazr.store.StoreManager;
-import com.qwazr.utils.server.GenericServer;
-import com.qwazr.utils.server.ServerBuilder;
-import com.qwazr.utils.server.ServerConfiguration;
 import com.qwazr.webapps.WebappManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,12 +110,8 @@ public class Qwazr extends GenericServer {
 	 */
 	public static synchronized void start(final String[] args) {
 
-		if (LOGGER.isInfoEnabled())
-			LOGGER.info("QWAZR is starting...");
 		try {
 			new Qwazr(new QwazrConfiguration(args)).start(true);
-			if (LOGGER.isInfoEnabled())
-				LOGGER.info("QWAZR started successfully.");
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
 			System.exit(1);
@@ -127,12 +124,9 @@ public class Qwazr extends GenericServer {
 	 * @param args For procrun compatbility, currently ignored
 	 */
 	public static synchronized void stop(final String[] args) {
-		if (LOGGER.isInfoEnabled())
-			LOGGER.info("QWAZR is stopping...");
 		final GenericServer server = GenericServer.getInstance();
 		if (server != null)
 			server.stopAll();
-		LOGGER.info("QWAZR stopped.");
 		System.exit(0);
 	}
 
@@ -144,12 +138,12 @@ public class Qwazr extends GenericServer {
 	public static void main(final String[] args) {
 		if (args != null && args.length > 0) {
 			switch (args[0]) {
-				case "start":
-					start(args);
-					return;
-				case "stop":
-					stop(args);
-					return;
+			case "start":
+				start(args);
+				return;
+			case "stop":
+				stop(args);
+				return;
 			}
 		}
 		start(args);

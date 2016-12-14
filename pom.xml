@@ -2,7 +2,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>qwazr-server</artifactId>
+    <groupId>com.qwazr</groupId>
+    <artifactId>qwazr</artifactId>
+    <version>1.1-SNAPSHOT</version>
     <name>QWAZR</name>
     <description>A Javascript based distributed and scalable application server</description>
     <packaging>jar</packaging>
@@ -13,26 +15,7 @@
         <version>1.1-SNAPSHOT</version>
     </parent>
 
-    <repositories>
-        <repository>
-            <id>oss-sonatype</id>
-            <name>oss-sonatype</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <dependencies>
-        <dependency>
-            <groupId>io.undertow</groupId>
-            <artifactId>undertow-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.undertow</groupId>
-            <artifactId>undertow-servlet</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
             <artifactId>qwazr-cluster</artifactId>
@@ -79,24 +62,7 @@
         </dependency>
         <dependency>
             <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-utils</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
             <artifactId>qwazr-webapps</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpcore</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
