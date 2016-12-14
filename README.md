@@ -2,7 +2,7 @@ Welcome to QWAZR
 ----------------
 
 [![Build Status](https://travis-ci.org/qwazr/QWAZR.svg?branch=master)](https://travis-ci.org/qwazr/QWAZR)
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-server/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr-server)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.qwazr/qwazr)
 [![Join the chat at https://gitter.im/qwazr/QWAZR](https://badges.gitter.im/qwazr/QWAZR.svg)](https://gitter.im/qwazr/QWAZR)
 [![Coverage Status](https://coveralls.io/repos/github/qwazr/QWAZR/badge.svg?branch=master)](https://coveralls.io/github/qwazr/QWAZR?branch=master)
 
