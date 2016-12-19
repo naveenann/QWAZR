@@ -11,7 +11,7 @@ ENV LANG C.UTF-8
 
 RUN /var/lib/dpkg/info/ca-certificates-java.postinst configure
 
-ADD target/qwazr-1.1-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr.jar
+ADD target/qwazr-1.1.0-SNAPSHOT-exec.jar /usr/share/qwazr/qwazr.jar
 
 VOLUME /var/lib/qwazr
 

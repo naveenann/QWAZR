@@ -90,7 +90,7 @@ public class QwazrConfiguration extends ServerConfiguration {
 	}
 
 	public static Builder of() {
-		return new Builder();
+		return new Builder(null);
 	}
 
 	public static class Builder extends ServerConfiguration.Builder {
@@ -98,7 +98,8 @@ public class QwazrConfiguration extends ServerConfiguration {
 		private final Set<String> services;
 		private final Set<String> profilers;
 
-		protected Builder() {
+		protected Builder(Map<String, String> map) {
+			super(map);
 			this.services = new LinkedHashSet<>();
 			this.profilers = new LinkedHashSet<>();
 

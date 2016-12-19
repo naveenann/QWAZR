@@ -27,80 +27,94 @@ import com.qwazr.profiler.ProfilerManager;
 import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.scripts.ScriptManager;
 import com.qwazr.search.index.IndexManager;
+import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
-import com.qwazr.server.ServerBuilder;
 import com.qwazr.server.WelcomeShutdownService;
-import com.qwazr.server.configuration.ServerConfiguration;
 import com.qwazr.store.StoreManager;
 import com.qwazr.webapps.WebappManager;
+import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
+import java.net.URISyntaxException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class Qwazr extends GenericServer {
+public class Qwazr implements BaseServer {
 
 	static final Logger LOGGER = LoggerFactory.getLogger(Qwazr.class);
 
 	private static final String ACCESS_LOG_LOGGER_NAME = "com.qwazr.rest.accessLogger";
 	private static final Logger ACCESS_REST_LOGGER = LoggerFactory.getLogger(ACCESS_LOG_LOGGER_NAME);
 
-	public Qwazr(final QwazrConfiguration config) throws IOException {
-		super(config);
+	private final GenericServer server;
+
+	public Qwazr(final QwazrConfiguration configuration)
+			throws IOException, URISyntaxException, ReflectiveOperationException, SchedulerException {
+		final ExecutorService executorService = Executors.newCachedThreadPool();
+		final GenericServer.Builder builder = GenericServer.of(configuration, executorService);
+
+		builder.restAccessLogger(ACCESS_REST_LOGGER);
+
+		final ClassLoaderManager classLoaderManager = new ClassLoaderManager(builder, Thread.currentThread());
+		final ClusterManager clusterManager = new ClusterManager(builder);
+
+		if (QwazrConfiguration.ServiceEnum.compiler.isActive(configuration))
+			new CompilerManager(executorService, classLoaderManager, builder);
+
+		builder.webService(WelcomeShutdownService.class);
+
+		final TableManager tableManager = QwazrConfiguration.ServiceEnum.table.isActive(configuration) ?
+				TableManager.getNewInstance(builder) :
+				null;
+
+		final LibraryManager libraryManager =
+				new LibraryManager(classLoaderManager, tableManager == null ? null : tableManager.getService(),
+						builder);
+		builder.identityManagerProvider(libraryManager);
+
+		if (QwazrConfiguration.ServiceEnum.profiler.isActive(configuration))
+			ProfilerManager.load(builder);
+
+		if (QwazrConfiguration.ServiceEnum.extractor.isActive(configuration))
+			new ExtractorManager(builder);
+
+		final ScriptManager scriptManager = QwazrConfiguration.ServiceEnum.scripts.isActive(configuration) ?
+				new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder) :
+				null;
+
+		if (QwazrConfiguration.ServiceEnum.webcrawler.isActive(configuration))
+			new WebCrawlerManager(clusterManager, scriptManager, executorService, builder);
+
+		if (QwazrConfiguration.ServiceEnum.search.isActive(configuration))
+			new IndexManager(classLoaderManager, builder, executorService);
+
+		if (QwazrConfiguration.ServiceEnum.graph.isActive(configuration))
+			new GraphManager(builder);
+
+		if (QwazrConfiguration.ServiceEnum.store.isActive(configuration))
+			new StoreManager(builder);
+
+		if (QwazrConfiguration.ServiceEnum.webapps.isActive(configuration))
+			new WebappManager(libraryManager, builder);
+
+		// Scheduler is last, because it may immediatly execute a scripts
+		if (QwazrConfiguration.ServiceEnum.schedulers.isActive(configuration))
+			new SchedulerManager(clusterManager, scriptManager, builder);
+
+		server = builder.build();
 	}
 
 	@Override
-	protected void build(final ExecutorService executorService, final ServerBuilder builder,
-			final ServerConfiguration configuration, final Collection<File> etcFiles) throws IOException {
+	public GenericServer getServer() {
+		return server;
+	}
 
-		final QwazrConfiguration config = (QwazrConfiguration) configuration;
+	private static volatile Qwazr INSTANCE = null;
 
-		builder.setRestAccessLogger(ACCESS_REST_LOGGER);
-
-		ClassLoaderManager.load(config.dataDirectory, null);
-
-		if (QwazrConfiguration.ServiceEnum.compiler.isActive(config))
-			CompilerManager.load(executorService, builder, configuration);
-
-		builder.registerWebService(WelcomeShutdownService.class);
-
-		ClusterManager.load(builder, configuration);
-		LibraryManager.load(builder, configuration, etcFiles);
-		builder.setIdentityManagerProvider(LibraryManager.getInstance());
-
-		if (QwazrConfiguration.ServiceEnum.profiler.isActive(config))
-			ProfilerManager.load(builder);
-
-		if (QwazrConfiguration.ServiceEnum.extractor.isActive(config))
-			ExtractorManager.load(builder);
-
-		if (QwazrConfiguration.ServiceEnum.scripts.isActive(config))
-			ScriptManager.load(executorService, builder, configuration);
-
-		if (QwazrConfiguration.ServiceEnum.webcrawler.isActive(config))
-			WebCrawlerManager.load(executorService, builder);
-
-		if (QwazrConfiguration.ServiceEnum.search.isActive(config))
-			IndexManager.load(builder, configuration, executorService);
-
-		if (QwazrConfiguration.ServiceEnum.graph.isActive(config))
-			GraphManager.load(builder, configuration);
-
-		if (QwazrConfiguration.ServiceEnum.table.isActive(config))
-			TableManager.load(builder, configuration);
-
-		if (QwazrConfiguration.ServiceEnum.store.isActive(config))
-			StoreManager.load(builder, configuration);
-
-		if (QwazrConfiguration.ServiceEnum.webapps.isActive(config))
-			WebappManager.load(builder, configuration, etcFiles);
-
-		// Scheduler is last, because it may immediatly execute a scripts
-		if (QwazrConfiguration.ServiceEnum.schedulers.isActive(config))
-			SchedulerManager.load(builder, configuration, etcFiles);
+	public static Qwazr getInstance() {
+		return INSTANCE;
 	}
 
 	/**
@@ -109,9 +123,9 @@ public class Qwazr extends GenericServer {
 	 * @param args For procrun compatbility, currently ignored
 	 */
 	public static synchronized void start(final String[] args) {
-
 		try {
-			new Qwazr(new QwazrConfiguration(args)).start(true);
+			INSTANCE = new Qwazr(new QwazrConfiguration(args));
+			INSTANCE.start();
 		} catch (Exception e) {
 			LOGGER.error(e.getMessage(), e);
 			System.exit(1);
@@ -124,9 +138,10 @@ public class Qwazr extends GenericServer {
 	 * @param args For procrun compatbility, currently ignored
 	 */
 	public static synchronized void stop(final String[] args) {
-		final GenericServer server = GenericServer.getInstance();
-		if (server != null)
-			server.stopAll();
+		if (INSTANCE != null) {
+			INSTANCE.stop();
+			INSTANCE = null;
+		}
 		System.exit(0);
 	}
 
