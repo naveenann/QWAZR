@@ -47,6 +47,9 @@ import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.management.MBeanException;
+import javax.management.OperationsException;
+import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.Objects;
@@ -199,18 +202,14 @@ public class Qwazr implements BaseServer {
 	}
 
 	/**
-	 * Start the server. The prototype is based on Procrun specs
-	 *
-	 * @param args For procrun compatbility, currently ignored
+	 * Stop the server..
 	 */
-	public static synchronized void start(final String[] args) {
-		try {
-			INSTANCE = new Qwazr(new QwazrConfiguration(args));
-			INSTANCE.start();
-		} catch (Exception e) {
-			LOGGER.error(e.getMessage(), e);
-			System.exit(1);
-		}
+	public static synchronized void start(final QwazrConfiguration config)
+			throws IOException, ReflectiveOperationException, OperationsException, ServletException, MBeanException,
+			URISyntaxException, SchedulerException {
+		shutdown();
+		INSTANCE = new Qwazr(config);
+		INSTANCE.start();
 	}
 
 	/**
@@ -220,6 +219,20 @@ public class Qwazr implements BaseServer {
 		if (INSTANCE == null)
 			return;
 		INSTANCE.stop();
+	}
+
+	/**
+	 * Start the server. The prototype is based on Procrun specs
+	 *
+	 * @param args For procrun compatbility, currently ignored
+	 */
+	public static synchronized void start(final String[] args) {
+		try {
+			start(new QwazrConfiguration(args));
+		} catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+			System.exit(1);
+		}
 	}
 
 	/**
