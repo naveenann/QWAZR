@@ -16,6 +16,7 @@
 package com.qwazr.server.test;
 
 import com.qwazr.Qwazr;
+import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -27,11 +28,27 @@ public class ServerTest {
 
 	@Test
 	public void test100start() throws IOException {
-		Qwazr.start(null);
+		Qwazr.main(new String[] { "start" });
+		Assert.assertNotNull(Qwazr.getInstance().getClassLoaderManager());
+		Assert.assertNotNull(Qwazr.getInstance().getClusterService());
+		Assert.assertNotNull(Qwazr.getInstance().getCompilerService());
+		Assert.assertNotNull(Qwazr.getInstance().getExtractorService());
+		Assert.assertNotNull(Qwazr.getInstance().getGraphService());
+		Assert.assertNotNull(Qwazr.getInstance().getIndexService());
+		Assert.assertNotNull(Qwazr.getInstance().getLibraryManager());
+		Assert.assertNotNull(Qwazr.getInstance().getSchedulerService());
+		Assert.assertNotNull(Qwazr.getInstance().getScriptService());
+		Assert.assertNotNull(Qwazr.getInstance().getStoreService());
+		Assert.assertNotNull(Qwazr.getInstance().getTableService());
+		Assert.assertNotNull(Qwazr.getInstance().getWebCrawlerService());
+		Assert.assertNotNull(Qwazr.getInstance().getWebappService());
 	}
 
 	@Test
 	public void test900stop() throws IOException {
-		Qwazr.getInstance().stop();
+		// First stop
+		Qwazr.shutdown();
+		// Second one
+		Qwazr.shutdown();
 	}
 }

@@ -44,4 +44,14 @@ public class ConfigurationTest {
 		Assert.assertEquals("com.qwazr.*;org.apache.*",
 				config.getStringProperty(ProfilerManager.QWAZR_PROFILERS, null));
 	}
+
+	@Test
+	public void unknownService() throws IOException {
+		try {
+			new QwazrConfiguration("--QWAZR_SERVICES=dummy");
+			Assert.fail("Exception not thrown");
+		} catch (IllegalArgumentException e) {
+			Assert.assertTrue(e.getMessage().contains("dummy"));
+		}
+	}
 }
