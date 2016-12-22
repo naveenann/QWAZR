@@ -6,8 +6,11 @@
         <!-- The logs location is defined by the QWAZR_LOGS environment variable -->
         <Property name="LogPath">${env:QWAZR_LOGS:-logs}/</Property>
 
-        <!-- The default error pattern -->
-        <Property name="ErrorPattern">%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+        <!-- The default pattern -->
+        <Property name="SystemPattern">%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %m%%n</Property>
+
+        <!-- The detailled error pattern -->
+        <Property name="ErrorPattern">%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %m%xEx{filters(com.qwazr)}%n</Property>
 
         <!-- The header of the Access logs -->
         <Property name="W3CHeader">
@@ -24,7 +27,7 @@
     <Appenders>
 
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="${ErrorPattern}"/>
+            <PatternLayout pattern="${SystemPattern}"/>
         </Console>
 
         <RollingFile name="ErrorFile" fileName="${LogPath}/error.${hostName}.log"
@@ -82,7 +85,6 @@
 
         <!-- Default logs level -->
         <Logger name="com.qwazr" level="WARN"/>
-        <Logger name="com.qwazr.cluster" level="INFO"/>
 
     </Loggers>
 
