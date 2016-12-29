@@ -17,13 +17,13 @@ package com.qwazr;
 
 import com.qwazr.classloader.ClassLoaderManager;
 import com.qwazr.cluster.ClusterManager;
-import com.qwazr.cluster.ClusterServiceInterface;
+import com.qwazr.cluster.ClusterServiceBuilder;
 import com.qwazr.compiler.CompilerManager;
 import com.qwazr.compiler.CompilerServiceInterface;
 import com.qwazr.crawler.web.WebCrawlerManager;
-import com.qwazr.crawler.web.WebCrawlerServiceInterface;
+import com.qwazr.crawler.web.WebCrawlerServiceBuilder;
 import com.qwazr.database.TableManager;
-import com.qwazr.database.TableServiceInterface;
+import com.qwazr.database.TableServiceBuilder;
 import com.qwazr.extractor.ExtractorManager;
 import com.qwazr.extractor.ExtractorServiceInterface;
 import com.qwazr.graph.GraphManager;
@@ -33,14 +33,14 @@ import com.qwazr.profiler.ProfilerManager;
 import com.qwazr.scheduler.SchedulerManager;
 import com.qwazr.scheduler.SchedulerServiceInterface;
 import com.qwazr.scripts.ScriptManager;
-import com.qwazr.scripts.ScriptServiceInterface;
+import com.qwazr.scripts.ScriptServiceBuilder;
 import com.qwazr.search.index.IndexManager;
-import com.qwazr.search.index.IndexServiceInterface;
+import com.qwazr.search.index.IndexServiceBuilder;
 import com.qwazr.server.BaseServer;
 import com.qwazr.server.GenericServer;
 import com.qwazr.server.WelcomeShutdownService;
 import com.qwazr.store.StoreManager;
-import com.qwazr.store.StoreServiceInterface;
+import com.qwazr.store.StoreServiceBuilder;
 import com.qwazr.webapps.WebappManager;
 import com.qwazr.webapps.WebappServiceInterface;
 import org.quartz.SchedulerException;
@@ -68,14 +68,14 @@ public class Qwazr implements BaseServer {
 	private final ClassLoaderManager classLoaderManager;
 	private final ClusterManager clusterManager;
 	private final CompilerManager compilerManager;
-	private final TableManager tableManager;
+	private final TableServiceBuilder tableServiceBuilder;
 	private final LibraryManager libraryManager;
 	private final ExtractorManager extractorManager;
-	private final ScriptManager scriptManager;
-	private final WebCrawlerManager webCrawlerManager;
-	private final IndexManager indexManager;
+	private final ScriptServiceBuilder scriptServiceBuilder;
+	private final WebCrawlerServiceBuilder webCrawlerServiceBuilder;
+	private final IndexServiceBuilder indexServiceBuilder;
 	private final GraphManager graphManager;
-	private final StoreManager storeManager;
+	private final StoreServiceBuilder storeServiceBuilder;
 	private final WebappManager webappManager;
 	private final SchedulerManager schedulerManager;
 
@@ -95,9 +95,10 @@ public class Qwazr implements BaseServer {
 
 		builder.webService(WelcomeShutdownService.class);
 
-		tableManager = QwazrConfiguration.ServiceEnum.table.isActive(configuration) ?
+		final TableManager tableManager = QwazrConfiguration.ServiceEnum.table.isActive(configuration) ?
 				TableManager.getNewInstance(builder) :
 				null;
+		tableServiceBuilder = new TableServiceBuilder(clusterManager, tableManager);
 
 		libraryManager = new LibraryManager(classLoaderManager, tableManager == null ? null : tableManager.getService(),
 				builder);
@@ -109,21 +110,26 @@ public class Qwazr implements BaseServer {
 		extractorManager =
 				QwazrConfiguration.ServiceEnum.extractor.isActive(configuration) ? new ExtractorManager(builder) : null;
 
-		scriptManager = QwazrConfiguration.ServiceEnum.scripts.isActive(configuration) ?
+		final ScriptManager scriptManager = QwazrConfiguration.ServiceEnum.scripts.isActive(configuration) ?
 				new ScriptManager(executorService, classLoaderManager, clusterManager, libraryManager, builder) :
 				null;
+		scriptServiceBuilder = new ScriptServiceBuilder(clusterManager, scriptManager);
 
-		webCrawlerManager = QwazrConfiguration.ServiceEnum.webcrawler.isActive(configuration) ?
+		final WebCrawlerManager webCrawlerManager = QwazrConfiguration.ServiceEnum.webcrawler.isActive(configuration) ?
 				new WebCrawlerManager(clusterManager, scriptManager, executorService, builder) :
 				null;
+		webCrawlerServiceBuilder = new WebCrawlerServiceBuilder(clusterManager, webCrawlerManager);
 
-		indexManager = QwazrConfiguration.ServiceEnum.search.isActive(configuration) ?
+		final IndexManager indexManager = QwazrConfiguration.ServiceEnum.search.isActive(configuration) ?
 				new IndexManager(classLoaderManager, builder, executorService) :
 				null;
+		indexServiceBuilder = new IndexServiceBuilder(clusterManager, indexManager);
 
 		graphManager = QwazrConfiguration.ServiceEnum.graph.isActive(configuration) ? new GraphManager(builder) : null;
 
-		storeManager = QwazrConfiguration.ServiceEnum.store.isActive(configuration) ? new StoreManager(builder) : null;
+		final StoreManager storeManager =
+				QwazrConfiguration.ServiceEnum.store.isActive(configuration) ? new StoreManager(builder) : null;
+		storeServiceBuilder = new StoreServiceBuilder(clusterManager, storeManager);
 
 		webappManager = QwazrConfiguration.ServiceEnum.webapps.isActive(configuration) ?
 				new WebappManager(libraryManager, builder) :
@@ -146,16 +152,16 @@ public class Qwazr implements BaseServer {
 		return classLoaderManager;
 	}
 
-	public ClusterServiceInterface getClusterService() {
-		return clusterManager == null ? null : clusterManager.getServiceBuilder().local();
+	public ClusterServiceBuilder getClusterService() {
+		return clusterManager == null ? null : clusterManager.getServiceBuilder();
 	}
 
 	public CompilerServiceInterface getCompilerService() {
 		return compilerManager == null ? null : compilerManager.getService();
 	}
 
-	public TableServiceInterface getTableService() {
-		return tableManager == null ? null : tableManager.getService();
+	public TableServiceBuilder getTableService() {
+		return tableServiceBuilder;
 	}
 
 	public LibraryManager getLibraryManager() {
@@ -166,24 +172,24 @@ public class Qwazr implements BaseServer {
 		return extractorManager == null ? null : extractorManager.getService();
 	}
 
-	public ScriptServiceInterface getScriptService() {
-		return scriptManager == null ? null : scriptManager.getService();
+	public ScriptServiceBuilder getScriptService() {
+		return scriptServiceBuilder;
 	}
 
-	public WebCrawlerServiceInterface getWebCrawlerService() {
-		return webCrawlerManager == null ? null : webCrawlerManager.getService();
+	public WebCrawlerServiceBuilder getWebCrawlerService() {
+		return webCrawlerServiceBuilder;
 	}
 
-	public IndexServiceInterface getIndexService() {
-		return indexManager == null ? null : indexManager.getService();
+	public IndexServiceBuilder getIndexService() {
+		return indexServiceBuilder;
 	}
 
 	public GraphServiceInterface getGraphService() {
 		return graphManager == null ? null : graphManager.getService();
 	}
 
-	public StoreServiceInterface getStoreService() {
-		return storeManager == null ? null : storeManager.getService();
+	public StoreServiceBuilder getStoreService() {
+		return storeServiceBuilder;
 	}
 
 	public WebappServiceInterface getWebappService() {

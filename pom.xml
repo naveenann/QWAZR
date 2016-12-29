@@ -67,10 +67,6 @@
             <groupId>com.qwazr</groupId>
             <artifactId>qwazr-store</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.qwazr</groupId>
-            <artifactId>qwazr-webapps</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
