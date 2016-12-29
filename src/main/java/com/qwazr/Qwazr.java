@@ -16,12 +16,12 @@
 package com.qwazr;
 
 import com.qwazr.classloader.ClassLoaderManager;
-import com.qwazr.cluster.manager.ClusterManager;
-import com.qwazr.cluster.service.ClusterServiceInterface;
+import com.qwazr.cluster.ClusterManager;
+import com.qwazr.cluster.ClusterServiceInterface;
 import com.qwazr.compiler.CompilerManager;
 import com.qwazr.compiler.CompilerServiceInterface;
-import com.qwazr.crawler.web.manager.WebCrawlerManager;
-import com.qwazr.crawler.web.service.WebCrawlerServiceInterface;
+import com.qwazr.crawler.web.WebCrawlerManager;
+import com.qwazr.crawler.web.WebCrawlerServiceInterface;
 import com.qwazr.database.TableManager;
 import com.qwazr.database.TableServiceInterface;
 import com.qwazr.extractor.ExtractorManager;
@@ -147,7 +147,7 @@ public class Qwazr implements BaseServer {
 	}
 
 	public ClusterServiceInterface getClusterService() {
-		return clusterManager == null ? null : clusterManager.getService();
+		return clusterManager == null ? null : clusterManager.getServiceBuilder().local();
 	}
 
 	public CompilerServiceInterface getCompilerService() {
