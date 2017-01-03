@@ -52,7 +52,6 @@ import javax.management.OperationsException;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -203,7 +202,6 @@ public class Qwazr implements BaseServer {
 	private static volatile Qwazr INSTANCE = null;
 
 	public static Qwazr getInstance() {
-		Objects.requireNonNull(INSTANCE, "QWAZR is not started");
 		return INSTANCE;
 	}
 
