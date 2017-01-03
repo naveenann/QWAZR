@@ -45,6 +45,11 @@ public class ServerTest {
 	}
 
 	@Test
+	public void test110inkect() {
+		Qwazr.inject(this);
+	}
+
+	@Test
 	public void test900stop() throws IOException {
 		// First stop
 		Qwazr.shutdown();
